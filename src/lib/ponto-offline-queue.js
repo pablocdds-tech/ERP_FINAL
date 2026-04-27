@@ -3,6 +3,7 @@
 import { openDB } from "idb";
 import { base44 } from "@/api/base44Client";
 import { registrarLog } from "./auditoria-service";
+import { proximoNsrEHash, calcularHashRegistro } from "./afd-service";
 
 const DB_NAME = "ponto-offline";
 const STORE = "fila";
@@ -57,8 +58,15 @@ export async function sincronizarFila() {
   let enviados = 0, falhas = 0;
   for (const item of itens) {
     try {
+      // Atribui NSR + hash na sincronização (cadeia respeita a ordem de chegada no servidor)
+      const { nsr, hash_anterior } = await proximoNsrEHash(item.registro.loja_id);
+      const paraHash = { ...item.registro, nsr };
+      const hash_registro = await calcularHashRegistro(paraHash, hash_anterior);
       const registro = await base44.entities.RegistroPonto.create({
         ...item.registro,
+        nsr,
+        hash_anterior,
+        hash_registro,
         observacoes: (item.registro.observacoes || "") + " [sync_offline]",
       });
       try {

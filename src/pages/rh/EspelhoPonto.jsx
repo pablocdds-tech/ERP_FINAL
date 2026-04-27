@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import PageShell from "@/components/rh/PageShell";
+import AfdActions from "@/components/rh/AfdActions";
 import { calcularMinutosTrabalhados, diagnosticoDia, formatMinutos, labelPonto } from "@/lib/rh-service";
 import { aprovarRegistroPonto, rejeitarRegistroPonto } from "@/lib/aprovacoes-service";
 import { format } from "date-fns";
@@ -61,6 +62,7 @@ export default function EspelhoPonto() {
 
   return (
     <PageShell title="Espelho de Ponto" description="Registros, atrasos, faltas e horas trabalhadas.">
+      <AfdActions />
       <Card className="p-4 mb-4">
         <div className="flex flex-col md:flex-row gap-3">
           <Select value={colId} onValueChange={setColId}>

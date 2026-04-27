@@ -2,6 +2,7 @@ import { base44 } from "@/api/base44Client";
 import { proximoEventoPonto } from "./rh-service";
 import { registrarLog } from "./auditoria-service";
 import { enfileirarBatida } from "./ponto-offline-queue";
+import { proximoNsrEHash, calcularHashRegistro } from "./afd-service";
 
 /**
  * Faz upload de um Blob como arquivo (jpg).
@@ -77,8 +78,16 @@ export async function registrarBatida({ colaborador, tipo, selfie_url, origem = 
     status = "pendente_revisao";
   }
 
+  // NSR + hash encadeado (Portaria 671-like)
+  const { nsr, hash_anterior } = await proximoNsrEHash(colaborador.loja_id);
+  const paraHash = { ...baseRegistro, nsr };
+  const hash_registro = await calcularHashRegistro(paraHash, hash_anterior);
+
   const registro = await base44.entities.RegistroPonto.create({
     ...baseRegistro,
+    nsr,
+    hash_anterior,
+    hash_registro,
     status,
     ia_resultado: ia?.resultado || "nao_avaliado",
     ia_confianca: ia?.confianca ?? null,
