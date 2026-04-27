@@ -1,6 +1,5 @@
 import {
-  Users, Briefcase, CalendarRange, Clock, FileText, GraduationCap,
-  ClipboardList, ListChecks, AlertCircle, FileSignature,
+  Users, Briefcase, CalendarRange, Clock, FileText, GraduationCap, FileSignature,
 } from "lucide-react";
 
 export const RH_LIST = [
@@ -11,7 +10,4 @@ export const RH_LIST = [
   { tipo: "solicitacoes", nome: "Solicitações", descricao: "Folgas, trocas, ajustes e justificativas.", icon: FileSignature },
   { tipo: "documentos", nome: "Documentos", descricao: "Atestados, contratos e arquivos.", icon: FileText },
   { tipo: "treinamentos", nome: "Treinamentos", descricao: "Treinamentos, presenças e certificados.", icon: GraduationCap },
-  { tipo: "tarefas", nome: "Tarefas", descricao: "Tarefas atribuídas a colaboradores.", icon: ClipboardList },
-  { tipo: "checklists", nome: "Checklists", descricao: "Modelos de checklist e execuções.", icon: ListChecks },
-  { tipo: "chamados", nome: "Chamados", descricao: "Chamados abertos pelos colaboradores.", icon: AlertCircle },
 ];

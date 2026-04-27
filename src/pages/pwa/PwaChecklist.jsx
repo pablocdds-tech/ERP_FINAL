@@ -2,29 +2,31 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { ListChecks, CheckCircle2 } from "lucide-react";
+import { ListChecks, Check, X } from "lucide-react";
 import PageTitle from "@/components/pwa/PageTitle";
 import { usePwa } from "@/lib/PwaContext";
+import { gerarOcorrenciasDeChecklist } from "@/lib/rotinas-service";
 
 export default function PwaChecklist() {
   const { colaborador } = usePwa() || {};
   const [checklists, setChecklists] = useState([]);
   const [exec, setExec] = useState(null); // execução em andamento
+  const [checklist, setChecklist] = useState(null);
 
   useEffect(() => {
     base44.entities.Checklist.filter({ ativo: true }).then(setChecklists);
   }, []);
 
-  const iniciar = async (cl) => {
+  const iniciar = (cl) => {
+    setChecklist(cl);
     setExec({
       checklist_id: cl.id,
       checklist_titulo: cl.titulo,
       loja_id: colaborador?.loja_id,
       colaborador_id: colaborador?.id,
       data: new Date().toISOString().slice(0, 10),
-      respostas: (cl.itens || []).map((i) => ({ item_id: i.id, texto: i.texto, feito: false, observacao: "" })),
+      respostas: (cl.itens || []).map((i) => ({ item_id: i.id, texto: i.texto, feito: null, observacao: "" })),
     });
   };
   const setResp = (idx, k, v) => {
@@ -32,37 +34,48 @@ export default function PwaChecklist() {
     setExec({ ...exec, respostas: arr });
   };
   const concluir = async () => {
-    await base44.entities.ChecklistExecucao.create({
+    const created = await base44.entities.ChecklistExecucao.create({
       ...exec, concluido: true, concluido_em: new Date().toISOString(),
     });
-    setExec(null);
+    if (checklist?.gera_ocorrencia !== false) {
+      await gerarOcorrenciasDeChecklist({ execucao: created, checklist });
+    }
+    setExec(null); setChecklist(null);
   };
 
   if (exec) {
     const total = exec.respostas.length;
-    const feitos = exec.respostas.filter((r) => r.feito).length;
+    const respondidos = exec.respostas.filter((r) => r.feito === true || r.feito === false).length;
+    const naoConformes = exec.respostas.filter((r) => r.feito === false).length;
     return (
       <div>
-        <PageTitle title={exec.checklist_titulo} subtitle={`${feitos}/${total} concluídos`}
-          action={<Button size="sm" variant="outline" onClick={() => setExec(null)}>Voltar</Button>} />
+        <PageTitle title={exec.checklist_titulo} subtitle={`${respondidos}/${total} respondidos${naoConformes > 0 ? ` • ${naoConformes} não conforme(s)` : ""}`}
+          action={<Button size="sm" variant="outline" onClick={() => { setExec(null); setChecklist(null); }}>Voltar</Button>} />
         <div className="space-y-2">
           {exec.respostas.map((r, idx) => (
             <Card key={idx} className="p-3">
-              <div className="flex items-start gap-3">
-                <Checkbox checked={r.feito} onCheckedChange={(v) => setResp(idx, "feito", !!v)} className="mt-0.5" />
-                <div className="flex-1">
-                  <div className={`text-sm ${r.feito ? "line-through text-muted-foreground" : ""}`}>{r.texto}</div>
-                  {r.feito && (
-                    <Textarea rows={1} placeholder="Observação (opcional)" className="mt-2 text-xs"
-                      value={r.observacao || ""} onChange={(e) => setResp(idx, "observacao", e.target.value)} />
-                  )}
-                </div>
+              <div className="text-sm mb-2">{r.texto}</div>
+              <div className="flex gap-2">
+                <Button size="sm" variant={r.feito === true ? "default" : "outline"}
+                  className={r.feito === true ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                  onClick={() => setResp(idx, "feito", true)}>
+                  <Check className="w-3.5 h-3.5 mr-1" /> Conforme
+                </Button>
+                <Button size="sm" variant={r.feito === false ? "default" : "outline"}
+                  className={r.feito === false ? "bg-destructive hover:bg-destructive/90" : ""}
+                  onClick={() => setResp(idx, "feito", false)}>
+                  <X className="w-3.5 h-3.5 mr-1" /> Não conforme
+                </Button>
               </div>
+              {r.feito === false && (
+                <Textarea rows={2} placeholder="Descreva o problema..." className="mt-2 text-xs"
+                  value={r.observacao || ""} onChange={(e) => setResp(idx, "observacao", e.target.value)} />
+              )}
             </Card>
           ))}
         </div>
-        <Button className="w-full mt-4 h-12" disabled={feitos < total} onClick={concluir}>
-          {feitos < total ? `${total - feitos} item(ns) restante(s)` : "Concluir checklist"}
+        <Button className="w-full mt-4 h-12" disabled={respondidos < total} onClick={concluir}>
+          {respondidos < total ? `${total - respondidos} item(ns) restante(s)` : `Concluir${naoConformes > 0 ? ` (gera ${naoConformes} ocorrência${naoConformes > 1 ? "s" : ""})` : ""}`}
         </Button>
       </div>
     );

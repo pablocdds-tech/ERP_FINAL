@@ -21,6 +21,8 @@ import FinanceiroIndex from '@/pages/financeiro/FinanceiroIndex';
 import FinanceiroTipoPage from '@/pages/financeiro/FinanceiroTipoPage';
 import RHIndex from '@/pages/rh/RHIndex';
 import PessoasTipoPage from '@/pages/rh/PessoasTipoPage';
+import RotinasIndex from '@/pages/rotinas/RotinasIndex';
+import RotinasTipoPage from '@/pages/rotinas/RotinasTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -84,6 +86,8 @@ const AuthenticatedApp = () => {
         <Route path="/financeiro/:area/:tipo" element={<FinanceiroTipoPage />} />
         <Route path="/pessoas" element={<RHIndex />} />
         <Route path="/pessoas/:tipo" element={<PessoasTipoPage />} />
+        <Route path="/rotinas" element={<RotinasIndex />} />
+        <Route path="/rotinas/:tipo" element={<RotinasTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

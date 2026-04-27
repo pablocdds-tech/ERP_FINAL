@@ -6,10 +6,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Camera, X } from "lucide-react";
+import { Plus, Camera, X, MessageSquare } from "lucide-react";
 import PageTitle from "@/components/pwa/PageTitle";
 import { usePwa } from "@/lib/PwaContext";
 import { format } from "date-fns";
+import ComentariosTimeline from "@/components/rotinas/ComentariosTimeline";
 
 const STATUS_CLS = {
   aberto: "bg-amber-50 text-amber-700 border-amber-200",
@@ -24,6 +25,7 @@ export default function PwaChamados() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState({ categoria: "manutencao", prioridade: "media", fotos: [] });
   const [uploading, setUploading] = useState(false);
+  const [view, setView] = useState({ open: false, ch: null });
 
   const load = async () => {
     let list;
@@ -71,10 +73,10 @@ export default function PwaChamados() {
       ) : (
         <div className="space-y-2">
           {items.map((c) => (
-            <Card key={c.id} className="p-3">
+            <Card key={c.id} className="p-3 cursor-pointer" onClick={() => setView({ open: true, ch: c })}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{c.titulo}</div>
+                  <div className="text-sm font-medium flex items-center gap-1.5">{c.titulo}<MessageSquare className="w-3 h-3 text-muted-foreground" /></div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">
                     {format(new Date(c.created_date), "dd/MM HH:mm")} • {c.categoria} • {c.prioridade}
                   </div>
@@ -94,6 +96,29 @@ export default function PwaChamados() {
           ))}
         </div>
       )}
+
+      <Dialog open={view.open} onOpenChange={(o) => !o && setView({ open: false, ch: null })}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{view.ch?.titulo}</DialogTitle></DialogHeader>
+          {view.ch && (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground">{view.ch.categoria} • {view.ch.prioridade} • {view.ch.status}</div>
+              {view.ch.descricao && <div className="text-sm">{view.ch.descricao}</div>}
+              {(view.ch.fotos || []).length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {view.ch.fotos.map((f, i) => (
+                    <a key={i} href={f} target="_blank" rel="noreferrer">
+                      <img src={f} alt="" className="w-full h-20 object-cover rounded border border-border" />
+                    </a>
+                  ))}
+                </div>
+              )}
+              <ComentariosTimeline entidade="Chamado" entidade_id={view.ch.id} />
+            </div>
+          )}
+          <DialogFooter><Button variant="outline" onClick={() => setView({ open: false, ch: null })}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
