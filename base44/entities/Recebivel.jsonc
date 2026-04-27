@@ -1,0 +1,56 @@
+{
+  "name": "Recebivel",
+  "type": "object",
+  "properties": {
+    "fechamento_id": {
+      "type": "string",
+      "description": "Fechamento di\u00e1rio que originou o receb\u00edvel"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "forma_id": {
+      "type": "string"
+    },
+    "forma_nome": {
+      "type": "string"
+    },
+    "data_venda": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_prevista": {
+      "type": "string",
+      "format": "date",
+      "description": "Quando o valor entra na conta"
+    },
+    "valor_bruto": {
+      "type": "number"
+    },
+    "taxa_percentual": {
+      "type": "number"
+    },
+    "valor_liquido": {
+      "type": "number",
+      "description": "Valor previsto a receber ap\u00f3s taxa"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "previsto",
+        "recebido",
+        "cancelado"
+      ],
+      "default": "previsto"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "loja_id",
+    "forma_id",
+    "data_venda",
+    "valor_bruto"
+  ]
+}

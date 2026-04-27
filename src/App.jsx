@@ -15,6 +15,8 @@ import CadastrosIndex from '@/pages/cadastros/CadastrosIndex';
 import CadastroTipoPage from '@/pages/cadastros/CadastroTipoPage';
 import OperacoesIndex from '@/pages/operacoes/OperacoesIndex';
 import OperacaoTipoPage from '@/pages/operacoes/OperacaoTipoPage';
+import VendasIndex from '@/pages/vendas/VendasIndex';
+import VendaTipoPage from '@/pages/vendas/VendaTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -60,6 +62,8 @@ const AuthenticatedApp = () => {
         <Route path="/cadastros/:tipo" element={<CadastroTipoPage />} />
         <Route path="/operacoes" element={<OperacoesIndex />} />
         <Route path="/operacoes/:tipo" element={<OperacaoTipoPage />} />
+        <Route path="/vendas" element={<VendasIndex />} />
+        <Route path="/vendas/:tipo" element={<VendaTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

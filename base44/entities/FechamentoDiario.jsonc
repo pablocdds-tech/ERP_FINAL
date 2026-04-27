@@ -1,0 +1,146 @@
+{
+  "name": "FechamentoDiario",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string",
+      "description": "Loja do fechamento"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de compet\u00eancia do movimento"
+    },
+    "responsavel": {
+      "type": "string",
+      "description": "Quem fechou o caixa"
+    },
+    "vendas_por_canal": {
+      "type": "array",
+      "description": "Total vendido por canal de venda",
+      "items": {
+        "type": "object",
+        "properties": {
+          "canal_id": {
+            "type": "string"
+          },
+          "canal_nome": {
+            "type": "string"
+          },
+          "valor": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "vendas_por_pagamento": {
+      "type": "array",
+      "description": "Total recebido por forma de pagamento (declarado pelo operador)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "forma_id": {
+            "type": "string"
+          },
+          "forma_nome": {
+            "type": "string"
+          },
+          "forma_tipo": {
+            "type": "string"
+          },
+          "valor_declarado": {
+            "type": "number"
+          },
+          "valor_conferido": {
+            "type": "number",
+            "description": "Confer\u00eancia feita pelo gestor"
+          }
+        }
+      }
+    },
+    "sangrias": {
+      "type": "array",
+      "description": "Retiradas de dinheiro do caixa durante o dia",
+      "items": {
+        "type": "object",
+        "properties": {
+          "valor": {
+            "type": "number"
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "responsavel": {
+            "type": "string"
+          },
+          "horario": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "despesas_caixa": {
+      "type": "array",
+      "description": "Despesas pagas em dinheiro do caixa",
+      "items": {
+        "type": "object",
+        "properties": {
+          "categoria_id": {
+            "type": "string"
+          },
+          "categoria_nome": {
+            "type": "string"
+          },
+          "valor": {
+            "type": "number"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "fornecedor": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total_vendas": {
+      "type": "number",
+      "description": "Soma das vendas por canal (c\u00e1lculo de refer\u00eancia)"
+    },
+    "total_pagamentos_declarado": {
+      "type": "number",
+      "description": "Soma do que o operador declarou em formas de pagamento"
+    },
+    "total_pagamentos_conferido": {
+      "type": "number",
+      "description": "Soma do que o gestor conferiu"
+    },
+    "total_sangrias": {
+      "type": "number"
+    },
+    "total_despesas": {
+      "type": "number"
+    },
+    "divergencia": {
+      "type": "number",
+      "description": "Diferen\u00e7a entre vendas e pagamentos conferidos. Zero = caixa OK."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberto",
+        "conferido",
+        "fechado",
+        "divergente"
+      ],
+      "default": "aberto"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "loja_id",
+    "data"
+  ]
+}
