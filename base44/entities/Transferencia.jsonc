@@ -1,0 +1,63 @@
+{
+  "name": "Transferencia",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string"
+    },
+    "loja_origem_id": {
+      "type": "string"
+    },
+    "loja_destino_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "motivo": {
+      "type": "string"
+    },
+    "itens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_tipo": {
+            "type": "string",
+            "enum": [
+              "insumo",
+              "produto"
+            ],
+            "default": "insumo"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "item_nome": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "lancada",
+        "cancelada"
+      ],
+      "default": "lancada"
+    }
+  },
+  "required": [
+    "loja_origem_id",
+    "loja_destino_id",
+    "data"
+  ]
+}

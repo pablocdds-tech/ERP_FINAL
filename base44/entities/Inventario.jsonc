@@ -1,0 +1,68 @@
+{
+  "name": "Inventario",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "responsavel": {
+      "type": "string"
+    },
+    "itens": {
+      "type": "array",
+      "description": "Contagem por item \u2014 funcion\u00e1rio registra quantidade contada sem ver saldo esperado",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_tipo": {
+            "type": "string",
+            "enum": [
+              "insumo",
+              "produto"
+            ],
+            "default": "insumo"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "item_nome": {
+            "type": "string"
+          },
+          "quantidade_contada": {
+            "type": "number"
+          },
+          "saldo_esperado": {
+            "type": "number",
+            "description": "Preenchido apenas no fechamento (vis\u00e3o gestor)"
+          },
+          "diferenca": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "em_contagem",
+        "fechado",
+        "cancelado"
+      ],
+      "default": "em_contagem"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "loja_id",
+    "data"
+  ]
+}

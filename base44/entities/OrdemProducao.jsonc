@@ -1,0 +1,50 @@
+{
+  "name": "OrdemProducao",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string"
+    },
+    "ficha_id": {
+      "type": "string"
+    },
+    "produto_id": {
+      "type": "string"
+    },
+    "produto_nome": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja/CD onde a produ\u00e7\u00e3o ocorre"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "quantidade_planejada": {
+      "type": "number"
+    },
+    "quantidade_produzida": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "em_producao",
+        "finalizada",
+        "cancelada"
+      ],
+      "default": "aberta"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "ficha_id",
+    "loja_id",
+    "data"
+  ]
+}

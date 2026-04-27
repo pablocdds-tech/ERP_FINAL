@@ -13,6 +13,8 @@ import ModulePage from '@/pages/modules/ModulePage';
 import Agentes from '@/pages/Agentes';
 import CadastrosIndex from '@/pages/cadastros/CadastrosIndex';
 import CadastroTipoPage from '@/pages/cadastros/CadastroTipoPage';
+import OperacoesIndex from '@/pages/operacoes/OperacoesIndex';
+import OperacaoTipoPage from '@/pages/operacoes/OperacaoTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -56,6 +58,8 @@ const AuthenticatedApp = () => {
         <Route path="/agentes" element={<Agentes />} />
         <Route path="/cadastros" element={<CadastrosIndex />} />
         <Route path="/cadastros/:tipo" element={<CadastroTipoPage />} />
+        <Route path="/operacoes" element={<OperacoesIndex />} />
+        <Route path="/operacoes/:tipo" element={<OperacaoTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

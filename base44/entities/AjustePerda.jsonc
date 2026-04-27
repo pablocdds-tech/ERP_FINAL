@@ -1,0 +1,60 @@
+{
+  "name": "AjustePerda",
+  "type": "object",
+  "properties": {
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "ajuste_positivo",
+        "ajuste_negativo",
+        "perda"
+      ],
+      "default": "perda"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "item_tipo": {
+      "type": "string",
+      "enum": [
+        "insumo",
+        "produto"
+      ],
+      "default": "insumo"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "item_nome": {
+      "type": "string"
+    },
+    "quantidade": {
+      "type": "number"
+    },
+    "motivo": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "lancada",
+        "cancelada"
+      ],
+      "default": "lancada"
+    }
+  },
+  "required": [
+    "tipo",
+    "loja_id",
+    "data",
+    "item_id",
+    "quantidade"
+  ]
+}

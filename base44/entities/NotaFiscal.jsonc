@@ -1,0 +1,53 @@
+{
+  "name": "NotaFiscal",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string"
+    },
+    "serie": {
+      "type": "string"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "compra_id": {
+      "type": "string",
+      "description": "Compra vinculada (opcional)"
+    },
+    "data_emissao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_entrada": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor_total": {
+      "type": "number"
+    },
+    "chave_acesso": {
+      "type": "string"
+    },
+    "arquivo_url": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recebida",
+        "cancelada"
+      ],
+      "default": "recebida"
+    }
+  },
+  "required": [
+    "fornecedor_id"
+  ]
+}

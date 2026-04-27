@@ -1,0 +1,85 @@
+{
+  "name": "MovimentacaoEstoque",
+  "type": "object",
+  "properties": {
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "entrada",
+        "saida",
+        "transferencia_saida",
+        "transferencia_entrada",
+        "ajuste",
+        "perda",
+        "producao_entrada",
+        "producao_saida",
+        "inventario"
+      ],
+      "description": "Tipo de movimenta\u00e7\u00e3o"
+    },
+    "item_tipo": {
+      "type": "string",
+      "enum": [
+        "insumo",
+        "produto"
+      ]
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "item_nome": {
+      "type": "string",
+      "description": "Cache do nome para hist\u00f3rico"
+    },
+    "quantidade": {
+      "type": "number"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja onde a movimenta\u00e7\u00e3o ocorre"
+    },
+    "loja_origem_id": {
+      "type": "string",
+      "description": "Loja origem (transfer\u00eancias)"
+    },
+    "loja_destino_id": {
+      "type": "string",
+      "description": "Loja destino (transfer\u00eancias)"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "motivo": {
+      "type": "string"
+    },
+    "origem_tipo": {
+      "type": "string",
+      "enum": [
+        "compra",
+        "transferencia",
+        "ajuste",
+        "perda",
+        "producao",
+        "inventario",
+        "manual"
+      ],
+      "description": "De que documento veio a movimenta\u00e7\u00e3o"
+    },
+    "origem_id": {
+      "type": "string",
+      "description": "ID do documento de origem"
+    },
+    "usuario_email": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que registrou"
+    }
+  },
+  "required": [
+    "tipo",
+    "item_id",
+    "quantidade",
+    "loja_id",
+    "data"
+  ]
+}

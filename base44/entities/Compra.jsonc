@@ -1,0 +1,80 @@
+{
+  "name": "Compra",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string",
+      "description": "N\u00famero/c\u00f3digo da compra"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja/CD que recebeu a compra"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "itens": {
+      "type": "array",
+      "description": "Itens comprados",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_tipo": {
+            "type": "string",
+            "enum": [
+              "insumo",
+              "produto"
+            ],
+            "default": "insumo"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "item_nome": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "custo_unitario": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "valor_total": {
+      "type": "number"
+    },
+    "nota_fiscal_id": {
+      "type": "string",
+      "description": "V\u00ednculo opcional com NF"
+    },
+    "conta_pagar_prevista": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica inten\u00e7\u00e3o de gerar conta a pagar (implementa\u00e7\u00e3o futura no Financeiro)"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "lancada",
+        "cancelada"
+      ],
+      "default": "lancada"
+    }
+  },
+  "required": [
+    "loja_id",
+    "data"
+  ]
+}
