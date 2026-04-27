@@ -67,6 +67,23 @@ export default function CompraDialog({ open, mode, record, onClose, onSaved }) {
       }));
     await registrarMovimentacoes(movs);
 
+    // Cria conta a pagar prevista (se marcado)
+    if (data.conta_pagar_prevista && Number(data.valor_total) > 0) {
+      const fornecedorNome = fornecedores.find((f) => f.id === data.fornecedor_id)?.nome || "";
+      await base44.entities.ContaPagar.create({
+        descricao: `Compra ${data.numero || ""}${fornecedorNome ? ` - ${fornecedorNome}` : ""}`.trim(),
+        fornecedor_id: data.fornecedor_id || undefined,
+        loja_id: data.loja_id,
+        valor: Number(data.valor_total),
+        data_emissao: data.data,
+        data_vencimento: data.data,
+        documento: data.numero || "",
+        compra_id: created.id,
+        status: "aberta",
+        observacoes: "Prevista a partir do lançamento da compra",
+      });
+    }
+
     setSaving(false);
     onSaved?.();
     onClose?.();
