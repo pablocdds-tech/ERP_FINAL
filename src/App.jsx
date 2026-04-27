@@ -23,6 +23,8 @@ import RHIndex from '@/pages/rh/RHIndex';
 import PessoasTipoPage from '@/pages/rh/PessoasTipoPage';
 import RotinasIndex from '@/pages/rotinas/RotinasIndex';
 import RotinasTipoPage from '@/pages/rotinas/RotinasTipoPage';
+import MarketingIndex from '@/pages/marketing/MarketingIndex';
+import MarketingTipoPage from '@/pages/marketing/MarketingTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -88,6 +90,8 @@ const AuthenticatedApp = () => {
         <Route path="/pessoas/:tipo" element={<PessoasTipoPage />} />
         <Route path="/rotinas" element={<RotinasIndex />} />
         <Route path="/rotinas/:tipo" element={<RotinasTipoPage />} />
+        <Route path="/marketing" element={<MarketingIndex />} />
+        <Route path="/marketing/:tipo" element={<MarketingTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

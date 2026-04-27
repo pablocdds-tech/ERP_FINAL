@@ -1,0 +1,77 @@
+{
+  "name": "Cupom",
+  "type": "object",
+  "properties": {
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo do cupom (ex: PIZZA20)"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "campanha_id": {
+      "type": "string"
+    },
+    "tipo_desconto": {
+      "type": "string",
+      "enum": [
+        "percentual",
+        "valor_fixo",
+        "frete_gratis"
+      ],
+      "default": "percentual"
+    },
+    "valor_desconto": {
+      "type": "number"
+    },
+    "valor_minimo_pedido": {
+      "type": "number"
+    },
+    "valor_maximo_desconto": {
+      "type": "number",
+      "description": "Teto de desconto para tipo percentual"
+    },
+    "canal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "loja_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_fim": {
+      "type": "string",
+      "format": "date"
+    },
+    "limite_total_usos": {
+      "type": "number"
+    },
+    "limite_por_cliente": {
+      "type": "number",
+      "default": 1
+    },
+    "usos_atuais": {
+      "type": "number",
+      "default": 0
+    },
+    "primeira_compra_apenas": {
+      "type": "boolean",
+      "default": false
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "codigo"
+  ]
+}

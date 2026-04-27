@@ -1,0 +1,57 @@
+{
+  "name": "PedidoCliente",
+  "type": "object",
+  "properties": {
+    "cliente_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "canal_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor_total": {
+      "type": "number"
+    },
+    "valor_desconto": {
+      "type": "number",
+      "default": 0
+    },
+    "campanha_id": {
+      "type": "string"
+    },
+    "cupom_id": {
+      "type": "string"
+    },
+    "cupom_codigo": {
+      "type": "string"
+    },
+    "fechamento_id": {
+      "type": "string",
+      "description": "V\u00ednculo com FechamentoDiario, se houver"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "fechamento",
+        "ifood",
+        "whatsapp",
+        "import"
+      ],
+      "default": "manual"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "cliente_id",
+    "valor_total"
+  ]
+}

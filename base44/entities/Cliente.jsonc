@@ -1,0 +1,81 @@
+{
+  "name": "Cliente",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "telefone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "documento": {
+      "type": "string",
+      "description": "CPF/CNPJ"
+    },
+    "data_nascimento": {
+      "type": "string",
+      "format": "date"
+    },
+    "endereco": {
+      "type": "string"
+    },
+    "loja_origem_id": {
+      "type": "string",
+      "description": "Loja onde virou cliente"
+    },
+    "canal_origem_id": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ex: vip, vegano, alergico_lactose"
+    },
+    "primeira_compra": {
+      "type": "string",
+      "format": "date"
+    },
+    "ultima_compra": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_pedidos": {
+      "type": "number",
+      "default": 0
+    },
+    "total_gasto": {
+      "type": "number",
+      "default": 0
+    },
+    "ticket_medio": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "recorrente",
+        "vip",
+        "inativo",
+        "bloqueado"
+      ],
+      "default": "ativo"
+    },
+    "aceita_marketing": {
+      "type": "boolean",
+      "default": true
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

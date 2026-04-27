@@ -1,0 +1,91 @@
+{
+  "name": "Campanha",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "desconto",
+        "combo",
+        "fidelidade",
+        "recuperacao",
+        "lancamento",
+        "sazonal",
+        "outro"
+      ],
+      "default": "desconto"
+    },
+    "canal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Canais de venda alvo"
+    },
+    "loja_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_fim": {
+      "type": "string",
+      "format": "date"
+    },
+    "investimento": {
+      "type": "number",
+      "description": "Custo da campanha"
+    },
+    "meta_receita": {
+      "type": "number"
+    },
+    "meta_pedidos": {
+      "type": "number"
+    },
+    "cupom_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Cupons vinculados"
+    },
+    "publico_alvo": {
+      "type": "string",
+      "enum": [
+        "todos",
+        "novos",
+        "recorrentes",
+        "inativos",
+        "vip"
+      ],
+      "default": "todos"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "rascunho",
+        "agendada",
+        "ativa",
+        "encerrada",
+        "cancelada"
+      ],
+      "default": "rascunho"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

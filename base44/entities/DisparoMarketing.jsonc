@@ -1,0 +1,86 @@
+{
+  "name": "DisparoMarketing",
+  "type": "object",
+  "properties": {
+    "campanha_id": {
+      "type": "string"
+    },
+    "titulo": {
+      "type": "string"
+    },
+    "canal": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "sms",
+        "email",
+        "n8n"
+      ],
+      "default": "whatsapp"
+    },
+    "mensagem": {
+      "type": "string"
+    },
+    "publico_alvo": {
+      "type": "string",
+      "enum": [
+        "todos",
+        "ativos",
+        "inativos",
+        "recorrentes",
+        "vip",
+        "lista_custom"
+      ],
+      "default": "ativos"
+    },
+    "cliente_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista custom de clientes alvo"
+    },
+    "agendado_para": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "enviado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_destinatarios": {
+      "type": "number",
+      "default": 0
+    },
+    "total_enviados": {
+      "type": "number",
+      "default": 0
+    },
+    "total_falhas": {
+      "type": "number",
+      "default": 0
+    },
+    "webhook_n8n": {
+      "type": "string",
+      "description": "URL do n8n para integra\u00e7\u00e3o futura"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "rascunho",
+        "agendado",
+        "enviando",
+        "enviado",
+        "falhou",
+        "cancelado"
+      ],
+      "default": "rascunho"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}
