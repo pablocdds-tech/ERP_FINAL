@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 import PwaBottomNav from "./PwaBottomNav";
 import { PwaProvider, usePwa } from "@/lib/PwaContext";
 import { canAccessAdmin } from "@/lib/perfil";
+import { instalarAutoSync } from "@/lib/ponto-offline-queue";
+import IndicadorFilaOffline from "@/components/ponto/IndicadorFilaOffline";
 
 function NotifBell() {
   const { user } = usePwa() || {};
@@ -32,6 +34,7 @@ function NotifBell() {
 function PwaShell() {
   const { gestor, user } = usePwa() || {};
   const podeErp = canAccessAdmin(user);
+  useEffect(() => { instalarAutoSync(); }, []);
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto min-h-screen pb-20 bg-background">
@@ -44,6 +47,7 @@ function PwaShell() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <IndicadorFilaOffline />
             {user && <NotifBell />}
             {podeErp && (
               <Link

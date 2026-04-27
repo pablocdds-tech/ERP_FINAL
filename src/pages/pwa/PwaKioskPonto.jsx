@@ -9,7 +9,9 @@ import { Camera, LogOut, KeyRound, Clock } from "lucide-react";
 import CameraCapture from "@/components/ponto/CameraCapture";
 import { canAccessAdmin } from "@/lib/perfil";
 import { labelPonto, proximoEventoPonto } from "@/lib/rh-service";
-import { uploadFotoBlob, registrarBatida, buscarPorPin } from "@/lib/ponto-service";
+import { uploadFotoBlob, registrarBatida, buscarPorPin, listarColaboradoresComTemplate } from "@/lib/ponto-service";
+import { extrairDescritor, melhorMatch, DEFAULT_THRESHOLD } from "@/lib/biometria";
+import { ensureModelsLoaded } from "@/lib/face-api-loader";
 
 const DEVICE_KEY = "kiosk_device_id";
 const LOJA_KEY = "kiosk_loja_id";
@@ -44,7 +46,7 @@ export default function PwaKioskPonto() {
   // Relógio
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
 
-  // Autorização inicial: precisa ser gestor/admin
+  // Autorização inicial + pré-carrega modelos da face-api
   useEffect(() => {
     base44.auth.me().then((u) => {
       setUser(u);
@@ -52,6 +54,7 @@ export default function PwaKioskPonto() {
       setAutorizado(ok);
     }).catch(() => setAutorizado(false));
     base44.entities.Loja.list().then((l) => setLojas(l || []));
+    ensureModelsLoaded().catch(() => {});
   }, []);
 
   const salvarLoja = (id) => {
@@ -112,12 +115,45 @@ export default function PwaKioskPonto() {
 
   const lojaNome = lojas.find((l) => l.id === lojaId)?.nome || "—";
 
-  // Captura selfie inicial e tenta identificar
+  // Captura selfie e tenta identificar 1:N pelo template (face-api)
   const handleCapture = async (blob) => {
     setShowCam(false);
     setSelfieBlob(blob);
-    // Sem identificação prévia ainda — pede PIN
-    setShowPin(true);
+    setProcessando(true);
+    try {
+      await ensureModelsLoaded();
+      const img = await new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const i = new Image();
+        i.onload = () => { resolve(i); URL.revokeObjectURL(url); };
+        i.onerror = (e) => { reject(e); URL.revokeObjectURL(url); };
+        i.src = url;
+      });
+      const probe = await extrairDescritor(img);
+      if (!probe?.descriptor) {
+        setResultado({ ok: false, msg: "Nenhum rosto detectado. Use o PIN." });
+        setShowPin(true);
+        return;
+      }
+      const candidatos = await listarColaboradoresComTemplate(lojaId);
+      const m = melhorMatch(probe.descriptor, candidatos, DEFAULT_THRESHOLD);
+      if (!m || !m.aprovado) {
+        setResultado({ ok: false, msg: "Não reconhecido. Use o PIN para confirmar identidade." });
+        setShowPin(true);
+        return;
+      }
+      const col = m.match;
+      setIdentificado({ ...col, _match_score: m.score, _match_dist: m.dist });
+      const hoje = new Date().toISOString().slice(0, 10);
+      const list = await base44.entities.RegistroPonto.filter({ colaborador_id: col.id, data: hoje }, "horario");
+      const ativos = list.filter((r) => r.status !== "rejeitado");
+      setProximo(proximoEventoPonto(ativos));
+    } catch (e) {
+      setResultado({ ok: false, msg: "Erro ao reconhecer. Use o PIN." });
+      setShowPin(true);
+    } finally {
+      setProcessando(false);
+    }
   };
 
   // Identifica colaborador pelo PIN
@@ -145,23 +181,30 @@ export default function PwaKioskPonto() {
     setProcessando(true);
     try {
       const selfie_url = await uploadFotoBlob(selfieBlob);
-      const { registro, ia } = await registrarBatida({
+      const fallback = !identificado._match_score; // se entrou via PIN, é fallback
+      const ret = await registrarBatida({
         colaborador: identificado,
         tipo: proximo,
         selfie_url,
         origem: "kiosk",
         dispositivo: getDeviceId(),
-        fallback_pin: true, // identificação no Kiosk usa PIN, foto só valida a posterior
-        lat: undefined, lng: undefined,
+        fallback_pin: fallback,
+        match_score: identificado._match_score,
+        match_dist: identificado._match_dist,
       });
-      setResultado({
-        ok: registro.status === "registrado" || registro.status === "aprovado",
-        msg: `${identificado.nome} — ${labelPonto(proximo)} ${
-          registro.status === "registrado" ? "registrado!" :
-          registro.status === "rejeitado" ? "rejeitado pela IA." :
-          "pendente de revisão."
-        }${ia?.motivo ? ` ${ia.motivo}` : ""}`,
-      });
+      if (ret.offline) {
+        setResultado({ ok: true, msg: `${identificado.nome} — ${labelPonto(proximo)} salvo offline. Sincroniza ao voltar a conexão.` });
+      } else {
+        const { registro, ia } = ret;
+        setResultado({
+          ok: registro.status === "registrado" || registro.status === "aprovado",
+          msg: `${identificado.nome} — ${labelPonto(proximo)} ${
+            registro.status === "registrado" ? "registrado!" :
+            registro.status === "rejeitado" ? "rejeitado pela IA." :
+            "pendente de revisão."
+          }${ia?.motivo ? ` ${ia.motivo}` : ""}`,
+        });
+      }
     } catch {
       setResultado({ ok: false, msg: "Erro ao registrar." });
     } finally {
@@ -215,7 +258,9 @@ export default function PwaKioskPonto() {
 
         {identificado && !resultado && (
           <Card className="p-6 w-full max-w-sm text-center">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Identificado</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+              Reconhecido {identificado._match_score != null ? `· ${(identificado._match_score * 100).toFixed(0)}%` : "via PIN"}
+            </div>
             <div className="text-lg font-semibold">{identificado.nome}</div>
             {proximo ? (
               <>

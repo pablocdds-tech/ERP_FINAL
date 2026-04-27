@@ -9,6 +9,7 @@ import CameraCapture from "@/components/ponto/CameraCapture";
 import { usePwa } from "@/lib/PwaContext";
 import { labelPonto } from "@/lib/rh-service";
 import { obterProximoEvento, registrarBatida, uploadFotoBlob } from "@/lib/ponto-service";
+import { extrairDescritor, distancia, similaridade, DEFAULT_THRESHOLD } from "@/lib/biometria";
 import { format } from "date-fns";
 
 export default function PwaPonto() {
@@ -50,16 +51,37 @@ export default function PwaPonto() {
         const pos = await pegarPosicao();
         if (pos) { lat = pos.lat; lng = pos.lng; }
       }
+
+      // Match biométrico local (face-api) contra o template do colaborador
+      let match_score, match_dist;
+      if (colaborador?.biometria_template) {
+        try {
+          const img = await blobToImage(blob);
+          const probe = await extrairDescritor(img);
+          if (probe?.descriptor) {
+            const ref = JSON.parse(colaborador.biometria_template);
+            match_dist = distancia(probe.descriptor, ref);
+            match_score = similaridade(match_dist);
+          }
+        } catch { /* segue sem match local */ }
+      }
+
       const selfie_url = await uploadFotoBlob(blob);
-      const { registro, ia } = await registrarBatida({
-        colaborador, tipo: proximo, selfie_url, origem: "pwa", lat, lng,
+      const ret = await registrarBatida({
+        colaborador, tipo: proximo, selfie_url, origem: "pwa", lat, lng, match_score, match_dist,
       });
-      const status = registro.status;
-      setResultado({
-        ok: status === "registrado",
-        status,
-        msg: msgPorStatus(status, ia, proximo),
-      });
+
+      if (ret.offline) {
+        setResultado({ ok: true, status: "offline", msg: `${labelPonto(proximo)} salvo offline. Sincroniza quando voltar a conexão.` });
+      } else {
+        const { registro, ia } = ret;
+        const matchInfo = match_score != null ? ` (match ${(match_score * 100).toFixed(0)}%)` : "";
+        setResultado({
+          ok: registro.status === "registrado",
+          status: registro.status,
+          msg: msgPorStatus(registro.status, ia, proximo) + matchInfo,
+        });
+      }
     } catch (e) {
       setResultado({ ok: false, status: "erro", msg: "Falha ao registrar. Tente novamente." });
     } finally {
@@ -67,6 +89,16 @@ export default function PwaPonto() {
       load();
     }
   };
+
+  function blobToImage(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+      img.onerror = (e) => { reject(e); URL.revokeObjectURL(url); };
+      img.src = url;
+    });
+  }
 
   if (!colaborador) {
     return (

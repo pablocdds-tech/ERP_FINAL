@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { proximoEventoPonto } from "./rh-service";
 import { registrarLog } from "./auditoria-service";
+import { enfileirarBatida } from "./ponto-offline-queue";
 
 /**
  * Faz upload de um Blob como arquivo (jpg).
@@ -13,10 +14,40 @@ export async function uploadFotoBlob(blob, name = "selfie.jpg") {
 
 /**
  * Registra batida de ponto com selfie + valida via Gemini.
- * Retorna { registro, ia }.
+ * Aceita opcionalmente { match_score, match_dist } da comparação biométrica local (face-api).
+ * Se o navegador estiver offline, salva na fila local (IndexedDB) e retorna { offline: true }.
+ * Retorna { registro, ia } ou { offline: true, fila_id }.
  */
-export async function registrarBatida({ colaborador, tipo, selfie_url, origem = "pwa", dispositivo, fallback_pin = false, lat, lng }) {
+export async function registrarBatida({ colaborador, tipo, selfie_url, origem = "pwa", dispositivo, fallback_pin = false, lat, lng, match_score, match_dist }) {
   if (!colaborador?.id || !tipo) throw new Error("Dados insuficientes");
+
+  const agora = new Date();
+  const baseRegistro = {
+    colaborador_id: colaborador.id,
+    loja_id: colaborador.loja_id,
+    data: agora.toISOString().slice(0, 10),
+    tipo,
+    horario: agora.toISOString(),
+    latitude: lat,
+    longitude: lng,
+    selfie_url,
+    origem,
+    dispositivo,
+    fallback_pin,
+  };
+
+  // Modo OFFLINE: enfileira sem validar IA, marca pendente_revisao
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    const registro = {
+      ...baseRegistro,
+      status: "pendente_revisao",
+      ia_resultado: "nao_avaliado",
+      ia_motivo: "Registrado offline — pendente de validação",
+      observacoes: "[offline]",
+    };
+    const fila_id = await enfileirarBatida({ registro, match_score, match_dist });
+    return { offline: true, fila_id, registro };
+  }
 
   // Chama validação IA (não bloqueia em caso de falha — vira pendente)
   let ia = null;
@@ -24,6 +55,8 @@ export async function registrarBatida({ colaborador, tipo, selfie_url, origem = 
     const res = await base44.functions.invoke("validarPontoFacial", {
       colaborador_id: colaborador.id,
       selfie_url,
+      match_score,
+      match_dist,
     });
     ia = res?.data || null;
   } catch (e) {
@@ -44,24 +77,13 @@ export async function registrarBatida({ colaborador, tipo, selfie_url, origem = 
     status = "pendente_revisao";
   }
 
-  const agora = new Date();
   const registro = await base44.entities.RegistroPonto.create({
-    colaborador_id: colaborador.id,
-    loja_id: colaborador.loja_id,
-    data: agora.toISOString().slice(0, 10),
-    tipo,
-    horario: agora.toISOString(),
-    latitude: lat,
-    longitude: lng,
-    selfie_url,
-    origem,
-    dispositivo,
-    fallback_pin,
+    ...baseRegistro,
     status,
     ia_resultado: ia?.resultado || "nao_avaliado",
     ia_confianca: ia?.confianca ?? null,
     ia_motivo: ia?.motivo || "",
-    ia_detalhes: ia ? JSON.stringify(ia) : "",
+    ia_detalhes: ia ? JSON.stringify({ ...ia, match_score, match_dist }) : "",
   });
 
   // Auditoria
@@ -185,6 +207,56 @@ export async function rejeitarRegistroPontoManual(registro, motivo) {
       critico: true,
     });
   } catch { /* */ }
+}
+
+/**
+ * Salva template biométrico (descritor 128-d) e hash no Colaborador.
+ * Marca consentimento se ainda não houver.
+ */
+export async function salvarTemplateBiometrico(colaborador_id, { descriptor, hash, versao, consentir = true }) {
+  const before = await base44.entities.Colaborador.filter({ id: colaborador_id });
+  const antes = before[0];
+  const update = {
+    biometria_template: JSON.stringify(descriptor),
+    biometria_hash: hash,
+    biometria_versao: versao,
+  };
+  if (consentir && !antes?.consentimento_biometria) {
+    update.consentimento_biometria = true;
+    update.consentimento_data = new Date().toISOString();
+  }
+  await base44.entities.Colaborador.update(colaborador_id, update);
+  try {
+    await registrarLog({
+      modulo: "rh",
+      acao: "atualizar",
+      entidade: "Colaborador",
+      entidade_id: colaborador_id,
+      descricao: `Template biométrico gerado/atualizado (${versao})`,
+      origem: "humano",
+      valor_anterior: { biometria_hash: antes?.biometria_hash, biometria_versao: antes?.biometria_versao },
+      valor_novo: { biometria_hash: hash, biometria_versao: versao },
+      loja_id: antes?.loja_id,
+      critico: false,
+    });
+  } catch { /* */ }
+}
+
+/**
+ * Lista colaboradores ativos com template biométrico carregado para matching 1:N.
+ */
+export async function listarColaboradoresComTemplate(loja_id) {
+  const filtros = { status: "ativo" };
+  if (loja_id) filtros.loja_id = loja_id;
+  const list = await base44.entities.Colaborador.filter(filtros, "nome", 500);
+  return list
+    .filter((c) => c.biometria_template)
+    .map((c) => {
+      try {
+        return { ...c, descriptor: JSON.parse(c.biometria_template) };
+      } catch { return null; }
+    })
+    .filter(Boolean);
 }
 
 /**

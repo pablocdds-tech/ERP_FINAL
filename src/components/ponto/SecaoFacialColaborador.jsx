@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Camera, CheckCircle2, AlertCircle } from "lucide-react";
+import { Camera, CheckCircle2, AlertCircle, Fingerprint } from "lucide-react";
 import CameraCapture from "./CameraCapture";
-import { uploadFotoBlob, salvarCadastroFacial } from "@/lib/ponto-service";
+import { uploadFotoBlob, salvarCadastroFacial, salvarTemplateBiometrico } from "@/lib/ponto-service";
+import { descritorDeUrl, mediaDescritores, hashTemplate, MODEL_VERSION } from "@/lib/biometria";
 
 const STATUS_LABEL = {
   nao_cadastrada: { label: "Não cadastrada", variant: "outline", color: "text-muted-foreground" },
@@ -21,6 +22,8 @@ const POSES = [
 export default function SecaoFacialColaborador({ colaborador, onUpdated, disabled }) {
   const [posing, setPosing] = useState(null); // "frontal" | "esquerda" | "direita"
   const [saving, setSaving] = useState(false);
+  const [gerandoTemplate, setGerandoTemplate] = useState(false);
+  const [templateMsg, setTemplateMsg] = useState(null);
 
   const status = colaborador?.facial_status || "nao_cadastrada";
   const meta = STATUS_LABEL[status] || STATUS_LABEL.nao_cadastrada;
@@ -41,6 +44,42 @@ export default function SecaoFacialColaborador({ colaborador, onUpdated, disable
       onUpdated?.();
     } finally {
       setSaving(false);
+    }
+  };
+
+  const gerarTemplate = async () => {
+    if (!fotos.frontal) {
+      setTemplateMsg({ ok: false, msg: "É necessário ter ao menos a foto frontal." });
+      return;
+    }
+    setGerandoTemplate(true);
+    setTemplateMsg(null);
+    try {
+      const urls = [fotos.frontal, fotos.esquerda, fotos.direita].filter(Boolean);
+      const descritores = [];
+      for (const url of urls) {
+        const d = await descritorDeUrl(url);
+        if (d?.descriptor) descritores.push(d.descriptor);
+      }
+      if (!descritores.length) {
+        setTemplateMsg({ ok: false, msg: "Nenhum rosto detectado nas fotos. Refaça as capturas." });
+        setGerandoTemplate(false);
+        return;
+      }
+      const media = mediaDescritores(descritores);
+      const hash = await hashTemplate(media);
+      await salvarTemplateBiometrico(colaborador.id, {
+        descriptor: media,
+        hash,
+        versao: MODEL_VERSION,
+        consentir: true,
+      });
+      setTemplateMsg({ ok: true, msg: `Template biométrico gerado a partir de ${descritores.length} foto(s).` });
+      onUpdated?.();
+    } catch (e) {
+      setTemplateMsg({ ok: false, msg: "Falha ao gerar template: " + (e?.message || "erro") });
+    } finally {
+      setGerandoTemplate(false);
     }
   };
 
@@ -100,6 +139,41 @@ export default function SecaoFacialColaborador({ colaborador, onUpdated, disable
           <div>Capture pelo menos a foto frontal para liberar o ponto facial.</div>
         </div>
       )}
+
+      <div className="rounded-lg border border-border p-3 space-y-2 bg-muted/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Fingerprint className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-medium">Template biométrico (128-d)</span>
+          </div>
+          {colaborador.biometria_hash ? (
+            <Badge variant="default" className="text-[10px]">Gerado</Badge>
+          ) : (
+            <Badge variant="outline" className="text-[10px]">Não gerado</Badge>
+          )}
+        </div>
+        {colaborador.biometria_hash && (
+          <div className="text-[10px] text-muted-foreground font-mono truncate">
+            hash: {colaborador.biometria_hash.slice(0, 24)}… · {colaborador.biometria_versao}
+          </div>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="w-full text-xs h-8"
+          disabled={disabled || gerandoTemplate || !fotos.frontal}
+          onClick={gerarTemplate}
+        >
+          {gerandoTemplate ? "Gerando…" : colaborador.biometria_hash ? "Regerar template" : "Gerar template biométrico"}
+        </Button>
+        {templateMsg && (
+          <div className={`text-[11px] ${templateMsg.ok ? "text-emerald-700" : "text-amber-700"}`}>{templateMsg.msg}</div>
+        )}
+        <div className="text-[10px] text-muted-foreground">
+          O template é um vetor numérico extraído das fotos — não é a imagem em si. Usado para reconhecimento offline e auditoria.
+        </div>
+      </div>
 
       {posing && (
         <CameraCapture

@@ -38,8 +38,7 @@
         "funcionario",
         "gestor"
       ],
-      "default": "funcionario",
-      "description": "Define quais funcionalidades v\u00ea no PWA"
+      "default": "funcionario"
     },
     "status": {
       "type": "string",
@@ -51,8 +50,7 @@
       "default": "ativo"
     },
     "foto_url": {
-      "type": "string",
-      "description": "Foto de perfil (display)"
+      "type": "string"
     },
     "endereco": {
       "type": "string"
@@ -71,28 +69,44 @@
       "default": "nao_cadastrada"
     },
     "facial_frontal_url": {
-      "type": "string",
-      "description": "Foto de refer\u00eancia frontal"
+      "type": "string"
     },
     "facial_esquerda_url": {
-      "type": "string",
-      "description": "Foto levemente \u00e0 esquerda"
+      "type": "string"
     },
     "facial_direita_url": {
-      "type": "string",
-      "description": "Foto levemente \u00e0 direita"
+      "type": "string"
     },
     "facial_cadastrada_em": {
       "type": "string",
       "format": "date-time"
     },
     "facial_cadastrada_por": {
-      "type": "string",
-      "description": "Email de quem cadastrou"
+      "type": "string"
     },
     "pin_ponto": {
+      "type": "string"
+    },
+    "biometria_template": {
       "type": "string",
-      "description": "PIN num\u00e9rico de fallback para bater ponto no Kiosk"
+      "description": "Descritor 128-d (face-api) serializado em JSON"
+    },
+    "biometria_hash": {
+      "type": "string",
+      "description": "SHA-256 do template (para auditoria sem expor o vetor)"
+    },
+    "biometria_versao": {
+      "type": "string",
+      "description": "Vers\u00e3o do modelo usado (ex: face-api-v1-128d)"
+    },
+    "consentimento_biometria": {
+      "type": "boolean",
+      "default": false,
+      "description": "Funcion\u00e1rio consentiu uso de biometria (LGPD)"
+    },
+    "consentimento_data": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
