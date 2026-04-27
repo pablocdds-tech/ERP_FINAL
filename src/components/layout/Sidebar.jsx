@@ -26,7 +26,7 @@ export default function Sidebar({ onNavigate }) {
   const [user, setUser] = useState(null);
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
   const isActive = (path) =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+    path === "/admin" ? location.pathname === "/admin" : location.pathname.startsWith(path);
 
   return (
     <aside className="h-full w-64 bg-card border-r border-border flex flex-col">
@@ -44,10 +44,10 @@ export default function Sidebar({ onNavigate }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         <NavItem
-          to="/"
+          to="/admin"
           icon={LayoutDashboard}
           label="Dashboard"
-          active={isActive("/") && location.pathname === "/"}
+          active={location.pathname === "/admin"}
           onClick={onNavigate}
         />
 
@@ -70,26 +70,26 @@ export default function Sidebar({ onNavigate }) {
           Sistema
         </div>
         <NavItem
-          to="/aprovacoes"
+          to="/admin/aprovacoes"
           icon={ShieldCheck}
           label="Aprovações"
-          active={isActive("/aprovacoes")}
+          active={isActive("/admin/aprovacoes")}
           onClick={onNavigate}
         />
         {user?.role === "admin" && (
           <NavItem
-            to="/auditoria"
+            to="/admin/auditoria"
             icon={FileSearch}
             label="Auditoria"
-            active={isActive("/auditoria")}
+            active={isActive("/admin/auditoria")}
             onClick={onNavigate}
           />
         )}
         <NavItem
-          to="/pwa"
+          to="/app"
           icon={Smartphone}
-          label="PWA"
-          active={isActive("/pwa")}
+          label="Ir para App"
+          active={false}
           onClick={onNavigate}
         />
       </nav>

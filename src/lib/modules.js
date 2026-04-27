@@ -18,7 +18,7 @@ export const MODULES = [
     id: "cadastros",
     nome: "Cadastros e Configurações",
     descricao: "Lojas, usuários, produtos, insumos, fornecedores e parâmetros gerais.",
-    path: "/cadastros",
+    path: "/admin/cadastros",
     icon: Settings,
     submodulos: [
       "Lojas / Unidades",
@@ -38,7 +38,7 @@ export const MODULES = [
     id: "operacoes",
     nome: "Operações",
     descricao: "Compras, estoque, fichas técnicas, produção e inventários.",
-    path: "/operacoes",
+    path: "/admin/operacoes",
     icon: Boxes,
     submodulos: [
       "Compras",
@@ -57,7 +57,7 @@ export const MODULES = [
     id: "vendas",
     nome: "Vendas e Caixa",
     descricao: "Fechamento diário, vendas, sangrias e conferência de caixa.",
-    path: "/vendas",
+    path: "/admin/vendas",
     icon: ShoppingCart,
     submodulos: [
       "Fechamento Diário",
@@ -73,7 +73,7 @@ export const MODULES = [
     id: "financeiro",
     nome: "Financeiro",
     descricao: "Financeiro real e Banco Virtual interno entre CD e lojas.",
-    path: "/financeiro",
+    path: "/admin/financeiro",
     icon: Wallet,
     submodulos: [
       "Contas a Pagar",
@@ -92,7 +92,7 @@ export const MODULES = [
     id: "gestao",
     nome: "Gestão e Indicadores",
     descricao: "DRE, CMV, margem, resultado por loja e relatórios.",
-    path: "/gestao",
+    path: "/admin/gestao",
     icon: BarChart3,
     submodulos: [
       "Dashboard",
@@ -108,7 +108,7 @@ export const MODULES = [
     id: "rotinas",
     nome: "Rotinas Operacionais",
     descricao: "Checklists, tarefas, chamados, manutenção e auditorias.",
-    path: "/rotinas",
+    path: "/admin/rotinas",
     icon: ClipboardCheck,
     submodulos: [
       "Checklists",
@@ -127,7 +127,7 @@ export const MODULES = [
     id: "marketing",
     nome: "Marketing e Comercial",
     descricao: "Campanhas, cupons, clientes e performance por canal.",
-    path: "/marketing",
+    path: "/admin/marketing",
     icon: Megaphone,
     submodulos: [
       "Campanhas",
@@ -145,7 +145,7 @@ export const MODULES = [
     id: "pessoas",
     nome: "Pessoas e RH",
     descricao: "Colaboradores, escalas, ponto, documentos e treinamentos.",
-    path: "/pessoas",
+    path: "/admin/pessoas",
     icon: Users,
     submodulos: [
       "Colaboradores",
@@ -167,7 +167,7 @@ export const MODULES = [
     id: "atendimento",
     nome: "Atendimento e Experiência",
     descricao: "Reclamações, avaliações, NPS, cortesias e tratativas.",
-    path: "/atendimento",
+    path: "/admin/atendimento",
     icon: HeartHandshake,
     submodulos: [
       "Reclamações",
@@ -184,7 +184,7 @@ export const MODULES = [
     id: "ia",
     nome: "IA e Integrações",
     descricao: "Agents, webhooks, n8n, WhatsApp e leitura inteligente.",
-    path: "/ia",
+    path: "/admin/ia",
     icon: Sparkles,
     submodulos: [
       "Agents Internos",

@@ -1,13 +1,16 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useParams, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import ErpLayout from '@/components/layout/ErpLayout';
 import PwaLayout from '@/components/layout/PwaLayout';
+import AdminGuard from '@/components/guards/AdminGuard';
+import AppGuard from '@/components/guards/AppGuard';
+import RootRedirect from '@/pages/RootRedirect';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
 import Agentes from '@/pages/Agentes';
@@ -45,6 +48,17 @@ import PwaAprovacoes from '@/pages/pwa/PwaAprovacoes';
 import PwaDashboard from '@/pages/pwa/PwaDashboard';
 import PwaEquipe from '@/pages/pwa/PwaEquipe';
 
+// Redireciona /pwa/algo → /app/algo (compatibilidade com links antigos)
+const PwaCompatRedirect = () => {
+  const { "*": rest } = useParams();
+  return <Navigate to={`/app${rest ? `/${rest}` : ""}`} replace />;
+};
+// Redireciona rotas antigas do ERP (/cadastros, /financeiro, etc.) → /admin/...
+const ErpCompatRedirect = () => {
+  const location = useLocation();
+  return <Navigate to={`/admin${location.pathname}${location.search}`} replace />;
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
@@ -67,49 +81,73 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* PWA Mobile (Funcionário + Gestor) */}
-      <Route element={<PwaLayout />}>
-        <Route path="/pwa" element={<PwaHome />} />
-        <Route path="/pwa/ponto" element={<PwaPonto />} />
-        <Route path="/pwa/escala" element={<PwaEscala />} />
-        <Route path="/pwa/checklist" element={<PwaChecklist />} />
-        <Route path="/pwa/chamados" element={<PwaChamados />} />
-        <Route path="/pwa/tarefas" element={<PwaTarefas />} />
-        <Route path="/pwa/solicitacoes" element={<PwaSolicitacoes />} />
-        <Route path="/pwa/notificacoes" element={<PwaNotificacoes />} />
-        <Route path="/pwa/aprovacoes" element={<PwaAprovacoes />} />
-        <Route path="/pwa/dashboard" element={<PwaDashboard />} />
-        <Route path="/pwa/equipe" element={<PwaEquipe />} />
+      {/* Raiz: redireciona conforme perfil */}
+      <Route path="/" element={<RootRedirect />} />
+
+      {/* PWA Mobile (/app) — funcionário + gestor */}
+      <Route element={<AppGuard />}>
+        <Route element={<PwaLayout />}>
+          <Route path="/app" element={<PwaHome />} />
+          <Route path="/app/ponto" element={<PwaPonto />} />
+          <Route path="/app/escala" element={<PwaEscala />} />
+          <Route path="/app/checklist" element={<PwaChecklist />} />
+          <Route path="/app/chamados" element={<PwaChamados />} />
+          <Route path="/app/tarefas" element={<PwaTarefas />} />
+          <Route path="/app/solicitacoes" element={<PwaSolicitacoes />} />
+          <Route path="/app/notificacoes" element={<PwaNotificacoes />} />
+          <Route path="/app/aprovacoes" element={<PwaAprovacoes />} />
+          <Route path="/app/dashboard" element={<PwaDashboard />} />
+          <Route path="/app/equipe" element={<PwaEquipe />} />
+        </Route>
       </Route>
 
-      {/* ERP Administrativo */}
-      <Route element={<ErpLayout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/agentes" element={<Agentes />} />
-        <Route path="/cadastros" element={<CadastrosIndex />} />
-        <Route path="/cadastros/:tipo" element={<CadastroTipoPage />} />
-        <Route path="/operacoes" element={<OperacoesIndex />} />
-        <Route path="/operacoes/:tipo" element={<OperacaoTipoPage />} />
-        <Route path="/vendas" element={<VendasIndex />} />
-        <Route path="/vendas/:tipo" element={<VendaTipoPage />} />
-        <Route path="/financeiro" element={<FinanceiroIndex />} />
-        <Route path="/financeiro/:area/:tipo" element={<FinanceiroTipoPage />} />
-        <Route path="/pessoas" element={<RHIndex />} />
-        <Route path="/pessoas/:tipo" element={<PessoasTipoPage />} />
-        <Route path="/rotinas" element={<RotinasIndex />} />
-        <Route path="/rotinas/:tipo" element={<RotinasTipoPage />} />
-        <Route path="/marketing" element={<MarketingIndex />} />
-        <Route path="/marketing/:tipo" element={<MarketingTipoPage />} />
-        <Route path="/atendimento" element={<AtendimentoIndex />} />
-        <Route path="/atendimento/:tipo" element={<AtendimentoTipoPage />} />
-        <Route path="/gestao" element={<GestaoIndex />} />
-        <Route path="/gestao/:tipo" element={<GestaoTipoPage />} />
-        <Route path="/ia" element={<IAIndex />} />
-        <Route path="/ia/:tipo" element={<IATipoPage />} />
-        <Route path="/auditoria" element={<Auditoria />} />
-        <Route path="/aprovacoes" element={<Aprovacoes />} />
-        <Route path="/:moduleId" element={<ModulePage />} />
+      {/* ERP Administrativo (/admin) — admin / gestor / operador */}
+      <Route element={<AdminGuard />}>
+        <Route element={<ErpLayout />}>
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/agentes" element={<Agentes />} />
+          <Route path="/admin/cadastros" element={<CadastrosIndex />} />
+          <Route path="/admin/cadastros/:tipo" element={<CadastroTipoPage />} />
+          <Route path="/admin/operacoes" element={<OperacoesIndex />} />
+          <Route path="/admin/operacoes/:tipo" element={<OperacaoTipoPage />} />
+          <Route path="/admin/vendas" element={<VendasIndex />} />
+          <Route path="/admin/vendas/:tipo" element={<VendaTipoPage />} />
+          <Route path="/admin/financeiro" element={<FinanceiroIndex />} />
+          <Route path="/admin/financeiro/:area/:tipo" element={<FinanceiroTipoPage />} />
+          <Route path="/admin/pessoas" element={<RHIndex />} />
+          <Route path="/admin/pessoas/:tipo" element={<PessoasTipoPage />} />
+          <Route path="/admin/rotinas" element={<RotinasIndex />} />
+          <Route path="/admin/rotinas/:tipo" element={<RotinasTipoPage />} />
+          <Route path="/admin/marketing" element={<MarketingIndex />} />
+          <Route path="/admin/marketing/:tipo" element={<MarketingTipoPage />} />
+          <Route path="/admin/atendimento" element={<AtendimentoIndex />} />
+          <Route path="/admin/atendimento/:tipo" element={<AtendimentoTipoPage />} />
+          <Route path="/admin/gestao" element={<GestaoIndex />} />
+          <Route path="/admin/gestao/:tipo" element={<GestaoTipoPage />} />
+          <Route path="/admin/ia" element={<IAIndex />} />
+          <Route path="/admin/ia/:tipo" element={<IATipoPage />} />
+          <Route path="/admin/auditoria" element={<Auditoria />} />
+          <Route path="/admin/aprovacoes" element={<Aprovacoes />} />
+          <Route path="/admin/:moduleId" element={<ModulePage />} />
+        </Route>
       </Route>
+
+      {/* Compatibilidade com URLs antigas */}
+      <Route path="/pwa" element={<Navigate to="/app" replace />} />
+      <Route path="/pwa/*" element={<PwaCompatRedirect />} />
+      <Route path="/cadastros/*" element={<ErpCompatRedirect />} />
+      <Route path="/operacoes/*" element={<ErpCompatRedirect />} />
+      <Route path="/vendas/*" element={<ErpCompatRedirect />} />
+      <Route path="/financeiro/*" element={<ErpCompatRedirect />} />
+      <Route path="/pessoas/*" element={<ErpCompatRedirect />} />
+      <Route path="/rotinas/*" element={<ErpCompatRedirect />} />
+      <Route path="/marketing/*" element={<ErpCompatRedirect />} />
+      <Route path="/atendimento/*" element={<ErpCompatRedirect />} />
+      <Route path="/gestao/*" element={<ErpCompatRedirect />} />
+      <Route path="/ia/*" element={<ErpCompatRedirect />} />
+      <Route path="/auditoria" element={<Navigate to="/admin/auditoria" replace />} />
+      <Route path="/aprovacoes" element={<Navigate to="/admin/aprovacoes" replace />} />
+      <Route path="/agentes" element={<Navigate to="/admin/agentes" replace />} />
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>

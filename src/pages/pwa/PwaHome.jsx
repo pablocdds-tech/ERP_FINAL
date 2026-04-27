@@ -4,21 +4,21 @@ import { Clock, Calendar, ListChecks, MessageSquare, Camera, Coffee, ShieldCheck
 import { usePwa } from "@/lib/PwaContext";
 
 const ACOES_FUNC = [
-  { to: "/pwa/ponto", icon: Clock, label: "Bater ponto" },
-  { to: "/pwa/escala", icon: Calendar, label: "Minha escala" },
-  { to: "/pwa/tarefas", icon: ListChecks, label: "Tarefas" },
-  { to: "/pwa/checklist", icon: ListChecks, label: "Checklists" },
-  { to: "/pwa/chamados", icon: MessageSquare, label: "Chamados" },
-  { to: "/pwa/solicitacoes", icon: FileText, label: "Solicitações" },
+  { to: "/app/ponto", icon: Clock, label: "Bater ponto" },
+  { to: "/app/escala", icon: Calendar, label: "Minha escala" },
+  { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
+  { to: "/app/checklist", icon: ListChecks, label: "Checklists" },
+  { to: "/app/chamados", icon: MessageSquare, label: "Chamados" },
+  { to: "/app/solicitacoes", icon: FileText, label: "Solicitações" },
 ];
 
 const ACOES_GESTOR = [
-  { to: "/pwa/aprovacoes", icon: ShieldCheck, label: "Aprovações" },
-  { to: "/pwa/dashboard", icon: BarChart3, label: "Dashboard" },
-  { to: "/pwa/equipe", icon: Calendar, label: "Equipe / Ponto" },
-  { to: "/pwa/tarefas", icon: ListChecks, label: "Tarefas" },
-  { to: "/pwa/chamados", icon: MessageSquare, label: "Chamados" },
-  { to: "/pwa/notificacoes", icon: Bell, label: "Notificações" },
+  { to: "/app/aprovacoes", icon: ShieldCheck, label: "Aprovações" },
+  { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
+  { to: "/app/equipe", icon: Calendar, label: "Equipe / Ponto" },
+  { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
+  { to: "/app/chamados", icon: MessageSquare, label: "Chamados" },
+  { to: "/app/notificacoes", icon: Bell, label: "Notificações" },
 ];
 
 export default function PwaHome() {
@@ -44,7 +44,7 @@ export default function PwaHome() {
         <div className="text-xs opacity-80">Próxima ação</div>
         <div className="text-lg font-medium mt-1">{gestor ? "Ver aprovações pendentes" : "Bater ponto"}</div>
         <Link
-          to={gestor ? "/pwa/aprovacoes" : "/pwa/ponto"}
+          to={gestor ? "/app/aprovacoes" : "/app/ponto"}
           className="inline-flex items-center gap-2 mt-4 text-sm bg-primary-foreground text-primary rounded-lg px-4 py-2 font-medium"
         >
           {gestor ? <ShieldCheck className="w-4 h-4" /> : <Clock className="w-4 h-4" />}

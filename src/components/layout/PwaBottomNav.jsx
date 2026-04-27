@@ -4,19 +4,19 @@ import { cn } from "@/lib/utils";
 import { usePwa } from "@/lib/PwaContext";
 
 const ITEMS_FUNC = [
-  { to: "/pwa", icon: Home, label: "Início", exact: true },
-  { to: "/pwa/ponto", icon: Clock, label: "Ponto" },
-  { to: "/pwa/escala", icon: Calendar, label: "Escala" },
-  { to: "/pwa/tarefas", icon: ListChecks, label: "Tarefas" },
-  { to: "/pwa/solicitacoes", icon: ShieldCheck, label: "Pedidos" },
+  { to: "/app", icon: Home, label: "Início", exact: true },
+  { to: "/app/ponto", icon: Clock, label: "Ponto" },
+  { to: "/app/escala", icon: Calendar, label: "Escala" },
+  { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
+  { to: "/app/solicitacoes", icon: ShieldCheck, label: "Pedidos" },
 ];
 
 const ITEMS_GESTOR = [
-  { to: "/pwa", icon: Home, label: "Início", exact: true },
-  { to: "/pwa/aprovacoes", icon: ShieldCheck, label: "Aprovar" },
-  { to: "/pwa/equipe", icon: Clock, label: "Equipe" },
-  { to: "/pwa/dashboard", icon: BarChart3, label: "Dash" },
-  { to: "/pwa/tarefas", icon: ListChecks, label: "Tarefas" },
+  { to: "/app", icon: Home, label: "Início", exact: true },
+  { to: "/app/aprovacoes", icon: ShieldCheck, label: "Aprovar" },
+  { to: "/app/equipe", icon: Clock, label: "Equipe" },
+  { to: "/app/dashboard", icon: BarChart3, label: "Dash" },
+  { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
 ];
 
 export default function PwaBottomNav() {

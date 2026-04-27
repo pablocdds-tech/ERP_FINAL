@@ -1,9 +1,10 @@
 import { Outlet, Link } from "react-router-dom";
-import { ArrowLeft, Bell } from "lucide-react";
+import { Bell, Monitor } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import PwaBottomNav from "./PwaBottomNav";
 import { PwaProvider, usePwa } from "@/lib/PwaContext";
+import { canAccessAdmin } from "@/lib/perfil";
 
 function NotifBell() {
   const { user } = usePwa() || {};
@@ -17,7 +18,7 @@ function NotifBell() {
     return () => clearInterval(i);
   }, [user?.email]);
   return (
-    <Link to="/pwa/notificacoes" className="relative text-muted-foreground hover:text-foreground">
+    <Link to="/app/notificacoes" className="relative text-muted-foreground hover:text-foreground">
       <Bell className="w-5 h-5" />
       {n > 0 && (
         <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[9px] rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center font-medium">
@@ -30,6 +31,7 @@ function NotifBell() {
 
 function PwaShell() {
   const { gestor, user } = usePwa() || {};
+  const podeErp = canAccessAdmin(user);
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto min-h-screen pb-20 bg-background">
@@ -43,9 +45,14 @@ function PwaShell() {
           </div>
           <div className="flex items-center gap-3">
             {user && <NotifBell />}
-            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-              <ArrowLeft className="w-3 h-3" />ERP
-            </Link>
+            {podeErp && (
+              <Link
+                to="/admin"
+                className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center gap-1"
+              >
+                <Monitor className="w-3 h-3" />Ir para ERP
+              </Link>
+            )}
           </div>
         </header>
         <div className="px-4 py-5">
