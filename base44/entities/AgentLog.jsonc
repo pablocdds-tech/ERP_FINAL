@@ -1,0 +1,74 @@
+{
+  "name": "AgentLog",
+  "type": "object",
+  "properties": {
+    "agent_chave": {
+      "type": "string",
+      "description": "Chave do agent (orquestrador, cadastros, etc.)"
+    },
+    "agent_nome": {
+      "type": "string"
+    },
+    "acao": {
+      "type": "string",
+      "description": "A\u00e7\u00e3o sugerida ou executada"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "sugestao",
+        "execucao",
+        "erro",
+        "info"
+      ],
+      "default": "info"
+    },
+    "entidade_alvo": {
+      "type": "string",
+      "description": "Ex: Tarefa, Chamado, ContaPagar"
+    },
+    "entidade_id": {
+      "type": "string"
+    },
+    "input": {
+      "type": "string",
+      "description": "Resumo dos dados de entrada"
+    },
+    "output": {
+      "type": "string",
+      "description": "Resumo do resultado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "processando",
+        "concluido",
+        "erro",
+        "aguardando_aprovacao"
+      ],
+      "default": "concluido"
+    },
+    "requer_aprovacao": {
+      "type": "boolean",
+      "default": false
+    },
+    "aprovado_por": {
+      "type": "string"
+    },
+    "aprovado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "erro_detalhe": {
+      "type": "string"
+    },
+    "duracao_ms": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "agent_chave",
+    "acao"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Integracao",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "n8n",
+        "whatsapp",
+        "webhook_generico",
+        "agent_externo"
+      ],
+      "default": "n8n"
+    },
+    "url_webhook": {
+      "type": "string",
+      "description": "URL para envio de eventos"
+    },
+    "url_recebimento": {
+      "type": "string",
+      "description": "URL p\u00fablica para receber callbacks (gerada pelo Base44)"
+    },
+    "token_seguranca": {
+      "type": "string",
+      "description": "Token compartilhado para valida\u00e7\u00e3o"
+    },
+    "eventos_assinados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tipos de eventos enviados"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "ultimo_envio": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ultimo_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "erro",
+        "nunca"
+      ],
+      "default": "nunca"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome",
+    "tipo"
+  ]
+}

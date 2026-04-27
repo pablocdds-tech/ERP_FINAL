@@ -29,6 +29,8 @@ import AtendimentoIndex from '@/pages/atendimento/AtendimentoIndex';
 import AtendimentoTipoPage from '@/pages/atendimento/AtendimentoTipoPage';
 import GestaoIndex from '@/pages/gestao/GestaoIndex';
 import GestaoTipoPage from '@/pages/gestao/GestaoTipoPage';
+import IAIndex from '@/pages/ia/IAIndex';
+import IATipoPage from '@/pages/ia/IATipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -100,6 +102,8 @@ const AuthenticatedApp = () => {
         <Route path="/atendimento/:tipo" element={<AtendimentoTipoPage />} />
         <Route path="/gestao" element={<GestaoIndex />} />
         <Route path="/gestao/:tipo" element={<GestaoTipoPage />} />
+        <Route path="/ia" element={<IAIndex />} />
+        <Route path="/ia/:tipo" element={<IATipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

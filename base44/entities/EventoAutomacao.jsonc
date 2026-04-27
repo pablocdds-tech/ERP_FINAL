@@ -1,0 +1,72 @@
+{
+  "name": "EventoAutomacao",
+  "type": "object",
+  "properties": {
+    "tipo_evento": {
+      "type": "string",
+      "description": "Ex: pedido.criado, fechamento.aprovado, ponto.batido"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "sistema",
+        "n8n",
+        "whatsapp",
+        "agent",
+        "manual"
+      ],
+      "default": "sistema"
+    },
+    "destino": {
+      "type": "string",
+      "enum": [
+        "n8n",
+        "whatsapp",
+        "agent",
+        "interno"
+      ],
+      "default": "n8n"
+    },
+    "integracao_id": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "string",
+      "description": "JSON serializado"
+    },
+    "entidade_origem": {
+      "type": "string"
+    },
+    "entidade_origem_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "processando",
+        "enviado",
+        "recebido",
+        "erro"
+      ],
+      "default": "pendente"
+    },
+    "tentativas": {
+      "type": "number",
+      "default": 0
+    },
+    "enviado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resposta": {
+      "type": "string"
+    },
+    "erro_detalhe": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tipo_evento"
+  ]
+}
