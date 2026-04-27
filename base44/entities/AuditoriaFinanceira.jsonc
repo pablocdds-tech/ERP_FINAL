@@ -1,0 +1,49 @@
+{
+  "name": "AuditoriaFinanceira",
+  "type": "object",
+  "properties": {
+    "entidade": {
+      "type": "string",
+      "description": "Ex: ContaPagar, ContaReceber, MovimentacaoBancaria"
+    },
+    "entidade_id": {
+      "type": "string"
+    },
+    "acao": {
+      "type": "string",
+      "enum": [
+        "criacao",
+        "edicao",
+        "baixa",
+        "estorno",
+        "exclusao",
+        "edicao_paga"
+      ]
+    },
+    "data": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "usuario_email": {
+      "type": "string"
+    },
+    "snapshot_antes": {
+      "type": "object",
+      "description": "Estado anterior (JSON livre)",
+      "additionalProperties": true
+    },
+    "snapshot_depois": {
+      "type": "object",
+      "description": "Estado posterior (JSON livre)",
+      "additionalProperties": true
+    },
+    "motivo": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "entidade",
+    "entidade_id",
+    "acao"
+  ]
+}

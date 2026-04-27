@@ -1,0 +1,44 @@
+{
+  "name": "ContaBancaria",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Apelido da conta (ex: Ita\u00fa Matriz)"
+    },
+    "banco": {
+      "type": "string"
+    },
+    "agencia": {
+      "type": "string"
+    },
+    "numero": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "corrente",
+        "poupanca",
+        "caixa",
+        "outro"
+      ],
+      "default": "corrente"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja titular. Vazio = corporativo."
+    },
+    "saldo_inicial": {
+      "type": "number",
+      "default": 0
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

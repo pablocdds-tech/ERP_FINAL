@@ -1,0 +1,72 @@
+{
+  "name": "ContaReceber",
+  "type": "object",
+  "properties": {
+    "descricao": {
+      "type": "string"
+    },
+    "cliente": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "CategoriaFinanceira (receita)"
+    },
+    "centro_custo_id": {
+      "type": "string"
+    },
+    "valor": {
+      "type": "number"
+    },
+    "valor_recebido": {
+      "type": "number",
+      "default": 0
+    },
+    "data_emissao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_recebimento": {
+      "type": "string",
+      "format": "date"
+    },
+    "conta_bancaria_id": {
+      "type": "string"
+    },
+    "forma_pagamento_id": {
+      "type": "string"
+    },
+    "documento": {
+      "type": "string"
+    },
+    "recebivel_id": {
+      "type": "string",
+      "description": "V\u00ednculo opcional com Receb\u00edvel de venda"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "recebida",
+        "parcial",
+        "cancelada",
+        "vencida"
+      ],
+      "default": "aberta"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "valor",
+    "data_vencimento"
+  ]
+}

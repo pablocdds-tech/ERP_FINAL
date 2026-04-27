@@ -1,0 +1,75 @@
+{
+  "name": "MovimentacaoBancaria",
+  "type": "object",
+  "properties": {
+    "conta_bancaria_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "credito",
+        "debito",
+        "transferencia_entrada",
+        "transferencia_saida",
+        "saldo_inicial"
+      ],
+      "default": "credito"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor": {
+      "type": "number"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "categoria_id": {
+      "type": "string"
+    },
+    "categoria_nome": {
+      "type": "string"
+    },
+    "centro_custo_id": {
+      "type": "string"
+    },
+    "origem_tipo": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "conta_pagar",
+        "conta_receber",
+        "transferencia",
+        "ofx",
+        "saldo_inicial"
+      ],
+      "default": "manual"
+    },
+    "origem_id": {
+      "type": "string"
+    },
+    "conciliada": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marcada como conciliada com extrato"
+    },
+    "ofx_fitid": {
+      "type": "string",
+      "description": "Identificador \u00fanico do OFX para evitar duplicidade"
+    },
+    "usuario_email": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "conta_bancaria_id",
+    "tipo",
+    "data",
+    "valor"
+  ]
+}

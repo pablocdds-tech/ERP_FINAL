@@ -1,0 +1,74 @@
+{
+  "name": "ContaPagar",
+  "type": "object",
+  "properties": {
+    "descricao": {
+      "type": "string"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "CategoriaFinanceira (despesa)"
+    },
+    "centro_custo_id": {
+      "type": "string"
+    },
+    "valor": {
+      "type": "number"
+    },
+    "valor_pago": {
+      "type": "number",
+      "default": 0
+    },
+    "data_emissao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_pagamento": {
+      "type": "string",
+      "format": "date"
+    },
+    "conta_bancaria_id": {
+      "type": "string",
+      "description": "Preenchido na baixa"
+    },
+    "forma_pagamento_id": {
+      "type": "string"
+    },
+    "documento": {
+      "type": "string",
+      "description": "NF, boleto, etc."
+    },
+    "compra_id": {
+      "type": "string",
+      "description": "V\u00ednculo opcional com Compra"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "paga",
+        "parcial",
+        "cancelada",
+        "vencida"
+      ],
+      "default": "aberta"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "valor",
+    "data_vencimento"
+  ]
+}

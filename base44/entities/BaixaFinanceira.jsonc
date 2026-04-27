@@ -1,0 +1,53 @@
+{
+  "name": "BaixaFinanceira",
+  "type": "object",
+  "properties": {
+    "documento_tipo": {
+      "type": "string",
+      "enum": [
+        "conta_pagar",
+        "conta_receber"
+      ]
+    },
+    "documento_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor": {
+      "type": "number"
+    },
+    "conta_bancaria_id": {
+      "type": "string"
+    },
+    "forma_pagamento_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "movimentacao_id": {
+      "type": "string",
+      "description": "MovimentacaoBancaria gerada"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "usuario_email": {
+      "type": "string",
+      "description": "Auditoria \u2014 quem deu a baixa"
+    },
+    "estornada": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "documento_tipo",
+    "documento_id",
+    "data",
+    "valor"
+  ]
+}

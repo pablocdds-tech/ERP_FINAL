@@ -1,0 +1,80 @@
+{
+  "name": "LancamentoInterno",
+  "type": "object",
+  "properties": {
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "debito",
+        "credito",
+        "liquidacao"
+      ],
+      "description": "debito: CD cobra loja. credito: CD credita loja. liquidacao: pagamento da loja para zerar saldo."
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "loja_origem_id": {
+      "type": "string",
+      "description": "Quem emite (geralmente CD)"
+    },
+    "loja_destino_id": {
+      "type": "string",
+      "description": "Quem recebe a cobran\u00e7a/credito"
+    },
+    "valor": {
+      "type": "number"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "categoria": {
+      "type": "string",
+      "description": "Ex: produ\u00e7\u00e3o, transfer\u00eancia, repasse"
+    },
+    "documento_origem_tipo": {
+      "type": "string",
+      "enum": [
+        "transferencia",
+        "producao",
+        "manual",
+        "outro"
+      ],
+      "default": "manual"
+    },
+    "documento_origem_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberto",
+        "liquidado",
+        "cancelado"
+      ],
+      "default": "aberto"
+    },
+    "liquidacao_id": {
+      "type": "string",
+      "description": "Se quitado, aponta para o lan\u00e7amento de liquida\u00e7\u00e3o"
+    },
+    "cupom_numero": {
+      "type": "string",
+      "description": "N\u00famero do cupom de confer\u00eancia interno"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "usuario_email": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tipo",
+    "data",
+    "loja_origem_id",
+    "loja_destino_id",
+    "valor"
+  ]
+}
