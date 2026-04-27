@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Bot, Smartphone, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, Smartphone, ShieldCheck, FileSearch } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import { MODULES } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,8 @@ const NavItem = ({ to, icon: Icon, label, active, onClick }) => (
 
 export default function Sidebar({ onNavigate }) {
   const location = useLocation();
+  const [user, setUser] = useState(null);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
   const isActive = (path) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
@@ -72,13 +76,15 @@ export default function Sidebar({ onNavigate }) {
           active={isActive("/aprovacoes")}
           onClick={onNavigate}
         />
-        <NavItem
-          to="/agentes"
-          icon={Bot}
-          label="Agents"
-          active={isActive("/agentes")}
-          onClick={onNavigate}
-        />
+        {user?.role === "admin" && (
+          <NavItem
+            to="/auditoria"
+            icon={FileSearch}
+            label="Auditoria"
+            active={isActive("/auditoria")}
+            onClick={onNavigate}
+          />
+        )}
         <NavItem
           to="/pwa"
           icon={Smartphone}

@@ -32,6 +32,7 @@ import GestaoTipoPage from '@/pages/gestao/GestaoTipoPage';
 import IAIndex from '@/pages/ia/IAIndex';
 import IATipoPage from '@/pages/ia/IATipoPage';
 import Auditoria from '@/pages/Auditoria';
+import Aprovacoes from '@/pages/Aprovacoes';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -106,6 +107,7 @@ const AuthenticatedApp = () => {
         <Route path="/ia" element={<IAIndex />} />
         <Route path="/ia/:tipo" element={<IATipoPage />} />
         <Route path="/auditoria" element={<Auditoria />} />
+        <Route path="/aprovacoes" element={<Aprovacoes />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 
