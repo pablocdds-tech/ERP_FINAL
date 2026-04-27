@@ -1,0 +1,36 @@
+{
+  "name": "Loja",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da loja/unidade"
+    },
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo curto de identifica\u00e7\u00e3o"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "loja",
+        "cd"
+      ],
+      "default": "loja",
+      "description": "Tipo da unidade: loja de venda ou centro de distribui\u00e7\u00e3o"
+    },
+    "endereco": {
+      "type": "string"
+    },
+    "telefone": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

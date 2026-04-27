@@ -5,12 +5,21 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+
+import ErpLayout from '@/components/layout/ErpLayout';
+import PwaLayout from '@/components/layout/PwaLayout';
+import Dashboard from '@/pages/Dashboard';
+import ModulePage from '@/pages/modules/ModulePage';
+import Agentes from '@/pages/Agentes';
+import PwaHome from '@/pages/pwa/PwaHome';
+import PwaPonto from '@/pages/pwa/PwaPonto';
+import PwaEscala from '@/pages/pwa/PwaEscala';
+import PwaChecklist from '@/pages/pwa/PwaChecklist';
+import PwaChamados from '@/pages/pwa/PwaChamados';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -19,21 +28,33 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      {/* PWA do Funcionário */}
+      <Route element={<PwaLayout />}>
+        <Route path="/pwa" element={<PwaHome />} />
+        <Route path="/pwa/ponto" element={<PwaPonto />} />
+        <Route path="/pwa/escala" element={<PwaEscala />} />
+        <Route path="/pwa/checklist" element={<PwaChecklist />} />
+        <Route path="/pwa/chamados" element={<PwaChamados />} />
+      </Route>
+
+      {/* ERP Administrativo */}
+      <Route element={<ErpLayout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/agentes" element={<Agentes />} />
+        <Route path="/:moduleId" element={<ModulePage />} />
+      </Route>
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -41,7 +62,6 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>

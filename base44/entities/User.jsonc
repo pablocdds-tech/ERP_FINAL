@@ -1,0 +1,31 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "gestor",
+        "operador",
+        "funcionario"
+      ],
+      "default": "funcionario",
+      "description": "Perfil de acesso no sistema"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja principal vinculada ao usu\u00e1rio"
+    },
+    "cargo": {
+      "type": "string"
+    },
+    "telefone": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
