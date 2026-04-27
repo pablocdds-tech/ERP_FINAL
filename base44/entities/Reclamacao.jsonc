@@ -1,0 +1,147 @@
+{
+  "name": "Reclamacao",
+  "type": "object",
+  "properties": {
+    "numero": {
+      "type": "string",
+      "description": "Numera\u00e7\u00e3o interna"
+    },
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "cliente_id": {
+      "type": "string",
+      "description": "Cliente cadastrado, se houver"
+    },
+    "cliente_nome": {
+      "type": "string",
+      "description": "Nome livre se n\u00e3o houver cadastro"
+    },
+    "cliente_telefone": {
+      "type": "string"
+    },
+    "canal_origem": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "telefone",
+        "presencial",
+        "ifood",
+        "instagram",
+        "google",
+        "email",
+        "outro"
+      ],
+      "default": "whatsapp"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "motivo": {
+      "type": "string",
+      "enum": [
+        "atraso_entrega",
+        "produto_errado",
+        "produto_faltando",
+        "qualidade_produto",
+        "temperatura",
+        "atendimento",
+        "higiene",
+        "preco_cobranca",
+        "embalagem",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "severidade": {
+      "type": "string",
+      "enum": [
+        "baixa",
+        "media",
+        "alta",
+        "critica"
+      ],
+      "default": "media"
+    },
+    "produto_id": {
+      "type": "string",
+      "description": "Produto reclamado, se aplic\u00e1vel"
+    },
+    "pedido_referencia": {
+      "type": "string",
+      "description": "N\u00famero do pedido externo (iFood etc.)"
+    },
+    "valor_pedido": {
+      "type": "number"
+    },
+    "fotos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "responsavel_tratativa": {
+      "type": "string",
+      "description": "Email ou nome do respons\u00e1vel"
+    },
+    "solucao": {
+      "type": "string",
+      "description": "Texto descritivo da solu\u00e7\u00e3o aplicada"
+    },
+    "tipo_solucao": {
+      "type": "string",
+      "enum": [
+        "nenhuma",
+        "cortesia",
+        "reembolso",
+        "reentrega",
+        "desconto_proximo",
+        "pedido_desculpas",
+        "outro"
+      ],
+      "default": "nenhuma"
+    },
+    "valor_compensacao": {
+      "type": "number",
+      "description": "Valor de cortesia/reembolso"
+    },
+    "cortesia_id": {
+      "type": "string"
+    },
+    "reembolso_id": {
+      "type": "string"
+    },
+    "status_tratativa": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "em_tratativa",
+        "aguardando_cliente",
+        "resolvida",
+        "improcedente",
+        "cancelada"
+      ],
+      "default": "aberta"
+    },
+    "resolvida_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tempo_resposta_horas": {
+      "type": "number"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

@@ -25,6 +25,8 @@ import RotinasIndex from '@/pages/rotinas/RotinasIndex';
 import RotinasTipoPage from '@/pages/rotinas/RotinasTipoPage';
 import MarketingIndex from '@/pages/marketing/MarketingIndex';
 import MarketingTipoPage from '@/pages/marketing/MarketingTipoPage';
+import AtendimentoIndex from '@/pages/atendimento/AtendimentoIndex';
+import AtendimentoTipoPage from '@/pages/atendimento/AtendimentoTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -92,6 +94,8 @@ const AuthenticatedApp = () => {
         <Route path="/rotinas/:tipo" element={<RotinasTipoPage />} />
         <Route path="/marketing" element={<MarketingIndex />} />
         <Route path="/marketing/:tipo" element={<MarketingTipoPage />} />
+        <Route path="/atendimento" element={<AtendimentoIndex />} />
+        <Route path="/atendimento/:tipo" element={<AtendimentoTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 
