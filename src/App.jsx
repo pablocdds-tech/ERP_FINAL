@@ -47,6 +47,8 @@ import PwaNotificacoes from '@/pages/pwa/PwaNotificacoes';
 import PwaAprovacoes from '@/pages/pwa/PwaAprovacoes';
 import PwaDashboard from '@/pages/pwa/PwaDashboard';
 import PwaEquipe from '@/pages/pwa/PwaEquipe';
+import PwaKioskPonto from '@/pages/pwa/PwaKioskPonto';
+import PwaPontosPendentes from '@/pages/pwa/PwaPontosPendentes';
 
 // Redireciona /pwa/algo → /app/algo (compatibilidade com links antigos)
 const PwaCompatRedirect = () => {
@@ -86,6 +88,8 @@ const AuthenticatedApp = () => {
 
       {/* PWA Mobile (/app) — funcionário + gestor */}
       <Route element={<AppGuard />}>
+        {/* Kiosk: rota fora do PwaLayout (tela cheia, sem nav) */}
+        <Route path="/app/kiosk-ponto" element={<PwaKioskPonto />} />
         <Route element={<PwaLayout />}>
           <Route path="/app" element={<PwaHome />} />
           <Route path="/app/ponto" element={<PwaPonto />} />
@@ -96,6 +100,7 @@ const AuthenticatedApp = () => {
           <Route path="/app/solicitacoes" element={<PwaSolicitacoes />} />
           <Route path="/app/notificacoes" element={<PwaNotificacoes />} />
           <Route path="/app/aprovacoes" element={<PwaAprovacoes />} />
+          <Route path="/app/pontos-pendentes" element={<PwaPontosPendentes />} />
           <Route path="/app/dashboard" element={<PwaDashboard />} />
           <Route path="/app/equipe" element={<PwaEquipe />} />
         </Route>

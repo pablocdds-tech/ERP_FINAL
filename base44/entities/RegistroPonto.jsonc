@@ -39,6 +39,7 @@
       "type": "string",
       "enum": [
         "pwa",
+        "kiosk",
         "ajuste_gestor",
         "manual"
       ],
@@ -63,6 +64,7 @@
       "type": "string",
       "enum": [
         "registrado",
+        "pendente_revisao",
         "aprovado",
         "rejeitado"
       ],
@@ -77,6 +79,38 @@
     },
     "observacoes": {
       "type": "string"
+    },
+    "ia_resultado": {
+      "type": "string",
+      "enum": [
+        "aprovado",
+        "reprovado",
+        "baixa_confianca",
+        "precisa_revisao",
+        "nao_avaliado"
+      ],
+      "default": "nao_avaliado"
+    },
+    "ia_confianca": {
+      "type": "number",
+      "description": "0 a 1"
+    },
+    "ia_motivo": {
+      "type": "string",
+      "description": "Motivo de reprova\u00e7\u00e3o ou observa\u00e7\u00e3o da IA"
+    },
+    "ia_detalhes": {
+      "type": "string",
+      "description": "JSON com detalhes da an\u00e1lise"
+    },
+    "fallback_pin": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se foi usado PIN em vez de facial"
+    },
+    "dispositivo": {
+      "type": "string",
+      "description": "Identifica\u00e7\u00e3o do dispositivo (Kiosk)"
     }
   },
   "required": [

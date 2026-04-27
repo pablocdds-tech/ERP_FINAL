@@ -7,11 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Field from "@/components/cadastros/Field";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
+import SecaoFacialColaborador from "@/components/ponto/SecaoFacialColaborador";
 
 const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
   cargo_id: "", loja_id: "", data_admissao: "",
   perfil_pwa: "funcionario", status: "ativo", salario: 0, endereco: "", observacoes: "",
+  pin_ponto: "",
 });
 
 export default function ColaboradorDialog({ open, mode, record, onClose, onSaved }) {
@@ -41,9 +43,16 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
     onClose?.();
   };
 
+  const recarregar = async () => {
+    if (!data.id) return;
+    const fresh = await base44.entities.Colaborador.filter({ id: data.id });
+    if (fresh[0]) setData({ ...fresh[0] });
+    onSaved?.();
+  };
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isView ? "Colaborador" : record ? "Editar colaborador" : "Novo colaborador"}</DialogTitle>
         </DialogHeader>
@@ -92,12 +101,21 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           <Field label="Data desligamento">
             <Input type="date" value={data.data_desligamento || ""} onChange={(e) => set("data_desligamento", e.target.value)} disabled={isView} />
           </Field>
+          <Field label="PIN ponto (Kiosk)" hint="4-6 dígitos para identificação no tablet">
+            <Input value={data.pin_ponto || ""} onChange={(e) => set("pin_ponto", e.target.value.replace(/\D/g, ""))} disabled={isView} maxLength={6} />
+          </Field>
           <Field label="Endereço" className="col-span-2">
             <Input value={data.endereco || ""} onChange={(e) => set("endereco", e.target.value)} disabled={isView} />
           </Field>
           <Field label="Observações" className="col-span-2">
             <Textarea rows={2} value={data.observacoes || ""} onChange={(e) => set("observacoes", e.target.value)} disabled={isView} />
           </Field>
+
+          {data.id && (
+            <div className="col-span-2 pt-3 mt-1 border-t border-border">
+              <SecaoFacialColaborador colaborador={data} onUpdated={recarregar} disabled={isView} />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{isView ? "Fechar" : "Cancelar"}</Button>

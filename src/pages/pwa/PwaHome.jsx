@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Clock, Calendar, ListChecks, MessageSquare, Camera, Coffee, ShieldCheck, FileText, Bell, BarChart3 } from "lucide-react";
+import { Clock, Calendar, ListChecks, MessageSquare, Camera, ShieldCheck, FileText, BarChart3 } from "lucide-react";
 import { usePwa } from "@/lib/PwaContext";
 
 const ACOES_FUNC = [
@@ -14,11 +14,11 @@ const ACOES_FUNC = [
 
 const ACOES_GESTOR = [
   { to: "/app/aprovacoes", icon: ShieldCheck, label: "Aprovações" },
+  { to: "/app/pontos-pendentes", icon: Clock, label: "Pontos pendentes" },
   { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
   { to: "/app/equipe", icon: Calendar, label: "Equipe / Ponto" },
   { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
-  { to: "/app/chamados", icon: MessageSquare, label: "Chamados" },
-  { to: "/app/notificacoes", icon: Bell, label: "Notificações" },
+  { to: "/app/kiosk-ponto", icon: Camera, label: "Modo Kiosk" },
 ];
 
 export default function PwaHome() {

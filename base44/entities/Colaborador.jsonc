@@ -51,13 +51,48 @@
       "default": "ativo"
     },
     "foto_url": {
-      "type": "string"
+      "type": "string",
+      "description": "Foto de perfil (display)"
     },
     "endereco": {
       "type": "string"
     },
     "observacoes": {
       "type": "string"
+    },
+    "facial_status": {
+      "type": "string",
+      "enum": [
+        "nao_cadastrada",
+        "cadastrada",
+        "pendente_revisao",
+        "bloqueada"
+      ],
+      "default": "nao_cadastrada"
+    },
+    "facial_frontal_url": {
+      "type": "string",
+      "description": "Foto de refer\u00eancia frontal"
+    },
+    "facial_esquerda_url": {
+      "type": "string",
+      "description": "Foto levemente \u00e0 esquerda"
+    },
+    "facial_direita_url": {
+      "type": "string",
+      "description": "Foto levemente \u00e0 direita"
+    },
+    "facial_cadastrada_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "facial_cadastrada_por": {
+      "type": "string",
+      "description": "Email de quem cadastrou"
+    },
+    "pin_ponto": {
+      "type": "string",
+      "description": "PIN num\u00e9rico de fallback para bater ponto no Kiosk"
     }
   },
   "required": [
