@@ -85,10 +85,10 @@ Responda APENAS no JSON solicitado.`;
     } else if (result.mesma_pessoa === 'nao') {
       resultado = 'reprovado';
       motivo = motivo || 'Selfie não corresponde ao colaborador';
-    } else if (result.mesma_pessoa === 'indeterminado' || (result.confianca ?? 0) < 0.7) {
+    } else if (result.mesma_pessoa === 'indeterminado' || (result.confianca ?? 0) < 0.5) {
       resultado = 'baixa_confianca';
       motivo = motivo || 'Confiança insuficiente';
-    } else if (result.mesma_pessoa === 'sim' && (result.confianca ?? 0) >= 0.7) {
+    } else if (result.mesma_pessoa === 'sim' && (result.confianca ?? 0) >= 0.5) {
       resultado = 'aprovado';
     }
 
