@@ -44,6 +44,13 @@ export async function baixarDocumento({ documento, documento_tipo, valor, data, 
   const v = round(valor);
   const isPagar = documento_tipo === "conta_pagar";
 
+  // Validação: não permitir pagar mais que o saldo
+  const total = Number(documento.valor) || 0;
+  const jaPago = Number(isPagar ? documento.valor_pago : documento.valor_recebido) || 0;
+  const saldo = round(total - jaPago);
+  if (v <= 0) throw new Error("Valor deve ser maior que zero");
+  if (v > saldo + 0.001) throw new Error(`Valor maior que o saldo restante (R$ ${saldo.toFixed(2)})`);
+
   let usuario_email;
   try {
     const u = await base44.auth.me();
@@ -66,9 +73,7 @@ export async function baixarDocumento({ documento, documento_tipo, valor, data, 
   });
 
   // 2. Atualizar documento
-  const valorAtualPago = Number(isPagar ? documento.valor_pago : documento.valor_recebido) || 0;
-  const novoPago = round(valorAtualPago + v);
-  const total = Number(documento.valor) || 0;
+  const novoPago = round(jaPago + v);
   let novoStatus;
   if (novoPago + 0.001 >= total) novoStatus = isPagar ? "paga" : "recebida";
   else if (novoPago > 0) novoStatus = "parcial";
@@ -106,6 +111,61 @@ export async function baixarDocumento({ documento, documento_tipo, valor, data, 
   });
 
   return { mov, baixa };
+}
+
+// --- Estorno de baixa ---
+// Reverte uma baixa: marca como estornada, remove movimentação bancária,
+// recalcula valor pago e status do documento, registra auditoria.
+export async function estornarBaixa({ baixa, documento, documento_tipo, motivo }) {
+  const isPagar = documento_tipo === "conta_pagar";
+  if (baixa.estornada) throw new Error("Baixa já estornada");
+
+  let usuario_email;
+  try {
+    const u = await base44.auth.me();
+    usuario_email = u?.email;
+  } catch { /* ignore */ }
+
+  // 1. Remover movimentação bancária associada
+  if (baixa.movimentacao_id) {
+    try { await base44.entities.MovimentacaoBancaria.delete(baixa.movimentacao_id); } catch { /* ignore */ }
+  }
+
+  // 2. Marcar baixa como estornada
+  await base44.entities.BaixaFinanceira.update(baixa.id, { estornada: true });
+
+  // 3. Recalcular valor pago do documento
+  const v = round(baixa.valor);
+  const jaPago = Number(isPagar ? documento.valor_pago : documento.valor_recebido) || 0;
+  const novoPago = round(Math.max(0, jaPago - v));
+  const total = Number(documento.valor) || 0;
+  let novoStatus;
+  if (novoPago + 0.001 >= total && total > 0) novoStatus = isPagar ? "paga" : "recebida";
+  else if (novoPago > 0) novoStatus = "parcial";
+  else novoStatus = "aberta";
+
+  const patch = isPagar
+    ? { valor_pago: novoPago, status: novoStatus }
+    : { valor_recebido: novoPago, status: novoStatus };
+
+  const Ent = isPagar ? base44.entities.ContaPagar : base44.entities.ContaReceber;
+  await Ent.update(documento.id, patch);
+
+  // 4. Auditoria
+  await registrarAuditoria({
+    entidade: isPagar ? "ContaPagar" : "ContaReceber",
+    entidade_id: documento.id,
+    acao: "estorno_baixa",
+    snapshot_antes: documento,
+    snapshot_depois: { ...documento, ...patch },
+    motivo: motivo || `Estorno de baixa de R$ ${v.toFixed(2)}`,
+  });
+}
+
+// Lista baixas (não estornadas) de um documento, ordenadas por data
+export async function listarBaixas(documento_id) {
+  const all = await base44.entities.BaixaFinanceira.filter({ documento_id });
+  return all.sort((a, b) => (a.data || "").localeCompare(b.data || ""));
 }
 
 // --- Banco virtual: saldos por loja ---

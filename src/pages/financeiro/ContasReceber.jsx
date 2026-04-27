@@ -8,7 +8,7 @@ import { Plus, Search } from "lucide-react";
 import PageShell from "@/components/financeiro/PageShell";
 import ContasDocumentoTable from "@/components/financeiro/ContasDocumentoTable";
 import ContaDocumentoDialog from "@/components/financeiro/ContaDocumentoDialog";
-import BaixaDialog from "@/components/financeiro/BaixaDialog";
+import BaixaDialog from "@/components/financeiro/BaixaDialog.jsx";
 import { aplicarVencimento } from "@/lib/financeiro-service";
 
 export default function ContasReceber() {
