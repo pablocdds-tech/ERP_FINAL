@@ -1,0 +1,50 @@
+{
+  "name": "Checklist",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "frequencia": {
+      "type": "string",
+      "enum": [
+        "unica",
+        "diaria",
+        "semanal",
+        "mensal"
+      ],
+      "default": "diaria"
+    },
+    "itens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "obrigatorio": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

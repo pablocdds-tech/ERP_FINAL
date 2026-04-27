@@ -1,0 +1,63 @@
+{
+  "name": "MensagemWhatsapp",
+  "type": "object",
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "description": "ID \u00fanico do WhatsApp/n8n"
+    },
+    "sender_phone": {
+      "type": "string"
+    },
+    "sender_nome": {
+      "type": "string"
+    },
+    "grupo": {
+      "type": "string"
+    },
+    "tipo_arquivo": {
+      "type": "string",
+      "enum": [
+        "image",
+        "pdf",
+        "xml",
+        "text",
+        "other"
+      ],
+      "default": "other"
+    },
+    "arquivo_url": {
+      "type": "string"
+    },
+    "texto": {
+      "type": "string"
+    },
+    "data_recebimento": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "nota_fiscal",
+        "fechamento_vendas",
+        "indefinido"
+      ],
+      "default": "indefinido",
+      "description": "Detectado pela IA"
+    },
+    "processada": {
+      "type": "boolean",
+      "default": false
+    },
+    "erro_processamento": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "message_id"
+  ]
+}

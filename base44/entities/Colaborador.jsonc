@@ -1,0 +1,66 @@
+{
+  "name": "Colaborador",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "cpf": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email do User para vincular login"
+    },
+    "telefone": {
+      "type": "string"
+    },
+    "cargo_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "data_admissao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_desligamento": {
+      "type": "string",
+      "format": "date"
+    },
+    "salario": {
+      "type": "number"
+    },
+    "perfil_pwa": {
+      "type": "string",
+      "enum": [
+        "funcionario",
+        "gestor"
+      ],
+      "default": "funcionario",
+      "description": "Define quais funcionalidades v\u00ea no PWA"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "afastado",
+        "desligado"
+      ],
+      "default": "ativo"
+    },
+    "foto_url": {
+      "type": "string"
+    },
+    "endereco": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

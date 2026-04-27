@@ -1,0 +1,26 @@
+{
+  "name": "Cargo",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "carga_horaria_semanal": {
+      "type": "number",
+      "default": 44
+    },
+    "salario_base": {
+      "type": "number"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

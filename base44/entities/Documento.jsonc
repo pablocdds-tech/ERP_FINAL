@@ -1,0 +1,45 @@
+{
+  "name": "Documento",
+  "type": "object",
+  "properties": {
+    "colaborador_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "rg",
+        "cpf",
+        "ctps",
+        "comprovante_residencia",
+        "atestado",
+        "exame_medico",
+        "contrato",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "nome": {
+      "type": "string"
+    },
+    "arquivo_url": {
+      "type": "string"
+    },
+    "data_emissao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_validade": {
+      "type": "string",
+      "format": "date"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "colaborador_id",
+    "nome",
+    "arquivo_url"
+  ]
+}

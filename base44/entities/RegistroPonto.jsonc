@@ -1,0 +1,87 @@
+{
+  "name": "RegistroPonto",
+  "type": "object",
+  "properties": {
+    "colaborador_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "entrada",
+        "intervalo_saida",
+        "intervalo_volta",
+        "saida"
+      ],
+      "description": "Tipo do evento batido"
+    },
+    "horario": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "selfie_url": {
+      "type": "string"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "pwa",
+        "ajuste_gestor",
+        "manual"
+      ],
+      "default": "pwa"
+    },
+    "ajustado": {
+      "type": "boolean",
+      "default": false
+    },
+    "ajuste_motivo": {
+      "type": "string"
+    },
+    "ajustado_por": {
+      "type": "string",
+      "description": "Email do gestor que ajustou"
+    },
+    "horario_original": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registrado",
+        "aprovado",
+        "rejeitado"
+      ],
+      "default": "registrado"
+    },
+    "aprovado_por": {
+      "type": "string"
+    },
+    "aprovado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "colaborador_id",
+    "tipo",
+    "horario"
+  ]
+}

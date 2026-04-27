@@ -1,0 +1,77 @@
+{
+  "name": "SolicitacaoRH",
+  "type": "object",
+  "properties": {
+    "colaborador_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "folga",
+        "troca_turno",
+        "justificativa_atraso",
+        "justificativa_falta",
+        "atestado",
+        "ajuste_ponto",
+        "outro"
+      ]
+    },
+    "data_solicitacao": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_referencia": {
+      "type": "string",
+      "format": "date",
+      "description": "Data alvo (ex: dia da folga ou da falta)"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "anexo_url": {
+      "type": "string",
+      "description": "Atestado, foto ou PDF"
+    },
+    "ponto_id": {
+      "type": "string",
+      "description": "V\u00ednculo com RegistroPonto se for ajuste"
+    },
+    "horario_correto": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Para ajuste de ponto"
+    },
+    "troca_com_colaborador_id": {
+      "type": "string",
+      "description": "Para troca de turno"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "aprovada",
+        "rejeitada",
+        "cancelada"
+      ],
+      "default": "pendente"
+    },
+    "resposta_gestor": {
+      "type": "string"
+    },
+    "aprovado_por": {
+      "type": "string"
+    },
+    "aprovado_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "colaborador_id",
+    "tipo"
+  ]
+}

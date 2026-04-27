@@ -1,0 +1,49 @@
+{
+  "name": "Treinamento",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "carga_horaria": {
+      "type": "number"
+    },
+    "instrutor": {
+      "type": "string"
+    },
+    "participantes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "colaborador_id": {
+            "type": "string"
+          },
+          "presente": {
+            "type": "boolean",
+            "default": true
+          },
+          "nota": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "certificado_url": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

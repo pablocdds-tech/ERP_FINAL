@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Bot, Smartphone } from "lucide-react";
+import { LayoutDashboard, Bot, Smartphone, ShieldCheck } from "lucide-react";
 import { MODULES } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +66,13 @@ export default function Sidebar({ onNavigate }) {
           Sistema
         </div>
         <NavItem
+          to="/aprovacoes"
+          icon={ShieldCheck}
+          label="Aprovações"
+          active={isActive("/aprovacoes")}
+          onClick={onNavigate}
+        />
+        <NavItem
           to="/agentes"
           icon={Bot}
           label="Agents"
@@ -75,7 +82,7 @@ export default function Sidebar({ onNavigate }) {
         <NavItem
           to="/pwa"
           icon={Smartphone}
-          label="PWA Funcionário"
+          label="PWA"
           active={isActive("/pwa")}
           onClick={onNavigate}
         />

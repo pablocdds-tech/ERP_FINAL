@@ -1,0 +1,45 @@
+{
+  "name": "AuditoriaAprovacao",
+  "type": "object",
+  "properties": {
+    "entidade": {
+      "type": "string",
+      "description": "Ex: NotaFiscalPendente, SolicitacaoRH, RegistroPonto"
+    },
+    "entidade_id": {
+      "type": "string"
+    },
+    "acao": {
+      "type": "string",
+      "enum": [
+        "aprovar",
+        "rejeitar",
+        "corrigir",
+        "ajustar"
+      ]
+    },
+    "usuario_email": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "snapshot_antes": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "snapshot_depois": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "entidade",
+    "entidade_id",
+    "acao"
+  ]
+}

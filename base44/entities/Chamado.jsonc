@@ -1,0 +1,69 @@
+{
+  "name": "Chamado",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "colaborador_id": {
+      "type": "string"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "manutencao",
+        "ti",
+        "limpeza",
+        "operacional",
+        "rh",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "prioridade": {
+      "type": "string",
+      "enum": [
+        "baixa",
+        "media",
+        "alta",
+        "critica"
+      ],
+      "default": "media"
+    },
+    "fotos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberto",
+        "em_atendimento",
+        "resolvido",
+        "cancelado"
+      ],
+      "default": "aberto"
+    },
+    "respondido_por": {
+      "type": "string"
+    },
+    "resposta": {
+      "type": "string"
+    },
+    "resolvido_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

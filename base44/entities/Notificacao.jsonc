@@ -1,0 +1,53 @@
+{
+  "name": "Notificacao",
+  "type": "object",
+  "properties": {
+    "destinatario_email": {
+      "type": "string",
+      "description": "Email do User"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "tarefa",
+        "checklist",
+        "ponto",
+        "solicitacao",
+        "nf_pendente",
+        "fechamento_pendente",
+        "alerta",
+        "chamado",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "titulo": {
+      "type": "string"
+    },
+    "mensagem": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string",
+      "description": "Rota interna do PWA"
+    },
+    "lida": {
+      "type": "boolean",
+      "default": false
+    },
+    "lida_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "origem_tipo": {
+      "type": "string"
+    },
+    "origem_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "destinatario_email",
+    "titulo"
+  ]
+}

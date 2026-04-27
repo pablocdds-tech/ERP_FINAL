@@ -1,0 +1,46 @@
+{
+  "name": "Escala",
+  "type": "object",
+  "properties": {
+    "colaborador_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "hora_entrada": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "hora_saida": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "intervalo_minutos": {
+      "type": "number",
+      "default": 60
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "folga",
+        "feriado",
+        "ferias",
+        "afastamento"
+      ],
+      "default": "normal"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "colaborador_id",
+    "data"
+  ]
+}

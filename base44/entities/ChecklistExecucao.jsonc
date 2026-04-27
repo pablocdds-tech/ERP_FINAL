@@ -1,0 +1,60 @@
+{
+  "name": "ChecklistExecucao",
+  "type": "object",
+  "properties": {
+    "checklist_id": {
+      "type": "string"
+    },
+    "checklist_titulo": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "colaborador_id": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "respostas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "feito": {
+            "type": "boolean",
+            "default": false
+          },
+          "observacao": {
+            "type": "string"
+          },
+          "foto_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "concluido": {
+      "type": "boolean",
+      "default": false
+    },
+    "concluido_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "checklist_id"
+  ]
+}

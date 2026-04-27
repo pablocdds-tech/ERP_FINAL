@@ -24,6 +24,15 @@ import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
 import PwaChecklist from '@/pages/pwa/PwaChecklist';
 import PwaChamados from '@/pages/pwa/PwaChamados';
+import PwaTarefas from '@/pages/pwa/PwaTarefas';
+import PwaSolicitacoes from '@/pages/pwa/PwaSolicitacoes';
+import PwaAprovacoes from '@/pages/pwa/PwaAprovacoes';
+import PwaEquipe from '@/pages/pwa/PwaEquipe';
+import PwaDashboard from '@/pages/pwa/PwaDashboard';
+import PwaNotificacoes from '@/pages/pwa/PwaNotificacoes';
+import PessoasIndex from '@/pages/pessoas/PessoasIndex';
+import PessoaTipoPage from '@/pages/pessoas/PessoaTipoPage';
+import Aprovacoes from '@/pages/Aprovacoes';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,13 +56,19 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* PWA do Funcionário */}
+      {/* PWA Mobile (Funcionário + Gestor) */}
       <Route element={<PwaLayout />}>
         <Route path="/pwa" element={<PwaHome />} />
         <Route path="/pwa/ponto" element={<PwaPonto />} />
         <Route path="/pwa/escala" element={<PwaEscala />} />
+        <Route path="/pwa/tarefas" element={<PwaTarefas />} />
         <Route path="/pwa/checklist" element={<PwaChecklist />} />
         <Route path="/pwa/chamados" element={<PwaChamados />} />
+        <Route path="/pwa/solicitacoes" element={<PwaSolicitacoes />} />
+        <Route path="/pwa/aprovacoes" element={<PwaAprovacoes />} />
+        <Route path="/pwa/equipe" element={<PwaEquipe />} />
+        <Route path="/pwa/dashboard" element={<PwaDashboard />} />
+        <Route path="/pwa/notificacoes" element={<PwaNotificacoes />} />
       </Route>
 
       {/* ERP Administrativo */}
@@ -68,6 +83,9 @@ const AuthenticatedApp = () => {
         <Route path="/vendas/:tipo" element={<VendaTipoPage />} />
         <Route path="/financeiro" element={<FinanceiroIndex />} />
         <Route path="/financeiro/:area/:tipo" element={<FinanceiroTipoPage />} />
+        <Route path="/pessoas" element={<PessoasIndex />} />
+        <Route path="/pessoas/:tipo" element={<PessoaTipoPage />} />
+        <Route path="/aprovacoes" element={<Aprovacoes />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

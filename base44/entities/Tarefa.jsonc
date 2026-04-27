@@ -1,0 +1,56 @@
+{
+  "name": "Tarefa",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "responsavel_id": {
+      "type": "string",
+      "description": "Colaborador respons\u00e1vel"
+    },
+    "criado_por": {
+      "type": "string",
+      "description": "Email do gestor"
+    },
+    "data_limite": {
+      "type": "string",
+      "format": "date"
+    },
+    "prioridade": {
+      "type": "string",
+      "enum": [
+        "baixa",
+        "media",
+        "alta"
+      ],
+      "default": "media"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "em_andamento",
+        "concluida",
+        "cancelada"
+      ],
+      "default": "pendente"
+    },
+    "concluida_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

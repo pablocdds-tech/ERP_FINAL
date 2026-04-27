@@ -1,0 +1,78 @@
+{
+  "name": "FechamentoPendente",
+  "type": "object",
+  "properties": {
+    "origem": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "manual"
+      ],
+      "default": "whatsapp"
+    },
+    "mensagem_whatsapp_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "arquivo_url": {
+      "type": "string"
+    },
+    "data_referencia": {
+      "type": "string",
+      "format": "date"
+    },
+    "dados_extraidos": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "JSON da IA \u2014 vendas por canal, formas de pagamento, totais"
+    },
+    "vendas_por_canal": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "vendas_por_pagamento": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "total_vendas": {
+      "type": "number"
+    },
+    "ia_confianca": {
+      "type": "number"
+    },
+    "ia_observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "aprovado",
+        "rejeitado",
+        "corrigido"
+      ],
+      "default": "pendente"
+    },
+    "fechamento_diario_id": {
+      "type": "string"
+    },
+    "aprovado_por": {
+      "type": "string"
+    },
+    "aprovado_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "origem"
+  ]
+}
