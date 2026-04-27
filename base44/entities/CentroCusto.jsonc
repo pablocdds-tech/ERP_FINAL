@@ -1,0 +1,23 @@
+{
+  "name": "CentroCusto",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "codigo": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja vinculada. Vazio = corporativo."
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

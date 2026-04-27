@@ -1,0 +1,44 @@
+{
+  "name": "FormaPagamento",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Ex: Dinheiro, Pix, Cart\u00e3o Cr\u00e9dito"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "dinheiro",
+        "pix",
+        "credito",
+        "debito",
+        "voucher",
+        "transferencia",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "taxa_percentual": {
+      "type": "number",
+      "description": "Taxa cobrada pela operadora (%)"
+    },
+    "prazo_recebimento_dias": {
+      "type": "number"
+    },
+    "loja_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lojas onde a forma \u00e9 aceita. Vazio = todas."
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

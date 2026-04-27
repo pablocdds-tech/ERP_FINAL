@@ -11,6 +11,8 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
 import Agentes from '@/pages/Agentes';
+import CadastrosIndex from '@/pages/cadastros/CadastrosIndex';
+import CadastroTipoPage from '@/pages/cadastros/CadastroTipoPage';
 import PwaHome from '@/pages/pwa/PwaHome';
 import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
@@ -52,6 +54,8 @@ const AuthenticatedApp = () => {
       <Route element={<ErpLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/agentes" element={<Agentes />} />
+        <Route path="/cadastros" element={<CadastrosIndex />} />
+        <Route path="/cadastros/:tipo" element={<CadastroTipoPage />} />
         <Route path="/:moduleId" element={<ModulePage />} />
       </Route>
 

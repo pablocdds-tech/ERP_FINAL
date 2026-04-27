@@ -1,0 +1,41 @@
+{
+  "name": "Insumo",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "codigo": {
+      "type": "string"
+    },
+    "categoria": {
+      "type": "string"
+    },
+    "unidade_medida": {
+      "type": "string"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "custo_referencia": {
+      "type": "number"
+    },
+    "loja_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lojas que utilizam o insumo. Vazio = todas."
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

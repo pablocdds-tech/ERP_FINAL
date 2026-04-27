@@ -1,0 +1,33 @@
+{
+  "name": "UnidadeMedida",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Ex: Quilograma, Litro, Unidade"
+    },
+    "sigla": {
+      "type": "string",
+      "description": "Ex: KG, L, UN"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "peso",
+        "volume",
+        "unidade",
+        "comprimento",
+        "outro"
+      ],
+      "default": "unidade"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome",
+    "sigla"
+  ]
+}

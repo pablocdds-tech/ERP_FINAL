@@ -1,0 +1,38 @@
+{
+  "name": "Perfil",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Ex: Admin Geral, Gestor, Operador, Funcion\u00e1rio"
+    },
+    "chave": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "gestor",
+        "operador",
+        "funcionario"
+      ],
+      "description": "Chave t\u00e9cnica usada no role do User"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "permissoes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs dos m\u00f3dulos liberados (ex: cadastros, operacoes, financeiro)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome",
+    "chave"
+  ]
+}

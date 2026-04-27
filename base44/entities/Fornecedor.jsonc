@@ -1,0 +1,38 @@
+{
+  "name": "Fornecedor",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "razao_social": {
+      "type": "string"
+    },
+    "cnpj_cpf": {
+      "type": "string"
+    },
+    "telefone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "endereco": {
+      "type": "string"
+    },
+    "contato": {
+      "type": "string",
+      "description": "Pessoa de contato"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

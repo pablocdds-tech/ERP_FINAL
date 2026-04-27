@@ -1,0 +1,40 @@
+{
+  "name": "Produto",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "codigo": {
+      "type": "string",
+      "description": "SKU/c\u00f3digo interno"
+    },
+    "categoria": {
+      "type": "string"
+    },
+    "unidade_medida": {
+      "type": "string",
+      "description": "Sigla da unidade (UN, KG, L)"
+    },
+    "preco_venda": {
+      "type": "number"
+    },
+    "loja_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lojas onde o produto \u00e9 vendido. Vazio = todas."
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

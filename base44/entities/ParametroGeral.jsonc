@@ -1,0 +1,35 @@
+{
+  "name": "ParametroGeral",
+  "type": "object",
+  "properties": {
+    "chave": {
+      "type": "string",
+      "description": "Identificador do par\u00e2metro (ex: nome_empresa)"
+    },
+    "valor": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "empresa",
+        "fiscal",
+        "operacional",
+        "integracao",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "chave",
+    "valor"
+  ]
+}

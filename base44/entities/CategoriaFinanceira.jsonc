@@ -1,0 +1,29 @@
+{
+  "name": "CategoriaFinanceira",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "receita",
+        "despesa"
+      ],
+      "default": "despesa"
+    },
+    "grupo": {
+      "type": "string",
+      "description": "Agrupamento opcional (ex: Pessoal, Operacional)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome",
+    "tipo"
+  ]
+}
