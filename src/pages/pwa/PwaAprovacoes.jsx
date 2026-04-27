@@ -2,128 +2,164 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, ShoppingCart, FileSignature, Clock, MessageSquare, Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { ShieldCheck, FileText, Receipt, AlertCircle, Check, X } from "lucide-react";
+import PageTitle from "@/components/pwa/PageTitle";
 import { usePwa } from "@/lib/PwaContext";
-import AprovacaoNfDialog from "@/components/aprovacoes/AprovacaoNfDialog";
-import AprovacaoFechamentoDialog from "@/components/aprovacoes/AprovacaoFechamentoDialog";
-import { decidirSolicitacao, aprovarRegistroPonto, rejeitarRegistroPonto } from "@/lib/aprovacoes-service";
+import {
+  aprovarNotaFiscalPendente, rejeitarNotaFiscalPendente,
+  aprovarFechamentoPendente, rejeitarFechamentoPendente,
+  decidirSolicitacao,
+} from "@/lib/aprovacoes-service";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 export default function PwaAprovacoes() {
   const { gestor } = usePwa() || {};
-  const [nf, setNf] = useState([]);
-  const [fech, setFech] = useState([]);
-  const [sol, setSol] = useState([]);
-  const [pontos, setPontos] = useState([]);
-  const [colaboradores, setColaboradores] = useState([]);
-  const [dlgNf, setDlgNf] = useState(null);
-  const [dlgFech, setDlgFech] = useState(null);
+  const [nfs, setNfs] = useState([]);
+  const [fechs, setFechs] = useState([]);
+  const [sols, setSols] = useState([]);
+  const [acao, setAcao] = useState(null);
+  // acao = { tipo, item, decisao, motivo }
 
   const load = async () => {
-    const [n, f, s, p, c] = await Promise.all([
+    const [a, b, c] = await Promise.all([
       base44.entities.NotaFiscalPendente.filter({ status: "pendente" }, "-created_date", 100),
       base44.entities.FechamentoPendente.filter({ status: "pendente" }, "-created_date", 100),
       base44.entities.SolicitacaoRH.filter({ status: "pendente" }, "-created_date", 100),
-      base44.entities.RegistroPonto.filter({ status: "registrado" }, "-horario", 100),
-      base44.entities.Colaborador.list("nome", 200),
     ]);
-    setNf(n); setFech(f); setSol(s); setPontos(p); setColaboradores(c);
+    setNfs(a); setFechs(b); setSols(c);
   };
-  useEffect(() => { if (gestor) load(); }, [gestor]);
+  useEffect(() => { load(); }, []);
 
   if (!gestor) {
-    return <div className="text-center py-10 text-sm text-muted-foreground">Acesso restrito a gestores.</div>;
+    return (
+      <div>
+        <PageTitle title="Aprovações" />
+        <Card className="p-5 text-sm text-muted-foreground">Apenas gestores acessam a central de aprovações.</Card>
+      </div>
+    );
   }
 
-  const colNome = (id) => colaboradores.find((c) => c.id === id)?.nome || "—";
+  const executar = async () => {
+    if (!acao) return;
+    const { tipo, item, decisao, motivo } = acao;
+    if (tipo === "nf") {
+      if (decisao === "aprovar") await aprovarNotaFiscalPendente(item, motivo);
+      else await rejeitarNotaFiscalPendente(item, motivo);
+    } else if (tipo === "fech") {
+      if (decisao === "aprovar") await aprovarFechamentoPendente(item, motivo);
+      else await rejeitarFechamentoPendente(item, motivo);
+    } else if (tipo === "sol") {
+      await decidirSolicitacao(item, decisao === "aprovar" ? "aprovada" : "rejeitada", motivo);
+    }
+    setAcao(null);
+    load();
+  };
+
+  const total = nfs.length + fechs.length + sols.length;
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-1">Aprovações</h1>
-      <p className="text-xs text-muted-foreground mb-4">{nf.length + fech.length + sol.length + pontos.length} pendente(s)</p>
+      <PageTitle title="Aprovações" subtitle={`${total} pendência(s)`} />
 
       <Tabs defaultValue="nf">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="nf" className="text-xs"><FileText className="w-3.5 h-3.5 mr-1" />NF{nf.length > 0 && ` (${nf.length})`}</TabsTrigger>
-          <TabsTrigger value="fech" className="text-xs"><ShoppingCart className="w-3.5 h-3.5 mr-1" />Fech{fech.length > 0 && ` (${fech.length})`}</TabsTrigger>
-          <TabsTrigger value="sol" className="text-xs"><FileSignature className="w-3.5 h-3.5 mr-1" />Sol{sol.length > 0 && ` (${sol.length})`}</TabsTrigger>
-          <TabsTrigger value="ponto" className="text-xs"><Clock className="w-3.5 h-3.5 mr-1" />Pto{pontos.length > 0 && ` (${pontos.length})`}</TabsTrigger>
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="nf"><Receipt className="w-3.5 h-3.5 mr-1" /> NF ({nfs.length})</TabsTrigger>
+          <TabsTrigger value="fech"><FileText className="w-3.5 h-3.5 mr-1" /> Fech. ({fechs.length})</TabsTrigger>
+          <TabsTrigger value="sol"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> RH ({sols.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="nf" className="mt-3 space-y-2">
-          {nf.length === 0 ? <Empty /> : nf.map((n) => (
+          {nfs.length === 0 ? <EmptyState /> : nfs.map((n) => (
             <Card key={n.id} className="p-3">
-              <div className="flex items-start gap-2 mb-2">
-                {n.arquivo_url && <img src={n.arquivo_url} alt="" className="w-14 h-14 object-cover rounded border" />}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{n.fornecedor_nome || n.numero || "NF"}</div>
-                  <div className="text-xs text-muted-foreground">R$ {Number(n.valor_total || 0).toFixed(2)}</div>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {n.origem === "whatsapp" && <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-200"><MessageSquare className="w-2 h-2 mr-0.5" />WA</Badge>}
-                    {n.ia_confianca != null && <Badge variant="outline" className="text-[9px]"><Sparkles className="w-2 h-2 mr-0.5" />{Math.round(n.ia_confianca * 100)}%</Badge>}
-                  </div>
-                </div>
+              <Cabecalho titulo={`NF ${n.numero || "—"} • ${n.fornecedor_nome || "—"}`} origem={n.origem} confianca={n.ia_confianca} />
+              <div className="text-xs mt-2 space-y-0.5">
+                <div>Valor: <strong>R$ {Number(n.valor_total || 0).toFixed(2)}</strong></div>
+                {n.data_emissao && <div>Emissão: {format(new Date(n.data_emissao), "dd/MM/yyyy")}</div>}
+                {n.fornecedor_cnpj && <div>CNPJ: {n.fornecedor_cnpj}</div>}
+                {n.arquivo_url && <a href={n.arquivo_url} target="_blank" rel="noreferrer" className="text-primary underline">Ver arquivo</a>}
               </div>
-              <Button size="sm" className="w-full" onClick={() => setDlgNf(n)}>Revisar</Button>
+              <BotoesAcao onAprovar={() => setAcao({ tipo: "nf", item: n, decisao: "aprovar", motivo: "" })}
+                onRejeitar={() => setAcao({ tipo: "nf", item: n, decisao: "rejeitar", motivo: "" })} />
             </Card>
           ))}
         </TabsContent>
 
         <TabsContent value="fech" className="mt-3 space-y-2">
-          {fech.length === 0 ? <Empty /> : fech.map((f) => (
+          {fechs.length === 0 ? <EmptyState /> : fechs.map((f) => (
             <Card key={f.id} className="p-3">
-              <div className="flex items-start gap-2 mb-2">
-                {f.arquivo_url && <img src={f.arquivo_url} alt="" className="w-14 h-14 object-cover rounded border" />}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">Fechamento {f.data_referencia || ""}</div>
-                  <div className="text-xs text-muted-foreground">R$ {Number(f.total_vendas || 0).toFixed(2)}</div>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {f.origem === "whatsapp" && <Badge variant="outline" className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-200"><MessageSquare className="w-2 h-2 mr-0.5" />WA</Badge>}
-                    {f.ia_confianca != null && <Badge variant="outline" className="text-[9px]"><Sparkles className="w-2 h-2 mr-0.5" />{Math.round(f.ia_confianca * 100)}%</Badge>}
+              <Cabecalho titulo={`Fechamento ${f.data_referencia ? format(new Date(f.data_referencia), "dd/MM/yyyy") : ""}`} origem={f.origem} confianca={f.ia_confianca} />
+              <div className="text-xs mt-2">
+                Total: <strong>R$ {Number(f.total_vendas || 0).toFixed(2)}</strong>
+                {(f.vendas_por_canal || []).length > 0 && (
+                  <div className="mt-1 text-muted-foreground">
+                    {f.vendas_por_canal.map((v, i) => <div key={i}>{v.canal_nome}: R$ {Number(v.valor || 0).toFixed(2)}</div>)}
                   </div>
-                </div>
+                )}
               </div>
-              <Button size="sm" className="w-full" onClick={() => setDlgFech(f)}>Revisar</Button>
+              {f.arquivo_url && <a href={f.arquivo_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Ver arquivo</a>}
+              <BotoesAcao onAprovar={() => setAcao({ tipo: "fech", item: f, decisao: "aprovar", motivo: "" })}
+                onRejeitar={() => setAcao({ tipo: "fech", item: f, decisao: "rejeitar", motivo: "" })} />
             </Card>
           ))}
         </TabsContent>
 
         <TabsContent value="sol" className="mt-3 space-y-2">
-          {sol.length === 0 ? <Empty /> : sol.map((s) => (
+          {sols.length === 0 ? <EmptyState /> : sols.map((s) => (
             <Card key={s.id} className="p-3">
-              <div className="font-medium text-sm">{s.tipo} — {colNome(s.colaborador_id)}</div>
-              {s.descricao && <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{s.descricao}</div>}
-              {s.anexo_url && <a href={s.anexo_url} target="_blank" rel="noreferrer" className="text-xs text-primary mt-1 inline-block">Ver anexo</a>}
-              <div className="flex gap-1.5 mt-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={async () => { const r = prompt("Motivo:"); if (r === null) return; await decidirSolicitacao(s, "rejeitada", r); load(); }}>Rejeitar</Button>
-                <Button size="sm" className="flex-1" onClick={async () => { await decidirSolicitacao(s, "aprovada", ""); load(); }}>Aprovar</Button>
-              </div>
-            </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="ponto" className="mt-3 space-y-2">
-          {pontos.length === 0 ? <Empty /> : pontos.map((p) => (
-            <Card key={p.id} className="p-3">
-              <div className="font-medium text-sm">{colNome(p.colaborador_id)}</div>
-              <div className="text-xs text-muted-foreground">{p.tipo} — {p.horario ? format(new Date(p.horario), "dd/MM HH:mm") : ""}</div>
-              <div className="flex gap-1.5 mt-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={async () => { const r = prompt("Motivo:"); if (r === null) return; await rejeitarRegistroPonto(p, r); load(); }}>Rejeitar</Button>
-                <Button size="sm" className="flex-1" onClick={async () => { await aprovarRegistroPonto(p); load(); }}>Aprovar</Button>
-              </div>
+              <div className="text-sm font-medium">{s.tipo}</div>
+              <div className="text-xs text-muted-foreground">{s.descricao || "—"}</div>
+              {s.data_referencia && <div className="text-xs mt-1">Para {format(new Date(s.data_referencia), "dd/MM/yyyy")}</div>}
+              {s.anexo_url && <a href={s.anexo_url} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Ver anexo</a>}
+              <BotoesAcao onAprovar={() => setAcao({ tipo: "sol", item: s, decisao: "aprovar", motivo: "" })}
+                onRejeitar={() => setAcao({ tipo: "sol", item: s, decisao: "rejeitar", motivo: "" })} />
             </Card>
           ))}
         </TabsContent>
       </Tabs>
 
-      <AprovacaoNfDialog open={!!dlgNf} record={dlgNf} onClose={() => setDlgNf(null)} onDone={load} />
-      <AprovacaoFechamentoDialog open={!!dlgFech} record={dlgFech} onClose={() => setDlgFech(null)} onDone={load} />
+      <Card className="p-3 mt-4 text-[11px] text-muted-foreground flex items-start gap-2">
+        <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+        <div>IA nunca aprova automaticamente. Toda decisão é gravada em auditoria. Para corrigir antes de aprovar, abra a tela completa no <Link to="/financeiro" className="underline">ERP</Link>.</div>
+      </Card>
+
+      <Dialog open={!!acao} onOpenChange={(o) => !o && setAcao(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{acao?.decisao === "aprovar" ? "Aprovar" : "Rejeitar"}</DialogTitle></DialogHeader>
+          <Textarea rows={3} placeholder="Observação (opcional)"
+            value={acao?.motivo || ""} onChange={(e) => setAcao({ ...acao, motivo: e.target.value })} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAcao(null)}>Cancelar</Button>
+            <Button onClick={executar}>Confirmar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function Empty() {
-  return <Card className="p-6 text-center text-sm text-muted-foreground">Nada pendente aqui.</Card>;
+function Cabecalho({ titulo, origem, confianca }) {
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="text-sm font-medium flex-1 min-w-0">{titulo}</div>
+      <div className="text-[10px] text-muted-foreground text-right shrink-0">
+        <div className="uppercase">{origem}</div>
+        {typeof confianca === "number" && <div>IA {Math.round(confianca * 100)}%</div>}
+      </div>
+    </div>
+  );
+}
+function BotoesAcao({ onAprovar, onRejeitar }) {
+  return (
+    <div className="flex gap-2 mt-3">
+      <Button size="sm" className="flex-1" onClick={onAprovar}><Check className="w-3.5 h-3.5 mr-1" />Aprovar</Button>
+      <Button size="sm" variant="outline" className="flex-1 text-destructive" onClick={onRejeitar}><X className="w-3.5 h-3.5 mr-1" />Rejeitar</Button>
+    </div>
+  );
+}
+function EmptyState() {
+  return <Card className="p-6 text-center text-xs text-muted-foreground">Sem pendências.</Card>;
 }
