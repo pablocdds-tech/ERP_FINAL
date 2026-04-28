@@ -87,6 +87,158 @@ export function calcularDespesas(contasPagar, lojaId, de, ate) {
     .reduce((s, c) => s + (Number(c.valor_pago) || Number(c.valor) || 0), 0);
 }
 
+// Grupos do DRE — ordem fixa de exibição
+export const GRUPOS_DRE = [
+  { chave: "pessoal", label: "Pessoal e Folha" },
+  { chave: "ocupacao", label: "Ocupação" },
+  { chave: "utilidades", label: "Utilidades" },
+  { chave: "marketing", label: "Marketing e Comissões" },
+  { chave: "administrativas", label: "Administrativas" },
+  { chave: "manutencao", label: "Manutenção e Limpeza" },
+  { chave: "impostos", label: "Impostos s/ Venda" },
+  { chave: "financeiras", label: "Despesas Financeiras" },
+  { chave: "outras", label: "Outras Despesas" },
+];
+
+// Agrupa contas a pagar por grupo_dre, separando Pago vs A Vencer (competência por data_vencimento)
+export function agruparDespesasPorGrupoDRE({ contasPagar, categorias, lojaId, de, ate }) {
+  const catMap = new Map(categorias.map((c) => [c.id, c]));
+  const grupos = {};
+  GRUPOS_DRE.forEach((g) => { grupos[g.chave] = { pago: 0, vencer: 0 }; });
+
+  const filtradas = contasPagar
+    .filter((c) => !c.banco_virtual && c.tipo_origem !== "interno")
+    .filter((c) => c.status !== "cancelada")
+    .filter((c) => !lojaId || c.loja_id === lojaId);
+
+  filtradas.forEach((c) => {
+    const cat = catMap.get(c.categoria_id);
+    const grupo = cat?.grupo_dre || "outras";
+    if (!grupos[grupo]) grupos[grupo] = { pago: 0, vencer: 0 };
+
+    const isPago = c.status === "pago" || c.status === "baixado" || (Number(c.valor_pago) > 0 && c.data_pagamento);
+    const dataRef = isPago ? (c.data_pagamento || c.data_vencimento) : c.data_vencimento;
+    if (!dentroPeriodo(dataRef, de, ate)) return;
+
+    const valor = Number(c.valor_pago) || Number(c.valor) || 0;
+    if (isPago) grupos[grupo].pago += valor;
+    else grupos[grupo].vencer += valor;
+  });
+
+  return grupos;
+}
+
+// Receita decomposta por canal de venda (a partir dos fechamentos aprovados)
+export function calcularReceitaPorCanal(fechamentos, lojaId, de, ate) {
+  const fs = fechamentos.filter((f) => {
+    if (lojaId && f.loja_id !== lojaId) return false;
+    if (!dentroPeriodo(f.data, de, ate)) return false;
+    return f.status === "aprovado" || f.status === "fechado" || !f.status;
+  });
+  const map = new Map();
+  fs.forEach((f) => {
+    (f.vendas_por_canal || []).forEach((v) => {
+      const key = v.canal_id || v.canal_nome || "sem_canal";
+      const cur = map.get(key) || { canal_id: v.canal_id, canal_nome: v.canal_nome || "Sem canal", valor: 0 };
+      cur.valor += Number(v.valor) || 0;
+      map.set(key, cur);
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => b.valor - a.valor);
+}
+
+// DRE Gerencial expandido — estrutura completa com grupos, EBITDA, Prime Cost, Ponto de Equilíbrio
+export function calcularDREExpandido({ base, lojaId, de, ate }) {
+  const { receita, taxas } = calcularReceitaELoja(base.fechamentos, lojaId, de, ate);
+  const { cmv, cmvPct } = calcularCMV({ ...base, lojaId, de, ate });
+  const grupos = agruparDespesasPorGrupoDRE({
+    contasPagar: base.contasPagar,
+    categorias: base.categorias || [],
+    lojaId, de, ate,
+  });
+  const canais = calcularReceitaPorCanal(base.fechamentos, lojaId, de, ate);
+
+  // Soma helper
+  const somaGrupo = (chave, modo = "pago") => grupos[chave]?.[modo] || 0;
+  const totalDespesasOperacionais = (modo) =>
+    ["pessoal", "ocupacao", "utilidades", "marketing", "administrativas", "manutencao", "outras"]
+      .reduce((s, k) => s + somaGrupo(k, modo), 0);
+
+  const impostosPago = somaGrupo("impostos", "pago");
+  const impostosVencer = somaGrupo("impostos", "vencer");
+  const financeirasPago = somaGrupo("financeiras", "pago");
+  const financeirasVencer = somaGrupo("financeiras", "vencer");
+
+  const receitaLiquida = receita - taxas - impostosPago;
+  const lucroBruto = receitaLiquida - cmv;
+  const opPago = totalDespesasOperacionais("pago");
+  const opVencer = totalDespesasOperacionais("vencer");
+
+  const ebitdaPago = lucroBruto - opPago;
+  const ebitdaCompetencia = lucroBruto - opPago - opVencer - impostosVencer;
+
+  const resultadoPago = ebitdaPago - financeirasPago;
+  const resultadoCompetencia = ebitdaCompetencia - financeirasPago - financeirasVencer;
+
+  // Prime Cost = CMV + Pessoal (indicador chave de food service)
+  const folha = somaGrupo("pessoal", "pago") + somaGrupo("pessoal", "vencer");
+  const primeCost = cmv + folha;
+  const primeCostPct = receita > 0 ? (primeCost / receita) * 100 : 0;
+
+  // Ponto de equilíbrio: Custos Fixos / Margem de Contribuição
+  // Aqui aproximamos: Fixos = Ocupação + Pessoal + Adm + Utilidades (mínimas)
+  const custosFixos = ["pessoal", "ocupacao", "administrativas", "utilidades"]
+    .reduce((s, k) => s + somaGrupo(k, "pago") + somaGrupo(k, "vencer"), 0);
+  const custosVariaveis = cmv + taxas + impostosPago + impostosVencer +
+    somaGrupo("marketing", "pago") + somaGrupo("marketing", "vencer");
+  const margemContribuicaoPct = receita > 0 ? ((receita - custosVariaveis) / receita) * 100 : 0;
+  const pontoEquilibrio = margemContribuicaoPct > 0 ? custosFixos / (margemContribuicaoPct / 100) : 0;
+
+  return {
+    receita,
+    receitaLiquida,
+    taxas,
+    cmv,
+    cmvPct,
+    lucroBruto,
+    margemBruta: receita > 0 ? (lucroBruto / receita) * 100 : 0,
+    grupos,
+    despesasOperacionaisPago: opPago,
+    despesasOperacionaisVencer: opVencer,
+    impostosPago,
+    impostosVencer,
+    financeirasPago,
+    financeirasVencer,
+    ebitdaPago,
+    ebitdaCompetencia,
+    ebitdaMargemPago: receita > 0 ? (ebitdaPago / receita) * 100 : 0,
+    ebitdaMargemCompetencia: receita > 0 ? (ebitdaCompetencia / receita) * 100 : 0,
+    resultadoPago,
+    resultadoCompetencia,
+    margemLiquidaPago: receita > 0 ? (resultadoPago / receita) * 100 : 0,
+    margemLiquidaCompetencia: receita > 0 ? (resultadoCompetencia / receita) * 100 : 0,
+    primeCost,
+    primeCostPct,
+    folha,
+    pontoEquilibrio,
+    margemContribuicaoPct,
+    canais,
+  };
+}
+
+// Calcula período anterior de mesmo tamanho para comparativo
+export function periodoAnterior(de, ate) {
+  if (!de || !ate) return { de: null, ate: null };
+  const dDe = new Date(de), dAte = new Date(ate);
+  const dias = Math.round((dAte - dDe) / 86400000) + 1;
+  const anteAnterior = new Date(dDe); anteAnterior.setDate(anteAnterior.getDate() - 1);
+  const deAnterior = new Date(anteAnterior); deAnterior.setDate(deAnterior.getDate() - dias + 1);
+  return {
+    de: deAnterior.toISOString().slice(0, 10),
+    ate: anteAnterior.toISOString().slice(0, 10),
+  };
+}
+
 // DRE Gerencial — não contábil, simples
 export function calcularDRE({ base, lojaId, de, ate }) {
   const { receita, taxas } = calcularReceitaELoja(base.fechamentos, lojaId, de, ate);

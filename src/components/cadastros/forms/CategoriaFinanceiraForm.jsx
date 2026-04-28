@@ -21,6 +21,25 @@ export default function CategoriaFinanceiraForm({ data, onChange, readOnly }) {
       <Field label="Grupo">
         <Input value={data.grupo || ""} onChange={(e) => set("grupo", e.target.value)} disabled={readOnly} />
       </Field>
+      {data.tipo !== "receita" && (
+        <Field label="Grupo no DRE" hint="Como esta categoria aparece no DRE Gerencial">
+          <Select value={data.grupo_dre || "__none__"} onValueChange={(v) => set("grupo_dre", v === "__none__" ? "" : v)} disabled={readOnly}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— Não classificada (Outras) —</SelectItem>
+              <SelectItem value="pessoal">Pessoal e Folha</SelectItem>
+              <SelectItem value="ocupacao">Ocupação (aluguel, condomínio, IPTU)</SelectItem>
+              <SelectItem value="utilidades">Utilidades (energia, água, gás, internet)</SelectItem>
+              <SelectItem value="marketing">Marketing e Comissões</SelectItem>
+              <SelectItem value="administrativas">Administrativas</SelectItem>
+              <SelectItem value="manutencao">Manutenção e Limpeza</SelectItem>
+              <SelectItem value="impostos">Impostos sobre Venda</SelectItem>
+              <SelectItem value="financeiras">Financeiras (juros, taxas bancárias)</SelectItem>
+              <SelectItem value="outras">Outras</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      )}
     </div>
   );
 }
