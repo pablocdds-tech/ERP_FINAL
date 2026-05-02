@@ -1,24 +1,26 @@
 import { base44 } from "@/api/base44Client";
 
 // Carrega tudo o que o módulo de gestão precisa em uma única chamada paralela
+// Limites em cada lista evitam travamentos quando uma entidade tem muitos registros.
 export async function carregarBaseGestao() {
+  const safe = (p) => p.catch(() => []);
   const [
     lojas, fechamentos, contasPagar, contasReceber,
     produtos, fichasTecnicas, insumos, compras, movEstoque,
     categorias, formasPagamento, canais,
   ] = await Promise.all([
-    base44.entities.Loja.list(),
-    base44.entities.FechamentoDiario.list(),
-    base44.entities.ContaPagar.list(),
-    base44.entities.ContaReceber.list().catch(() => []),
-    base44.entities.Produto.list(),
-    base44.entities.FichaTecnica.list().catch(() => []),
-    base44.entities.Insumo.list().catch(() => []),
-    base44.entities.Compra.list().catch(() => []),
-    base44.entities.MovimentacaoEstoque.list().catch(() => []),
-    base44.entities.CategoriaFinanceira.list().catch(() => []),
-    base44.entities.FormaPagamento.list().catch(() => []),
-    base44.entities.CanalVenda.list().catch(() => []),
+    safe(base44.entities.Loja.list("-created_date", 200)),
+    safe(base44.entities.FechamentoDiario.list("-data", 500)),
+    safe(base44.entities.ContaPagar.list("-data_vencimento", 1000)),
+    safe(base44.entities.ContaReceber.list("-data_vencimento", 500)),
+    safe(base44.entities.Produto.list("-created_date", 500)),
+    safe(base44.entities.FichaTecnica.list("-created_date", 500)),
+    safe(base44.entities.Insumo.list("-created_date", 500)),
+    safe(base44.entities.Compra.list("-data", 200)),
+    safe(base44.entities.MovimentacaoEstoque.list("-data", 200)),
+    safe(base44.entities.CategoriaFinanceira.list("-created_date", 200)),
+    safe(base44.entities.FormaPagamento.list("-created_date", 100)),
+    safe(base44.entities.CanalVenda.list("-created_date", 100)),
   ]);
   return { lojas, fechamentos, contasPagar, contasReceber, produtos, fichasTecnicas, insumos, compras, movEstoque, categorias, formasPagamento, canais };
 }
