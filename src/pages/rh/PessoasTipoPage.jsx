@@ -10,12 +10,14 @@ import Treinamentos from "./Treinamentos";
 import Tarefas from "./Tarefas";
 import Checklists from "./Checklists";
 import Chamados from "./Chamados";
+import ConfiguracaoPonto from "./ConfiguracaoPonto";
 
 const PAGES = {
   colaboradores: Colaboradores,
   cargos: Cargos,
   escalas: Escalas,
   ponto: EspelhoPonto,
+  "configuracao-ponto": ConfiguracaoPonto,
   solicitacoes: Solicitacoes,
   documentos: Documentos,
   treinamentos: Treinamentos,
