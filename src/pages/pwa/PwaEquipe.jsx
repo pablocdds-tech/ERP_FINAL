@@ -22,11 +22,15 @@ export default function PwaEquipe() {
   const hoje = new Date().toISOString().slice(0, 10);
 
   const load = async () => {
-    const [cs, regs, esc] = await Promise.all([
+    // Resiliente: se uma chamada falhar (ex: rede instável), as outras seguem
+    const [csR, regsR, escR] = await Promise.allSettled([
       base44.entities.Colaborador.filter({ status: "ativo" }),
       base44.entities.RegistroPonto.filter({ data: hoje }),
       base44.entities.Escala.filter({ data: hoje }),
     ]);
+    const cs = csR.status === "fulfilled" ? csR.value : [];
+    const regs = regsR.status === "fulfilled" ? regsR.value : [];
+    const esc = escR.status === "fulfilled" ? escR.value : [];
     setColaboradores(cs);
     const mr = {}; regs.forEach((r) => { (mr[r.colaborador_id] = mr[r.colaborador_id] || []).push(r); });
     setRegistrosPorCol(mr);
