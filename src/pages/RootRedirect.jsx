@@ -12,7 +12,11 @@ export default function RootRedirect() {
     base44.auth
       .me()
       .then((u) => setTarget(defaultLandingPath(u)))
-      .catch(() => setTarget("/admin")); // sem user, ErpLayout dispara fluxo de login
+      .catch(() => {
+        // Sem usuário: dispara o fluxo de login do Base44 e fica aqui
+        // (NÃO redirecione para /admin — AdminGuard manda de volta para "/" e cria loop)
+        base44.auth.redirectToLogin(window.location.origin + "/");
+      });
   }, []);
 
   if (!target) {
