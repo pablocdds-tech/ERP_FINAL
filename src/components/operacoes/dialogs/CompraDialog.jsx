@@ -11,6 +11,8 @@ import Field from "@/components/cadastros/Field";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
 import ItemLineEditor from "@/components/operacoes/ItemLineEditor";
 import { registrarMovimentacoes } from "@/lib/operacoes-service";
+import FornecedorQuickDialog from "@/components/operacoes/dialogs/FornecedorQuickDialog";
+import { Plus } from "lucide-react";
 
 const empty = () => ({
   numero: "",
@@ -27,6 +29,7 @@ export default function CompraDialog({ open, mode, record, onClose, onSaved }) {
   const [data, setData] = useState(empty());
   const [fornecedores, setFornecedores] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [quickFornecedor, setQuickFornecedor] = useState(false);
   const isView = mode === "view";
 
   useEffect(() => {
@@ -104,13 +107,20 @@ export default function CompraDialog({ open, mode, record, onClose, onSaved }) {
             <Input type="date" value={data.data || ""} onChange={(e) => setData({ ...data, data: e.target.value })} disabled={isView} />
           </Field>
           <Field label="Fornecedor">
-            <Select value={data.fornecedor_id || "__none__"} onValueChange={(v) => setData({ ...data, fornecedor_id: v === "__none__" ? "" : v })} disabled={isView}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— Nenhum —</SelectItem>
-                {fornecedores.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={data.fornecedor_id || "__none__"} onValueChange={(v) => setData({ ...data, fornecedor_id: v === "__none__" ? "" : v })} disabled={isView}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Nenhum —</SelectItem>
+                  {fornecedores.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {!isView && (
+                <Button type="button" variant="outline" size="icon" onClick={() => setQuickFornecedor(true)} title="Cadastro rápido">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </Field>
           <Field label="Loja / CD que recebeu" required>
             <LojaSingleSelect value={data.loja_id} onChange={(v) => setData({ ...data, loja_id: v })} allowEmpty={false} />
@@ -159,6 +169,15 @@ export default function CompraDialog({ open, mode, record, onClose, onSaved }) {
             </Button>
           )}
         </DialogFooter>
+
+        <FornecedorQuickDialog
+          open={quickFornecedor}
+          onClose={() => setQuickFornecedor(false)}
+          onCreated={(f) => {
+            setFornecedores((prev) => [...prev, f]);
+            setData((d) => ({ ...d, fornecedor_id: f.id }));
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
