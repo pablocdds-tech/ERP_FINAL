@@ -83,7 +83,19 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
       if (data.tipo_conta === "conta_corrente_pj" || data.tipo_conta === "conta_corrente_pf") return "corrente";
       return "outro";
     })();
-    const payload = { ...data, tipo: tipoLegado };
+    const numOrUndef = (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    const payload = {
+      ...data,
+      tipo: tipoLegado,
+      limite_credito: numOrUndef(data.limite_credito),
+      taxa_juros_mensal: numOrUndef(data.taxa_juros_mensal),
+      vencimento_fatura: numOrUndef(data.vencimento_fatura),
+      saldo_inicial: numOrUndef(data.saldo_inicial) ?? 0,
+    };
 
     if (record?.id) {
       const { id, ...rest } = payload;
