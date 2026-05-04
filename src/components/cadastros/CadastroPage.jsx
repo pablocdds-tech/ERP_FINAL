@@ -20,6 +20,7 @@ const formatValue = (val, format) => {
   if (val === null || val === undefined || val === "") return "—";
   if (format === "money") return `R$ ${Number(val).toFixed(2).replace(".", ",")}`;
   if (format === "percent") return `${Number(val).toFixed(2)}%`;
+  if (format === "boolean") return val ? "Sim" : "Não";
   return String(val);
 };
 

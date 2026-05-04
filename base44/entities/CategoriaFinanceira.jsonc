@@ -5,32 +5,126 @@
     "nome": {
       "type": "string"
     },
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo curto \u00fanico (ex: REC.SALAO, CMV.MUSSARELA)"
+    },
     "tipo": {
       "type": "string",
       "enum": [
+        "entrada",
+        "saida",
+        "interno",
+        "ajuste",
         "receita",
         "despesa"
       ],
-      "default": "despesa"
+      "default": "saida",
+      "description": "Tipo do movimento. 'receita'/'despesa' s\u00e3o mantidos por compatibilidade."
     },
     "grupo": {
       "type": "string",
-      "description": "Agrupamento livre (ex: Pessoal, Operacional)"
+      "enum": [
+        "Receitas",
+        "Dedu\u00e7\u00f5es da Receita",
+        "CMV",
+        "M\u00e3o de Obra",
+        "Ocupa\u00e7\u00e3o e Estrutura",
+        "Operacional",
+        "Manuten\u00e7\u00e3o e Equipamentos",
+        "Administrativo",
+        "Marketing e Comercial",
+        "Delivery e Log\u00edstica",
+        "Financeiro",
+        "Impostos e Taxas",
+        "Investimentos",
+        "S\u00f3cio x Empresa",
+        "Transfer\u00eancias e Movimentos Internos",
+        "Receb\u00edveis e Concilia\u00e7\u00e3o"
+      ],
+      "description": "Grupo de cadastro (organiza\u00e7\u00e3o gerencial)"
+    },
+    "subgrupo": {
+      "type": "string",
+      "description": "Agrupamento livre dentro do grupo (opcional)"
+    },
+    "impacta_dre": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se este lan\u00e7amento entra na DRE Gerencial"
     },
     "grupo_dre": {
       "type": "string",
       "enum": [
-        "pessoal",
-        "ocupacao",
-        "utilidades",
-        "marketing",
-        "administrativas",
-        "manutencao",
-        "impostos",
-        "financeiras",
-        "outras"
+        "Receita Bruta",
+        "Dedu\u00e7\u00f5es da Receita",
+        "Receita L\u00edquida",
+        "CMV",
+        "Lucro Bruto",
+        "M\u00e3o de Obra",
+        "Despesas Operacionais",
+        "Marketing e Comercial",
+        "Delivery e Log\u00edstica",
+        "Despesas Administrativas",
+        "Despesas Financeiras",
+        "Impostos e Taxas",
+        "Resultado Operacional",
+        "Investimentos",
+        "Movimentos N\u00e3o Operacionais",
+        "N\u00e3o aplic\u00e1vel"
       ],
-      "description": "Classifica\u00e7\u00e3o para agrupar no DRE Gerencial"
+      "description": "Como aparece no DRE"
+    },
+    "ordem_dre": {
+      "type": "number",
+      "description": "Ordem de exibi\u00e7\u00e3o dentro do grupo DRE"
+    },
+    "tipo_dre": {
+      "type": "string",
+      "enum": [
+        "receita",
+        "deducao",
+        "custo",
+        "despesa",
+        "investimento",
+        "nao_operacional",
+        "nao_aplicavel"
+      ],
+      "description": "Como agrega no c\u00e1lculo da DRE"
+    },
+    "natureza_uso": {
+      "type": "string",
+      "enum": [
+        "operacional",
+        "deducao_receita",
+        "transferencia_interna",
+        "baixa_recebivel",
+        "socio_empresa",
+        "investimento",
+        "ajuste"
+      ],
+      "default": "operacional",
+      "description": "Para valida\u00e7\u00f5es: identifica usos especiais (transfer\u00eancia, baixa de cart\u00e3o, s\u00f3cio etc.)"
+    },
+    "loja_obrigatoria": {
+      "type": "boolean",
+      "default": false
+    },
+    "centro_custo_obrigatorio": {
+      "type": "boolean",
+      "default": false
+    },
+    "regra_uso": {
+      "type": "string",
+      "description": "Texto explicando quando usar e quando N\u00c3O usar esta categoria"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "sistema": {
+      "type": "boolean",
+      "default": false,
+      "description": "Categoria semeada pelo sistema. Bloqueia exclus\u00e3o e protege contra altera\u00e7\u00f5es cr\u00edticas."
     },
     "ativo": {
       "type": "boolean",
@@ -38,7 +132,6 @@
     }
   },
   "required": [
-    "nome",
-    "tipo"
+    "nome"
   ]
 }

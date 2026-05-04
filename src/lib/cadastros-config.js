@@ -132,12 +132,16 @@ export const CADASTROS = {
     icon: Tags,
     hasLoja: false,
     columns: [
+      { key: "codigo", label: "Código" },
       { key: "nome", label: "Nome" },
-      { key: "tipo", label: "Tipo" },
       { key: "grupo", label: "Grupo" },
+      { key: "tipo", label: "Tipo" },
+      { key: "grupo_dre", label: "DRE" },
+      { key: "impacta_dre", label: "Impacta DRE", format: "boolean" },
     ],
-    searchFields: ["nome", "grupo"],
+    searchFields: ["nome", "codigo", "grupo", "grupo_dre", "subgrupo"],
     formComponent: "CategoriaFinanceiraForm",
+    customPage: "PlanoCategorias",
   },
   "centros-custo": {
     entity: "CentroCusto",
