@@ -3,9 +3,11 @@ import CadastroPage from "@/components/cadastros/CadastroPage";
 import { getCadastro } from "@/lib/cadastros-config";
 import PageNotFound from "@/lib/PageNotFound";
 import PlanoCategorias from "./PlanoCategorias";
+import ImportarItens from "./ImportarItens";
 
 const CUSTOM_PAGES = {
   PlanoCategorias,
+  ImportarItens,
 };
 
 export default function CadastroTipoPage() {

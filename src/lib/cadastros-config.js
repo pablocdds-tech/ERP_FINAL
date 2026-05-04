@@ -1,6 +1,6 @@
 import {
   Store, Users, Shield, Package, Wheat, Truck, Ruler, Tags,
-  Building2, CreditCard, Megaphone, Settings2,
+  Building2, CreditCard, Megaphone, Settings2, FileSpreadsheet,
 } from "lucide-react";
 
 // Configuração declarativa de cada subcadastro do Módulo 1.
@@ -202,6 +202,14 @@ export const CADASTROS = {
     ],
     searchFields: ["chave", "valor", "descricao"],
     formComponent: "ParametroGeralForm",
+  },
+  "importar-itens": {
+    entity: null,
+    title: "Importar Itens por Planilha",
+    singular: "Importação",
+    icon: FileSpreadsheet,
+    hasLoja: false,
+    customPage: "ImportarItens",
   },
 };
 
