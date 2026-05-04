@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Eye, Power } from "lucide-react";
+import { Plus, Pencil, Eye, Power, Trash2 } from "lucide-react";
 import PageShell from "@/components/financeiro/PageShell";
 import StatusBadge from "@/components/cadastros/StatusBadge";
 import ContaBancariaDialog from "@/components/financeiro/ContaBancariaDialog";
+import ExcluirContaBancariaDialog from "@/components/financeiro/ExcluirContaBancariaDialog";
 import { calcularSaldosBancarios } from "@/lib/financeiro-service";
 
 export default function ContasBancarias() {
@@ -14,6 +15,7 @@ export default function ContasBancarias() {
   const [movs, setMovs] = useState([]);
   const [lojas, setLojas] = useState([]);
   const [dialog, setDialog] = useState({ open: false, mode: "create", record: null });
+  const [excluir, setExcluir] = useState({ open: false, conta: null });
 
   const load = async () => {
     const [c, m, l] = await Promise.all([
@@ -96,7 +98,8 @@ export default function ContasBancarias() {
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDialog({ open: true, mode: "view", record: c })}><Eye className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDialog({ open: true, mode: "edit", record: c })}><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(c)}><Power className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggle(c)} title={c.ativo === false ? "Ativar" : "Inativar"}><Power className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setExcluir({ open: true, conta: c })} title="Excluir"><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -110,6 +113,10 @@ export default function ContasBancarias() {
       <ContaBancariaDialog
         open={dialog.open} mode={dialog.mode} record={dialog.record}
         onClose={() => setDialog((d) => ({ ...d, open: false }))} onSaved={load}
+      />
+      <ExcluirContaBancariaDialog
+        open={excluir.open} conta={excluir.conta}
+        onClose={() => setExcluir({ open: false, conta: null })} onDeleted={load}
       />
     </PageShell>
   );
