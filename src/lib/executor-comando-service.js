@@ -1,37 +1,55 @@
-// Orquestra o ciclo de vida de um ComandoExecutor:
-// criar (aguardando confirmação) → confirmar/cancelar → executar ou aprovar.
+// Orquestra o ciclo de vida de um ComandoExecutor (Agent Executor ERP):
+// criar (aguardando confirmação / rascunho) → confirmar/cancelar → executar.
 
 import { base44 } from "@/api/base44Client";
 import { getPerfilChave } from "@/lib/perfil";
 import { logInteracao } from "@/lib/ai-log";
 import { interpretarComando, classificar, executarPlano } from "@/lib/executor-operacional";
 
+const AGENT_CHAVE = "executor_erp";
+const AGENT_NOME = "Executor ERP";
+
 // Cria um ComandoExecutor a partir do comando livre, já com o plano interpretado.
 export async function criarComando({ comando, modelo, usuario }) {
   const plano = await interpretarComando({ comando, modelo });
-  const cls = classificar(plano.intencao);
+  const cls = classificar(plano);
 
-  const status =
-    cls.tipo === "proibida" ? "rejeitado" :
-    cls.tipo === "sensivel" ? "aguardando_aprovacao" :
-    cls.tipo === "desconhecida" ? "rejeitado" :
-    "aguardando_confirmacao";
+  let status;
+  let exige_aprovacao = false;
+  let motivo_aprovacao = "";
 
-  const exige_aprovacao = cls.tipo === "sensivel";
-  const motivo_aprovacao = cls.motivo || (cls.tipo === "proibida" ? cls.motivo : "");
+  if (cls.tipo === "proibida") {
+    status = "rejeitado";
+    motivo_aprovacao = cls.motivo;
+  } else if (cls.tipo === "desconhecida") {
+    status = "rejeitado";
+    motivo_aprovacao = cls.motivo;
+  } else if (plano.precisa_esclarecimento) {
+    status = "pendente_revisao";
+    motivo_aprovacao = plano.pergunta_esclarecimento || "Faltam informações críticas.";
+  } else if (plano.rascunho) {
+    status = "aguardando_confirmacao";
+    motivo_aprovacao = plano.motivo_rascunho || "Algumas informações estão incompletas — confira antes de confirmar.";
+  } else if (cls.tipo === "confirmacao_extra") {
+    status = "aguardando_confirmacao";
+    motivo_aprovacao = cls.motivo;
+    exige_aprovacao = true;
+  } else {
+    status = "aguardando_confirmacao";
+  }
 
   const registro = await base44.entities.ComandoExecutor.create({
     comando_original: comando,
     usuario_email: usuario?.email,
     usuario_nome: usuario?.full_name,
     perfil_usuario: getPerfilChave(usuario),
-    agente_chave: "executor_operacional",
-    agente_nome: "Executor Operacional",
+    agente_chave: AGENT_CHAVE,
+    agente_nome: AGENT_NOME,
     modelo_ia: plano.modelo_usado,
     intencao: plano.intencao,
     plano_resumo: plano.plano_resumo,
     plano_dados: JSON.stringify(plano.dados || {}),
-    modulo_afetado: plano.modulo_afetado || "rotinas",
+    modulo_afetado: plano.modulo_afetado || "cadastros",
     loja_id: plano.dados?.loja_id || undefined,
     status,
     exige_aprovacao,
@@ -61,14 +79,15 @@ export async function confirmarComando({ comandoId }) {
       status: "executado",
       registro_entidade: out.registro_entidade,
       registro_id: out.registro_id,
+      registros_criados: JSON.stringify(out.registros_criados || []),
       dados_depois: out.dados_depois,
       log_execucao: out.log_execucao,
       executado_em: new Date().toISOString(),
     });
 
     await logInteracao({
-      agentChave: "executor_operacional",
-      agentNome: "Executor Operacional",
+      agentChave: AGENT_CHAVE,
+      agentNome: AGENT_NOME,
       modelo: cmd.modelo_ia,
       pergunta: cmd.comando_original,
       resposta: cmd.plano_resumo,
@@ -86,8 +105,8 @@ export async function confirmarComando({ comandoId }) {
       log_execucao: `[${new Date().toISOString()}] ERRO: ${erro}`,
     });
     await logInteracao({
-      agentChave: "executor_operacional",
-      agentNome: "Executor Operacional",
+      agentChave: AGENT_CHAVE,
+      agentNome: AGENT_NOME,
       modelo: cmd.modelo_ia,
       pergunta: cmd.comando_original,
       resposta: erro,
@@ -102,27 +121,4 @@ export async function confirmarComando({ comandoId }) {
 
 export async function cancelarComando({ comandoId }) {
   return base44.entities.ComandoExecutor.update(comandoId, { status: "cancelado" });
-}
-
-// Aprovação humana: gestor aprova → executa em seguida.
-export async function aprovarComando({ comandoId, aprovador }) {
-  const cmd = await base44.entities.ComandoExecutor.get(comandoId);
-  if (cmd.status !== "aguardando_aprovacao") {
-    throw new Error(`Comando não está aguardando aprovação (status atual: ${cmd.status}).`);
-  }
-  await base44.entities.ComandoExecutor.update(comandoId, {
-    status: "aguardando_confirmacao",
-    aprovado_por: aprovador?.email,
-    aprovado_em: new Date().toISOString(),
-  });
-  return confirmarComando({ comandoId });
-}
-
-export async function rejeitarComando({ comandoId, aprovador, motivo }) {
-  return base44.entities.ComandoExecutor.update(comandoId, {
-    status: "rejeitado",
-    aprovado_por: aprovador?.email,
-    aprovado_em: new Date().toISOString(),
-    erro_detalhe: motivo || "Rejeitado pelo aprovador",
-  });
 }

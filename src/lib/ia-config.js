@@ -29,7 +29,7 @@ export const AGENTS = [
 
 export const IA_LIST = [
   { tipo: "chat", nome: "Chat com Agentes", descricao: "Converse com os agentes (Orquestrador, Financeiro, Operações...).", icon: MessagesSquare },
-  { tipo: "comandos", nome: "Comandos do Executor", descricao: "Histórico de comandos do Executor Operacional, com plano, status e aprovações.", icon: Wand2 },
+  { tipo: "executor", nome: "Executor ERP", descricao: "Comandos em linguagem natural para cadastros, lançamentos financeiros, estoque e compras. Histórico, plano e confirmações.", icon: Wand2 },
   { tipo: "agents", nome: "Agents", descricao: "Catálogo dos agents internos da plataforma.", icon: Bot },
   { tipo: "logs", nome: "Logs de Agents", descricao: "Histórico de ações sugeridas e executadas.", icon: FileText },
   { tipo: "eventos", nome: "Eventos de Automação", descricao: "Eventos enviados/recebidos do sistema.", icon: Activity },

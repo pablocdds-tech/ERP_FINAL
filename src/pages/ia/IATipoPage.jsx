@@ -15,6 +15,7 @@ import Comandos from "./Comandos";
 
 const PAGES = {
   chat: Chat,
+  executor: Comandos,
   comandos: Comandos,
   agents: Agents,
   logs: Logs,

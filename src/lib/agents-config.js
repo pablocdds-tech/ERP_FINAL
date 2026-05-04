@@ -51,14 +51,14 @@ REGRAS GERAIS (válidas para todos os agentes):
 
 export const AGENTS_CATALOG = [
   {
-    chave: "executor_operacional",
-    nome: "Executor Operacional",
-    descricao: "Recebe comandos em linguagem natural e EXECUTA ações operacionais (criar tarefa, abrir chamado, cobrar checklist, gerar resumo, notificar). Sempre apresenta um plano antes de executar; ações sensíveis viram solicitação de aprovação.",
+    chave: "executor_erp",
+    nome: "Executor ERP",
+    descricao: "Recebe comandos em linguagem natural e EXECUTA cadastros, lançamentos financeiros, estoque e compras dentro do ERP. Apresenta um plano antes de executar; ações relevantes pedem confirmação. Não envia mensagens nem cria tarefas/chamados.",
     icon: Wand2,
     cor: "violet",
     modoExecutor: true,
-    fontes: ["Tarefa", "Chamado", "OcorrenciaOperacional", "Notificacao", "Checklist", "Colaborador", "Loja"],
-    papel: `Você é o Agent Executor Operacional. Diferente dos outros agentes, você EXECUTA ações no ERP a partir de comandos em linguagem natural — mas só após confirmação humana, e nunca para ações financeiras, de estoque ou aprovações sensíveis.\n\n${REGRAS_BASE}`,
+    fontes: ["ContaPagar", "ContaReceber", "Insumo", "Produto", "Fornecedor", "Cliente", "CategoriaFinanceira", "CentroCusto", "Compra", "MovimentacaoEstoque"],
+    papel: `Você é o Agent Executor ERP. Diferente dos outros agentes, você EXECUTA cadastros e lançamentos no ERP a partir de comandos em linguagem natural — mas só após confirmação, e nunca para ações financeiras sensíveis (baixa, saldo, aprovação de NF/ponto/fechamento) ou para envio de mensagens.\n\n${REGRAS_BASE}`,
   },
   {
     chave: "orquestrador",

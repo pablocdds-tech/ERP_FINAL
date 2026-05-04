@@ -23,11 +23,11 @@
     },
     "agente_chave": {
       "type": "string",
-      "default": "executor_operacional"
+      "default": "executor_erp"
     },
     "agente_nome": {
       "type": "string",
-      "default": "Executor Operacional"
+      "default": "Executor ERP"
     },
     "modelo_ia": {
       "type": "string"
@@ -35,32 +35,38 @@
     "intencao": {
       "type": "string",
       "enum": [
-        "criar_tarefa",
-        "criar_chamado",
-        "criar_ocorrencia",
-        "criar_notificacao",
-        "criar_lembrete",
-        "criar_checklist_simples",
-        "atribuir_responsavel",
-        "alterar_status_tarefa",
-        "alterar_status_chamado",
-        "consultar_pendencias",
-        "consultar_tarefas",
-        "consultar_chamados",
-        "consultar_checklists",
-        "consultar_manutencao",
-        "consultar_fotos_checklist",
-        "gerar_resumo_operacional",
-        "preparar_mensagem_whatsapp",
-        "enviar_notificacao_individual",
-        "registrar_observacao",
+        "criar_conta_pagar",
+        "criar_conta_receber",
+        "criar_parcelas_pagar",
+        "criar_parcelas_receber",
+        "consultar_contas_pagar",
+        "consultar_contas_receber",
+        "classificar_despesa",
+        "criar_item",
+        "criar_itens_lote",
+        "criar_fornecedor",
+        "criar_cliente",
+        "criar_categoria",
+        "criar_centro_custo",
+        "atualizar_item",
+        "classificar_itens",
+        "criar_entrada_estoque",
+        "criar_saldo_inicial",
+        "atualizar_estoque_minimo",
+        "consultar_estoque",
+        "criar_compra",
+        "criar_compra_com_itens",
+        "gerar_conta_pagar_compra",
+        "separar_lista_por_tipo",
+        "categorizar_lista",
+        "identificar_duplicidades",
         "acao_sensivel",
         "desconhecida"
       ]
     },
     "plano_resumo": {
       "type": "string",
-      "description": "Texto curto: 'Vou criar uma tarefa para...' "
+      "description": "Texto curto: 'Vou criar uma conta a pagar...' "
     },
     "plano_dados": {
       "type": "string",
@@ -69,16 +75,15 @@
     "modulo_afetado": {
       "type": "string",
       "enum": [
-        "rotinas",
-        "rh",
+        "cadastros",
+        "financeiro",
         "operacoes",
-        "atendimento",
-        "vendas",
-        "comunicacao",
+        "estoque",
+        "compras",
         "ia",
         "outro"
       ],
-      "default": "rotinas"
+      "default": "cadastros"
     },
     "loja_id": {
       "type": "string"
@@ -86,8 +91,11 @@
     "status": {
       "type": "string",
       "enum": [
+        "interpretado",
         "aguardando_confirmacao",
         "executado",
+        "rascunho_criado",
+        "pendente_revisao",
         "aguardando_aprovacao",
         "aprovado",
         "rejeitado",
@@ -102,7 +110,7 @@
     },
     "motivo_aprovacao": {
       "type": "string",
-      "description": "Por que essa a\u00e7\u00e3o caiu em aprova\u00e7\u00e3o"
+      "description": "Por que essa a\u00e7\u00e3o caiu em aprova\u00e7\u00e3o ou em revis\u00e3o"
     },
     "aprovado_por": {
       "type": "string"
@@ -113,11 +121,15 @@
     },
     "registro_entidade": {
       "type": "string",
-      "description": "Ex: Tarefa, Chamado, OcorrenciaOperacional, Notificacao, EventoAutomacao"
+      "description": "Ex: ContaPagar, ContaReceber, Insumo, Produto, Fornecedor, Compra"
     },
     "registro_id": {
       "type": "string",
-      "description": "ID do registro criado"
+      "description": "ID do registro principal criado"
+    },
+    "registros_criados": {
+      "type": "string",
+      "description": "JSON serializado com lista [{entidade, id, descricao}] para execu\u00e7\u00f5es em lote"
     },
     "dados_antes": {
       "type": "string",

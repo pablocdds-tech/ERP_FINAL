@@ -182,7 +182,7 @@ export default function Chat() {
           <div className="border-t p-3 flex gap-2 items-end">
             <Textarea
               placeholder={isExecutor
-                ? "Digite o que deseja que o Executor faça (ex: Crie uma tarefa para João limpar a câmara fria às 15h)..."
+                ? "Digite o que deseja que o Executor faça (ex: Cadastrar conta a pagar de R$ 1.200 do fornecedor Coca-Cola, vencimento dia 10, loja NB)..."
                 : `Pergunte algo para ${agent?.nome}...`}
               value={input}
               onChange={(e) => setInput(e.target.value)}

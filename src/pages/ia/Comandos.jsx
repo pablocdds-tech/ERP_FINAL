@@ -6,15 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, ShieldAlert, AlertTriangle, Ban, X, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { CheckCircle2, ShieldAlert, AlertTriangle, Ban, X, Sparkles, Loader2, RefreshCw, FileText } from "lucide-react";
 import PageShell from "@/components/ia/PageShell";
 import { base44 } from "@/api/base44Client";
-import { confirmarComando, cancelarComando, aprovarComando, rejeitarComando } from "@/lib/executor-comando-service";
+import { confirmarComando, cancelarComando } from "@/lib/executor-comando-service";
 import { toast } from "sonner";
 
 const STATUS_BADGE = {
   aguardando_confirmacao: { label: "Aguardando confirmação", icon: Sparkles, tone: "bg-amber-50 text-amber-700 border-amber-200" },
   executado: { label: "Executado", icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  rascunho_criado: { label: "Rascunho", icon: FileText, tone: "bg-slate-50 text-slate-700 border-slate-200" },
+  pendente_revisao: { label: "Pendente de revisão", icon: AlertTriangle, tone: "bg-orange-50 text-orange-700 border-orange-200" },
   aguardando_aprovacao: { label: "Aguardando aprovação", icon: ShieldAlert, tone: "bg-violet-50 text-violet-700 border-violet-200" },
   rejeitado: { label: "Rejeitado", icon: Ban, tone: "bg-rose-50 text-rose-700 border-rose-200" },
   erro: { label: "Erro", icon: AlertTriangle, tone: "bg-rose-50 text-rose-700 border-rose-200" },
@@ -52,34 +54,6 @@ export default function Comandos() {
     }
   };
 
-  const handleAprovar = async (id) => {
-    setAcaoLoading(id);
-    try {
-      const aprovador = await base44.auth.me().catch(() => null);
-      await aprovarComando({ comandoId: id, aprovador });
-      toast.success("Aprovado e executado");
-      await carregar();
-    } catch (e) {
-      toast.error(e?.message || "Falha ao aprovar");
-    } finally {
-      setAcaoLoading(null);
-    }
-  };
-
-  const handleRejeitar = async (id) => {
-    setAcaoLoading(id);
-    try {
-      const aprovador = await base44.auth.me().catch(() => null);
-      await rejeitarComando({ comandoId: id, aprovador, motivo: "Rejeitado manualmente" });
-      toast.success("Rejeitado");
-      await carregar();
-    } catch (e) {
-      toast.error(e?.message || "Falha");
-    } finally {
-      setAcaoLoading(null);
-    }
-  };
-
   const filtrada = lista.filter((c) => {
     if (filtroStatus !== "todos" && c.status !== filtroStatus) return false;
     if (busca && !`${c.comando_original} ${c.plano_resumo} ${c.usuario_email}`.toLowerCase().includes(busca.toLowerCase())) return false;
@@ -88,8 +62,8 @@ export default function Comandos() {
 
   return (
     <PageShell
-      title="Central de Comandos do Executor"
-      description="Histórico de comandos enviados ao Agent Executor Operacional, com plano, status, aprovações e log de execução."
+      title="Executor ERP"
+      description="Comandos em linguagem natural para cadastros, lançamentos financeiros, estoque e compras. Cada comando gera um plano que precisa ser confirmado antes da execução."
       actions={
         <Button variant="outline" size="sm" onClick={carregar} disabled={loading}>
           <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Atualizar
@@ -177,14 +151,7 @@ export default function Comandos() {
                             </Button>
                           </>
                         )}
-                        {c.status === "aguardando_aprovacao" && (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={() => handleRejeitar(c.id)} disabled={acaoLoading === c.id}>Rejeitar</Button>
-                            <Button size="sm" onClick={() => handleAprovar(c.id)} disabled={acaoLoading === c.id}>
-                              {acaoLoading === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Aprovar"}
-                            </Button>
-                          </>
-                        )}
+
                       </div>
                     </TableCell>
                   </TableRow>

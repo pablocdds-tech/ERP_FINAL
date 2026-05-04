@@ -9,10 +9,10 @@ import { base44 } from "@/api/base44Client";
 import { criarComando } from "@/lib/executor-comando-service";
 
 const EXEMPLOS = [
-  "Crie uma tarefa para conferir a validade dos produtos amanhã",
-  "Abrir chamado de manutenção: forno da NB não acende",
-  "Cobre o checklist de fechamento da Praça",
-  "Gere um resumo das pendências de hoje",
+  "Cadastrar conta a pagar de R$ 1.200 do fornecedor Coca-Cola, vencimento dia 10, loja NB",
+  "Cadastrar como insumos: farinha, muçarela, calabresa, frango e catupiry",
+  "Cadastrar caixa de pizza G, M e P como embalagens",
+  "Criar fornecedor Atacadão",
 ];
 
 export default function ComandoRapidoOperacional() {
@@ -31,7 +31,7 @@ export default function ComandoRapidoOperacional() {
         usuario,
       });
       toast.success("Comando interpretado.");
-      navigate(`/admin/ia/comandos?focus=${registro.id}`);
+      navigate(`/admin/ia/executor?focus=${registro.id}`);
     } catch (e) {
       toast.error(e?.message || "Falha ao interpretar comando");
     } finally {
@@ -43,7 +43,7 @@ export default function ComandoRapidoOperacional() {
     <Card className="p-4 mb-6 border-violet-200 bg-violet-50/30">
       <div className="flex items-center gap-2 mb-2">
         <Wand2 className="w-4 h-4 text-violet-600" />
-        <h2 className="text-sm font-semibold">Comando rápido operacional</h2>
+        <h2 className="text-sm font-semibold">Executor ERP — comando rápido</h2>
       </div>
       <div className="flex gap-2">
         <Input

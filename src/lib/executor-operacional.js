@@ -1,10 +1,12 @@
-// Lógica do Agent Executor Operacional.
+// Lógica do Agent Executor ERP.
 //
 // Pipeline:
-//  1) interpretarComando(): IA recebe o comando livre + lista de lojas/colaboradores
-//     e devolve JSON estruturado (intenção, plano, dados).
-//  2) classificar(): checa se a intenção é proibida, sensível (aprovação) ou simples.
-//  3) executarPlano(): cria o registro real (Tarefa, Chamado, etc.) e devolve o ID.
+//  1) interpretarComando(): IA recebe o comando livre + lojas/fornecedores/categorias
+//     e devolve JSON estruturado (intenção, plano, dados — incluindo lista de itens
+//     em lote com categorização automática).
+//  2) classificar(): bloqueia ações proibidas e marca ações que exigem aprovação.
+//  3) executarPlano(): cria os registros reais (ContaPagar, ContaReceber, Insumo,
+//     Produto, Fornecedor, Cliente, Categoria, CentroCusto, Compra, MovimentacaoEstoque).
 //
 // A camada de IA é abstraída via lib/ai-provider.js → askAI({ prompt, schema }).
 
@@ -14,157 +16,271 @@ import { askAI } from "@/lib/ai-provider";
 // ----- Classificação de intenções -----------------------------------------
 
 const INTENCOES_SIMPLES = new Set([
-  "criar_tarefa",
-  "criar_chamado",
-  "criar_ocorrencia",
-  "criar_notificacao",
-  "criar_lembrete",
-  "criar_checklist_simples",
-  "atribuir_responsavel",
-  "alterar_status_tarefa",
-  "alterar_status_chamado",
-  "consultar_pendencias",
-  "consultar_tarefas",
-  "consultar_chamados",
-  "consultar_checklists",
-  "consultar_manutencao",
-  "consultar_fotos_checklist",
-  "gerar_resumo_operacional",
-  "preparar_mensagem_whatsapp",
-  "enviar_notificacao_individual",
-  "registrar_observacao",
+  "criar_conta_pagar",
+  "criar_conta_receber",
+  "criar_parcelas_pagar",
+  "criar_parcelas_receber",
+  "consultar_contas_pagar",
+  "consultar_contas_receber",
+  "classificar_despesa",
+  "criar_item",
+  "criar_itens_lote",
+  "criar_fornecedor",
+  "criar_cliente",
+  "criar_categoria",
+  "criar_centro_custo",
+  "atualizar_item",
+  "classificar_itens",
+  "criar_entrada_estoque",
+  "criar_saldo_inicial",
+  "atualizar_estoque_minimo",
+  "consultar_estoque",
+  "criar_compra",
+  "criar_compra_com_itens",
+  "gerar_conta_pagar_compra",
+  "separar_lista_por_tipo",
+  "categorizar_lista",
+  "identificar_duplicidades",
 ]);
 
-// Ações que existem mas sempre exigem aprovação humana.
-export const INTENCOES_SENSIVEIS = {
-  encerrar_chamado_critico: "Encerramento de chamado crítico exige aprovação humana.",
-  cancelar_tarefa_com_responsavel: "Cancelar tarefa com responsável atribuído exige aprovação.",
-  alterar_checklist_concluido: "Alterar um checklist já concluído exige aprovação.",
-  aprovar_ponto: "Aprovação de ponto exige decisão humana.",
-  rejeitar_ponto: "Rejeição de ponto exige decisão humana.",
-  aprovar_nota_fiscal: "Aprovação de NF exige decisão humana.",
-  aprovar_fechamento_caixa: "Aprovação de fechamento de caixa exige decisão humana.",
-  gerar_despesa_financeira: "Gerar despesa financeira exige aprovação.",
-  registrar_pagamento: "Registrar pagamento exige aprovação humana.",
-  alterar_estoque: "Alterar estoque diretamente não é permitido — exige aprovação.",
-  excluir_registro: "Exclusão de registros exige aprovação.",
-  alterar_escala: "Alterar escala de funcionário exige aprovação.",
-  aplicar_advertencia: "Advertência ou suspensão exige aprovação.",
-  disparar_mensagem_massa: "Mensagem em massa pelo WhatsApp exige aprovação.",
-};
-
-// Ações totalmente proibidas — nem com aprovação saem por aqui.
+// Ações totalmente proibidas para o Executor ERP.
 export const INTENCOES_PROIBIDAS = {
   apagar_dados_definitivamente: "Apagar dados definitivamente não é permitido.",
   baixar_conta: "Baixar conta como paga não é permitido pelo Executor.",
-  movimentar_dinheiro: "Movimentação financeira não é permitida pelo Executor.",
   alterar_saldo_bancario: "Alterar saldo bancário não é permitido.",
   alterar_banco_virtual: "Alterar Banco Virtual não é permitido.",
   alterar_socio_empresa: "Alterar Sócio x Empresa não é permitido.",
-  alterar_estoque_direto: "Alterar estoque diretamente não é permitido.",
-  aprovar_nf_automatico: "Aprovação automática de NF não é permitida.",
-  aprovar_ponto_automatico: "Aprovação automática de ponto não é permitida.",
-  demitir_funcionario: "Demissão de funcionário não é permitida pelo Executor.",
-  aplicar_punicao_trabalhista: "Aplicar punição trabalhista não é permitido pelo Executor.",
-  disparar_campanha_marketing: "Disparar campanha de marketing não é permitido sem aprovação humana.",
-  editar_dados_financeiros: "Editar dados financeiros sensíveis não é permitido.",
+  aprovar_nota_fiscal: "Aprovação de NF não é permitida pelo Executor.",
+  aprovar_ponto: "Aprovação de ponto não é permitida pelo Executor.",
+  aprovar_fechamento_caixa: "Aprovação de fechamento não é permitida pelo Executor.",
+  alterar_ponto: "Alterar ponto não é permitido pelo Executor.",
+  demitir_funcionario: "Demissão não é permitida pelo Executor.",
+  aplicar_punicao_trabalhista: "Punição trabalhista não é permitida pelo Executor.",
+  disparar_whatsapp: "Disparo de WhatsApp não é função deste agente.",
+  disparar_campanha_marketing: "Campanhas de marketing não são função deste agente.",
 };
 
-export function classificar(intencao) {
+export function classificar(plano) {
+  const intencao = plano.intencao;
   if (INTENCOES_PROIBIDAS[intencao]) return { tipo: "proibida", motivo: INTENCOES_PROIBIDAS[intencao] };
-  if (INTENCOES_SENSIVEIS[intencao]) return { tipo: "sensivel", motivo: INTENCOES_SENSIVEIS[intencao] };
-  if (INTENCOES_SIMPLES.has(intencao)) return { tipo: "simples" };
-  return { tipo: "desconhecida", motivo: "Não consegui identificar uma ação operacional clara." };
+  if (!INTENCOES_SIMPLES.has(intencao)) {
+    return { tipo: "desconhecida", motivo: "Não consegui identificar uma ação ERP clara." };
+  }
+
+  // Ações que exigem confirmação explícita por critérios do plano:
+  const d = plano.dados || {};
+  const motivos = [];
+  if (Array.isArray(d.itens) && d.itens.length > 5) motivos.push(`Lote com ${d.itens.length} itens (>5).`);
+  if ((intencao === "criar_conta_pagar" || intencao === "criar_conta_receber") && Number(d.valor) > 1000)
+    motivos.push("Valor acima de R$ 1.000.");
+  if (Array.isArray(d.parcelas) && d.parcelas.some((p) => Number(p.valor) > 1000))
+    motivos.push("Parcela acima de R$ 1.000.");
+  if (d.vencimento_passado) motivos.push("Vencimento anterior à data de hoje.");
+  if (intencao === "atualizar_item" && d.muda_categoria) motivos.push("Alteração de categoria de item existente.");
+  if (intencao === "atualizar_estoque_minimo" || intencao === "criar_saldo_inicial" || intencao === "criar_entrada_estoque")
+    motivos.push("Atualização de estoque.");
+  if (intencao === "criar_compra" || intencao === "criar_compra_com_itens") motivos.push("Compra com impacto em estoque.");
+  if (intencao === "gerar_conta_pagar_compra") motivos.push("Geração de conta a pagar a partir de compra.");
+  if (intencao === "criar_fornecedor" && d.dados_incompletos) motivos.push("Fornecedor com dados incompletos.");
+
+  return motivos.length
+    ? { tipo: "confirmacao_extra", motivo: motivos.join(" ") }
+    : { tipo: "simples" };
 }
 
 // ----- Interpretação por IA -----------------------------------------------
+
+const ITEM_BATCH = {
+  type: "object",
+  properties: {
+    nome: { type: "string" },
+    grupo: { type: "string", enum: ["insumo", "produto"], description: "Onde criar: Insumo ou Produto" },
+    tipo_detalhado: {
+      type: "string",
+      enum: [
+        "insumo_producao",
+        "embalagem",
+        "material_operacional",
+        "produto_acabado_semielaborado",
+        "produto_revenda",
+        "produto_acabado",
+        "produto_acabado_porcionado",
+      ],
+    },
+    categoria: { type: "string", description: "Ex: CMV/Queijos, CMV/Embalagens pizza, Despesa operacional/Limpeza" },
+    subcategoria: { type: "string" },
+    unidade_medida: { type: "string", description: "Ex: KG, UN, L" },
+    entra_ficha_tecnica: { type: "boolean" },
+    entra_cmv: { type: "boolean" },
+    impacta_dre: { type: "boolean" },
+    grupo_dre_sugerido: { type: "string" },
+    estoque_minimo: { type: "number" },
+    custo_referencia: { type: "number" },
+    motivo_revisao: { type: "string" },
+  },
+  required: ["nome", "grupo", "tipo_detalhado"],
+};
+
+const PARCELA = {
+  type: "object",
+  properties: {
+    numero: { type: "number" },
+    valor: { type: "number" },
+    vencimento_iso: { type: "string", description: "YYYY-MM-DD" },
+  },
+};
 
 const SCHEMA_PLANO = {
   type: "object",
   properties: {
     intencao: { type: "string" },
-    plano_resumo: { type: "string", description: "Frase curta: 'Vou criar uma tarefa para...'" },
-    confianca: { type: "number", description: "0 a 1" },
+    plano_resumo: { type: "string", description: "Frase curta executiva: 'Vou criar uma conta a pagar...'" },
+    confianca: { type: "number" },
     precisa_esclarecimento: { type: "boolean" },
     pergunta_esclarecimento: { type: "string" },
-    modulo_afetado: { type: "string", enum: ["rotinas", "rh", "operacoes", "atendimento", "vendas", "comunicacao", "ia", "outro"] },
+    modulo_afetado: { type: "string", enum: ["cadastros", "financeiro", "operacoes", "estoque", "compras", "ia", "outro"] },
+    rascunho: { type: "boolean", description: "Sugerir criar como rascunho por faltar informação não crítica" },
+    motivo_rascunho: { type: "string" },
     dados: {
       type: "object",
       properties: {
-        titulo: { type: "string" },
+        // Genéricos
         descricao: { type: "string" },
-        loja_nome: { type: "string", description: "Nome da loja extraído do comando" },
-        loja_id: { type: "string", description: "ID resolvido da loja, se reconhecível" },
-        responsavel_nome: { type: "string" },
-        responsavel_id: { type: "string", description: "ID resolvido do colaborador, se reconhecível" },
-        prazo_iso: { type: "string", description: "ISO 8601 ou data YYYY-MM-DD" },
-        prioridade: { type: "string", enum: ["baixa", "media", "alta", "critica"] },
-        categoria: { type: "string", enum: ["manutencao", "ti", "limpeza", "operacional", "rh", "outro"] },
-        severidade: { type: "string", enum: ["baixa", "media", "alta", "critica"] },
-        tipo_ocorrencia: { type: "string", enum: ["operacional", "qualidade", "seguranca", "atendimento", "manutencao", "auditoria", "outro"] },
-        novo_status: { type: "string" },
-        registro_alvo_id: { type: "string", description: "ID do registro alvo em alterações de status / observação" },
-        observacao: { type: "string" },
-        mensagem_whatsapp: { type: "string", description: "Texto pronto para envio quando intenção for preparar/enviar mensagem" },
-        destinatario_nome: { type: "string" },
-        destinatario_telefone: { type: "string" },
-        destinatario_email: { type: "string" },
+        loja_nome: { type: "string" },
+        loja_id: { type: "string" },
+        observacoes: { type: "string" },
+
+        // Financeiro - conta única
+        valor: { type: "number" },
+        vencimento_iso: { type: "string", description: "YYYY-MM-DD" },
+        vencimento_passado: { type: "boolean" },
+        fornecedor_nome: { type: "string" },
+        fornecedor_id: { type: "string" },
+        cliente_nome: { type: "string" },
+        cliente_documento: { type: "string" },
+        categoria_nome: { type: "string" },
+        categoria_id: { type: "string" },
+        centro_custo_nome: { type: "string" },
+        centro_custo_id: { type: "string" },
+
+        // Financeiro - parcelas
+        parcelas: { type: "array", items: PARCELA },
+
+        // Cadastros - itens em lote
+        itens: { type: "array", items: ITEM_BATCH },
+
+        // Cadastros simples
+        nome: { type: "string" },
+        cnpj_cpf: { type: "string" },
+        telefone: { type: "string" },
+        email: { type: "string" },
+        endereco: { type: "string" },
+
+        // Categoria/Centro de custo
+        categoria_grupo: { type: "string" },
+        categoria_tipo_dre: { type: "string" },
+
+        // Atualização de item
+        item_alvo_id: { type: "string" },
+        item_alvo_nome: { type: "string" },
+        muda_categoria: { type: "boolean" },
+        novo_estoque_minimo: { type: "number" },
+        novo_estoque_maximo: { type: "number" },
+        novo_compartilhado: { type: "boolean" },
+        nova_loja_ids: { type: "array", items: { type: "string" } },
+
+        // Estoque
+        movimentacao_quantidade: { type: "number" },
+        movimentacao_tipo: { type: "string", enum: ["entrada", "saldo_inicial"] },
+
+        // Compra
+        compra_data_iso: { type: "string" },
+        compra_valor_total: { type: "number" },
+        compra_gerar_conta_pagar: { type: "boolean" },
+        compra_vencimento_iso: { type: "string" },
       },
     },
+    dados_incompletos: { type: "boolean" },
   },
   required: ["intencao", "plano_resumo"],
 };
 
-function buildContextoSistema(lojas, colaboradores) {
+function buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades }) {
   const hoje = new Date().toISOString();
   const lojasTxt = lojas.map((l) => `- ${l.id}: ${l.nome}${l.codigo ? ` (${l.codigo})` : ""}`).join("\n");
-  const colabsTxt = colaboradores
-    .slice(0, 80)
-    .map((c) => `- ${c.id}: ${c.nome}${c.loja_id ? ` [loja ${c.loja_id}]` : ""}`)
-    .join("\n");
+  const fornTxt = fornecedores.slice(0, 80).map((f) => `- ${f.id}: ${f.nome}${f.cnpj_cpf ? ` (${f.cnpj_cpf})` : ""}`).join("\n");
+  const catTxt = categorias.slice(0, 120).map((c) => `- ${c.id}: ${c.nome} [${c.tipo}/${c.grupo || "?"}]`).join("\n");
+  const ccTxt = centrosCusto.slice(0, 60).map((c) => `- ${c.id}: ${c.nome}`).join("\n");
+  const uniTxt = unidades.slice(0, 30).map((u) => `- ${u.sigla}: ${u.nome}`).join("\n");
 
-  return `Você é o interpretador de comandos do Agent Executor Operacional.
-Receba o comando do gestor e devolva APENAS JSON com a intenção, plano resumido e dados extraídos.
+  return `Você é o interpretador de comandos do Agent Executor ERP.
+Receba o comando do usuário e devolva APENAS JSON conforme o schema, com intenção, plano resumido e dados extraídos.
 
 Hora atual: ${hoje} (America/Sao_Paulo)
 
-LOJAS DISPONÍVEIS (use o id exato em loja_id quando reconhecer a loja no comando):
-${lojasTxt || "(nenhuma loja cadastrada)"}
+LOJAS (use o id exato em loja_id quando reconhecer):
+${lojasTxt || "(nenhuma)"}
 
-COLABORADORES (até 80 mais recentes — use o id exato em responsavel_id quando reconhecer a pessoa):
-${colabsTxt || "(nenhum colaborador)"}
+FORNECEDORES (até 80 — resolva fornecedor_id quando reconhecer):
+${fornTxt || "(nenhum)"}
+
+CATEGORIAS FINANCEIRAS (até 120 — resolva categoria_id; se não houver match, deixe em categoria_nome):
+${catTxt || "(nenhuma)"}
+
+CENTROS DE CUSTO (resolva centro_custo_id quando reconhecer):
+${ccTxt || "(nenhum)"}
+
+UNIDADES DE MEDIDA cadastradas:
+${uniTxt || "(nenhuma)"}
 
 INTENÇÕES ACEITAS:
-- criar_tarefa, criar_chamado, criar_ocorrencia, criar_notificacao, criar_lembrete, criar_checklist_simples
-- atribuir_responsavel, alterar_status_tarefa, alterar_status_chamado, registrar_observacao
-- consultar_pendencias, consultar_tarefas, consultar_chamados, consultar_checklists, consultar_manutencao, consultar_fotos_checklist
-- gerar_resumo_operacional, preparar_mensagem_whatsapp, enviar_notificacao_individual
-
-INTENÇÕES SENSÍVEIS (use uma destas se for o caso, NÃO tente executar como simples):
-encerrar_chamado_critico, cancelar_tarefa_com_responsavel, alterar_checklist_concluido,
-aprovar_ponto, rejeitar_ponto, aprovar_nota_fiscal, aprovar_fechamento_caixa, gerar_despesa_financeira,
-registrar_pagamento, alterar_estoque, excluir_registro, alterar_escala, aplicar_advertencia, disparar_mensagem_massa.
+- Financeiro: criar_conta_pagar, criar_conta_receber, criar_parcelas_pagar, criar_parcelas_receber, consultar_contas_pagar, consultar_contas_receber, classificar_despesa
+- Cadastros: criar_item, criar_itens_lote, criar_fornecedor, criar_cliente, criar_categoria, criar_centro_custo, atualizar_item, classificar_itens
+- Estoque: criar_entrada_estoque, criar_saldo_inicial, atualizar_estoque_minimo, consultar_estoque
+- Compras: criar_compra, criar_compra_com_itens, gerar_conta_pagar_compra
+- Organização: separar_lista_por_tipo, categorizar_lista, identificar_duplicidades
 
 INTENÇÕES PROIBIDAS (sinalize, não execute):
-apagar_dados_definitivamente, baixar_conta, movimentar_dinheiro, alterar_saldo_bancario,
-alterar_banco_virtual, alterar_socio_empresa, alterar_estoque_direto, aprovar_nf_automatico,
-aprovar_ponto_automatico, demitir_funcionario, aplicar_punicao_trabalhista,
-disparar_campanha_marketing, editar_dados_financeiros.
+apagar_dados_definitivamente, baixar_conta, alterar_saldo_bancario, alterar_banco_virtual,
+alterar_socio_empresa, aprovar_nota_fiscal, aprovar_ponto, aprovar_fechamento_caixa,
+alterar_ponto, demitir_funcionario, aplicar_punicao_trabalhista, disparar_whatsapp, disparar_campanha_marketing.
 
-Regras:
-- Resolva loja_id e responsavel_id usando os IDs exatos da lista acima quando possível.
-- Se faltar informação crítica (responsável, loja, prazo) defina precisa_esclarecimento=true e formule pergunta_esclarecimento curta.
-- plano_resumo deve começar com "Vou ..." em uma frase única.
-- Se a intenção não for clara, use intencao="desconhecida".`;
+ESTE AGENTE NÃO CRIA TAREFAS, CHAMADOS, NOTIFICAÇÕES OU MENSAGENS — se o comando for sobre isso, retorne intencao="desconhecida".
+
+REGRAS DE CATEGORIZAÇÃO AUTOMÁTICA DE ITENS (quando intencao=criar_itens_lote ou criar_item):
+- Farinha, queijo (muçarela, cheddar, parmesão, catupiry), carnes (frango, calabresa, bacon, presunto), molho, tempero, açúcar, sal, ovos, leite → grupo=insumo, tipo_detalhado=insumo_producao, entra_ficha_tecnica=true, entra_cmv=true, impacta_dre=true, grupo_dre_sugerido="CMV", unidade KG (sólidos) ou L (líquidos).
+- Caixa de pizza (G/M/P), saco kraft, pote, tampa, etiqueta, embalagem delivery → grupo=insumo, tipo_detalhado=embalagem, entra_ficha_tecnica=true, entra_cmv=true, unidade UN, grupo_dre_sugerido="CMV".
+- Refrigerantes, água, sucos prontos, cervejas, bebidas prontas → grupo=produto, tipo_detalhado=produto_revenda, entra_ficha_tecnica=false, entra_cmv=true, impacta_dre=true, grupo_dre_sugerido="CMV", unidade UN.
+- Detergente, álcool, sabão, papel toalha, saco de lixo, luva, desinfetante → grupo=insumo, tipo_detalhado=material_operacional, entra_ficha_tecnica=false, entra_cmv=false, impacta_dre=true, grupo_dre_sugerido="Despesas Operacionais", unidade UN ou L.
+- Massa pronta, molho pronto, frango desfiado, bacon torrado, base de pizza → grupo=insumo, tipo_detalhado=produto_acabado_semielaborado, entra_ficha_tecnica=true, entra_cmv=true, unidade UN ou KG.
+- Produto final vendido pronto sem revenda externa (pizza, lanche) → grupo=produto, tipo_detalhado=produto_acabado, entra_cmv=true.
+
+Se faltar custo, unidade ou categoria, defina motivo_revisao no item e o sistema marca prioridade_revisao.
+
+REGRAS DE INTERPRETAÇÃO FINANCEIRA:
+- "vencimento dia 10/15/30" sem mês → assumir o próximo dia 10/15/30 ≥ hoje.
+- "vencimento amanhã/hoje/ontem" → calcular relativo a hoje.
+- vencimento_passado=true se a data for anterior a hoje.
+- Se valor não for informado, marque rascunho=true e motivo_rascunho="Valor não informado".
+- Se loja não for informada e o sistema tiver mais de 1 loja → rascunho=true, motivo_rascunho="Loja não informada".
+- Se faltar categoria, deixe categoria_nome com sugestão (ex: "Energia elétrica") e o sistema cria a categoria depois.
+
+REGRAS GERAIS:
+- plano_resumo: frase única começando com "Vou ...".
+- precisa_esclarecimento=true só quando faltar informação CRÍTICA não inferível (ex: "Cadastre uma conta de R$ 500" sem qualquer outra info).
+- Resolva loja_id, fornecedor_id, categoria_id, centro_custo_id usando os IDs exatos das listas acima sempre que possível.`;
 }
 
 export async function interpretarComando({ comando, modelo }) {
-  const [lojas, colaboradores] = await Promise.all([
+  const [lojas, fornecedores, categorias, centrosCusto, unidades] = await Promise.all([
     base44.entities.Loja.list("-created_date", 200).catch(() => []),
-    base44.entities.Colaborador.list("-created_date", 200).catch(() => []),
+    base44.entities.Fornecedor.list("-created_date", 200).catch(() => []),
+    base44.entities.CategoriaFinanceira.list("-created_date", 300).catch(() => []),
+    base44.entities.CentroCusto.list("-created_date", 100).catch(() => []),
+    base44.entities.UnidadeMedida.list("-created_date", 50).catch(() => []),
   ]);
 
-  const systemContext = buildContextoSistema(lojas, colaboradores);
+  const systemContext = buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades });
   const result = await askAI({
     prompt: `Comando: "${comando}"`,
     model: modelo,
@@ -178,22 +294,44 @@ export async function interpretarComando({ comando, modelo }) {
     confianca: data.confianca ?? 0.5,
     precisa_esclarecimento: !!data.precisa_esclarecimento,
     pergunta_esclarecimento: data.pergunta_esclarecimento || "",
-    modulo_afetado: data.modulo_afetado || "rotinas",
+    modulo_afetado: data.modulo_afetado || "cadastros",
+    rascunho: !!data.rascunho,
+    motivo_rascunho: data.motivo_rascunho || "",
+    dados_incompletos: !!data.dados_incompletos,
     dados: data.dados || {},
     modelo_usado: result.model,
     raw: data,
   };
 }
 
-// ----- Resolução de prazo --------------------------------------------------
+// ----- Helpers de execução ------------------------------------------------
 
-function resolverPrazo(prazoIso) {
-  if (!prazoIso) return null;
-  // Aceita YYYY-MM-DD ou ISO completa
-  const d = new Date(prazoIso);
+function dataIso(s) {
+  if (!s) return null;
+  const d = new Date(s);
   if (Number.isNaN(d.getTime())) return null;
-  // Para Tarefa.data_limite usamos YYYY-MM-DD
   return d.toISOString().slice(0, 10);
+}
+
+async function resolverFornecedor({ id, nome }) {
+  if (id) return id;
+  if (!nome) return null;
+  const lista = await base44.entities.Fornecedor.filter({ nome }).catch(() => []);
+  if (lista[0]) return lista[0].id;
+  const novo = await base44.entities.Fornecedor.create({ nome });
+  return novo.id;
+}
+
+async function resolverCategoria({ id, nome, tipo }) {
+  if (id) return id;
+  if (!nome) return null;
+  const lista = await base44.entities.CategoriaFinanceira.filter({ nome }).catch(() => []);
+  if (lista[0]) return lista[0].id;
+  const nova = await base44.entities.CategoriaFinanceira.create({
+    nome,
+    tipo: tipo === "receita" ? "entrada" : "saida",
+  });
+  return nova.id;
 }
 
 // ----- Execução real ------------------------------------------------------
@@ -201,168 +339,320 @@ function resolverPrazo(prazoIso) {
 export async function executarPlano({ plano, comando, usuario }) {
   const d = plano.dados || {};
   const log = [];
-  const stamp = (msg) => log.push(`[${new Date().toISOString()}] ${msg}`);
+  const stamp = (m) => log.push(`[${new Date().toISOString()}] ${m}`);
+  const criados = [];
 
   let registro_entidade = null;
   let registro = null;
 
   switch (plano.intencao) {
-    case "criar_tarefa": {
-      registro_entidade = "Tarefa";
-      registro = await base44.entities.Tarefa.create({
-        titulo: d.titulo || comando.slice(0, 80),
-        descricao: d.descricao || comando,
+    // -------- FINANCEIRO --------
+    case "criar_conta_pagar": {
+      registro_entidade = "ContaPagar";
+      const fornecedor_id = await resolverFornecedor({ id: d.fornecedor_id, nome: d.fornecedor_nome });
+      const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "despesa" });
+      registro = await base44.entities.ContaPagar.create({
+        descricao: d.descricao || comando.slice(0, 80),
+        valor: Number(d.valor) || 0,
+        data_vencimento: dataIso(d.vencimento_iso),
         loja_id: d.loja_id || undefined,
-        responsavel_id: d.responsavel_id || undefined,
-        criado_por: usuario?.email,
-        data_limite: resolverPrazo(d.prazo_iso),
-        prioridade: ["baixa", "media", "alta"].includes(d.prioridade) ? d.prioridade : "media",
-        status: "pendente",
-        origem_tipo: "manual",
-      });
-      stamp(`Tarefa criada (id ${registro.id})`);
-      break;
-    }
-
-    case "criar_chamado": {
-      registro_entidade = "Chamado";
-      registro = await base44.entities.Chamado.create({
-        titulo: d.titulo || comando.slice(0, 80),
-        descricao: d.descricao || comando,
-        loja_id: d.loja_id || undefined,
-        categoria: ["manutencao", "ti", "limpeza", "operacional", "rh", "outro"].includes(d.categoria) ? d.categoria : "outro",
-        prioridade: ["baixa", "media", "alta", "critica"].includes(d.prioridade) ? d.prioridade : "media",
-        status: "aberto",
-      });
-      stamp(`Chamado criado (id ${registro.id})`);
-      break;
-    }
-
-    case "criar_ocorrencia": {
-      registro_entidade = "OcorrenciaOperacional";
-      registro = await base44.entities.OcorrenciaOperacional.create({
-        titulo: d.titulo || comando.slice(0, 80),
-        descricao: d.descricao || comando,
-        loja_id: d.loja_id || undefined,
-        tipo: ["operacional", "qualidade", "seguranca", "atendimento", "manutencao", "auditoria", "outro"].includes(d.tipo_ocorrencia) ? d.tipo_ocorrencia : "operacional",
-        severidade: ["baixa", "media", "alta", "critica"].includes(d.severidade) ? d.severidade : "media",
-        responsavel_id: d.responsavel_id || undefined,
-        origem_tipo: "manual",
+        fornecedor_id: fornecedor_id || undefined,
+        categoria_id: categoria_id || undefined,
+        centro_custo_id: d.centro_custo_id || undefined,
+        observacoes: d.observacoes,
         status: "aberta",
       });
-      stamp(`Ocorrência criada (id ${registro.id})`);
+      criados.push({ entidade: "ContaPagar", id: registro.id, descricao: registro.descricao });
+      stamp(`ContaPagar criada (id ${registro.id}) — R$ ${registro.valor}`);
       break;
     }
 
-    case "criar_notificacao":
-    case "criar_lembrete":
-    case "enviar_notificacao_individual": {
-      registro_entidade = "Notificacao";
-      registro = await base44.entities.Notificacao.create({
-        destinatario_email: d.destinatario_email || usuario?.email,
-        tipo: "outro",
-        titulo: d.titulo || "Lembrete operacional",
-        mensagem: d.descricao || d.mensagem_whatsapp || comando,
-        link: d.link,
-      });
-      stamp(`Notificação criada (id ${registro.id})`);
-      break;
-    }
-
-    case "registrar_observacao": {
-      if (!d.registro_alvo_id) throw new Error("Não foi informado o registro alvo da observação.");
-      registro_entidade = "ComentarioOperacional";
-      registro = await base44.entities.ComentarioOperacional.create({
-        entidade_origem: d.tipo_ocorrencia || "Tarefa",
-        entidade_id: d.registro_alvo_id,
-        comentario: d.observacao || d.descricao || comando,
-        autor_email: usuario?.email,
-      });
-      stamp(`Observação registrada (id ${registro.id})`);
-      break;
-    }
-
-    case "alterar_status_tarefa": {
-      if (!d.registro_alvo_id) throw new Error("Tarefa alvo não identificada.");
-      const valid = ["pendente", "em_andamento", "concluida"];
-      if (!valid.includes(d.novo_status)) throw new Error(`Status inválido: ${d.novo_status}`);
-      registro_entidade = "Tarefa";
-      registro = await base44.entities.Tarefa.update(d.registro_alvo_id, {
-        status: d.novo_status,
-        ...(d.novo_status === "concluida" ? { concluida_em: new Date().toISOString() } : {}),
-      });
-      stamp(`Tarefa ${d.registro_alvo_id} → ${d.novo_status}`);
-      break;
-    }
-
-    case "alterar_status_chamado": {
-      if (!d.registro_alvo_id) throw new Error("Chamado alvo não identificado.");
-      const valid = ["aberto", "em_atendimento", "resolvido"];
-      if (!valid.includes(d.novo_status)) throw new Error(`Status inválido: ${d.novo_status}`);
-      registro_entidade = "Chamado";
-      registro = await base44.entities.Chamado.update(d.registro_alvo_id, {
-        status: d.novo_status,
-      });
-      stamp(`Chamado ${d.registro_alvo_id} → ${d.novo_status}`);
-      break;
-    }
-
-    case "atribuir_responsavel": {
-      if (!d.registro_alvo_id || !d.responsavel_id) throw new Error("Faltou registro alvo ou responsável.");
-      registro_entidade = "Tarefa";
-      registro = await base44.entities.Tarefa.update(d.registro_alvo_id, {
-        responsavel_id: d.responsavel_id,
-      });
-      stamp(`Responsável da tarefa ${d.registro_alvo_id} = ${d.responsavel_id}`);
-      break;
-    }
-
-    case "criar_checklist_simples": {
-      registro_entidade = "Checklist";
-      registro = await base44.entities.Checklist.create({
-        nome: d.titulo || "Checklist simples",
-        descricao: d.descricao || comando,
+    case "criar_conta_receber": {
+      registro_entidade = "ContaReceber";
+      const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "receita" });
+      registro = await base44.entities.ContaReceber.create({
+        descricao: d.descricao || comando.slice(0, 80),
+        cliente: d.cliente_nome,
+        valor: Number(d.valor) || 0,
+        data_vencimento: dataIso(d.vencimento_iso),
         loja_id: d.loja_id || undefined,
-        ativo: true,
+        categoria_id: categoria_id || undefined,
+        centro_custo_id: d.centro_custo_id || undefined,
+        observacoes: d.observacoes,
+        status: "aberta",
       });
-      stamp(`Checklist criado (id ${registro.id})`);
+      criados.push({ entidade: "ContaReceber", id: registro.id, descricao: registro.descricao });
+      stamp(`ContaReceber criada (id ${registro.id}) — R$ ${registro.valor}`);
       break;
     }
 
-    case "preparar_mensagem_whatsapp": {
-      // Apenas prepara — não envia.
-      registro_entidade = "EventoAutomacao";
-      const payload = {
-        tipo_evento: "executor.mensagem.preparada",
-        destinatario: d.destinatario_nome,
-        telefone: d.destinatario_telefone,
-        mensagem: d.mensagem_whatsapp || d.descricao,
+    case "criar_parcelas_pagar": {
+      registro_entidade = "ContaPagar";
+      const fornecedor_id = await resolverFornecedor({ id: d.fornecedor_id, nome: d.fornecedor_nome });
+      const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "despesa" });
+      const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
+      for (const p of parcelas) {
+        const r = await base44.entities.ContaPagar.create({
+          descricao: `${d.descricao || comando.slice(0, 60)} — parcela ${p.numero || ""}`.trim(),
+          valor: Number(p.valor) || 0,
+          data_vencimento: dataIso(p.vencimento_iso),
+          loja_id: d.loja_id || undefined,
+          fornecedor_id: fornecedor_id || undefined,
+          categoria_id: categoria_id || undefined,
+          status: "aberta",
+        });
+        criados.push({ entidade: "ContaPagar", id: r.id, descricao: r.descricao });
+      }
+      registro = criados[0]?.id ? { id: criados[0].id } : null;
+      stamp(`Criadas ${criados.length} parcelas de ContaPagar.`);
+      break;
+    }
+
+    case "criar_parcelas_receber": {
+      registro_entidade = "ContaReceber";
+      const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "receita" });
+      const parcelas = Array.isArray(d.parcelas) ? d.parcelas : [];
+      for (const p of parcelas) {
+        const r = await base44.entities.ContaReceber.create({
+          descricao: `${d.descricao || comando.slice(0, 60)} — parcela ${p.numero || ""}`.trim(),
+          cliente: d.cliente_nome,
+          valor: Number(p.valor) || 0,
+          data_vencimento: dataIso(p.vencimento_iso),
+          loja_id: d.loja_id || undefined,
+          categoria_id: categoria_id || undefined,
+          status: "aberta",
+        });
+        criados.push({ entidade: "ContaReceber", id: r.id, descricao: r.descricao });
+      }
+      registro = criados[0] ? { id: criados[0].id } : null;
+      stamp(`Criadas ${criados.length} parcelas de ContaReceber.`);
+      break;
+    }
+
+    // -------- CADASTROS --------
+    case "criar_fornecedor": {
+      registro_entidade = "Fornecedor";
+      registro = await base44.entities.Fornecedor.create({
+        nome: d.nome || d.fornecedor_nome || comando.slice(0, 80),
+        cnpj_cpf: d.cnpj_cpf,
+        telefone: d.telefone,
+        email: d.email,
+        endereco: d.endereco,
+      });
+      criados.push({ entidade: "Fornecedor", id: registro.id, descricao: registro.nome });
+      stamp(`Fornecedor criado (id ${registro.id})`);
+      break;
+    }
+
+    case "criar_cliente": {
+      registro_entidade = "Cliente";
+      registro = await base44.entities.Cliente.create({
+        nome: d.nome || d.cliente_nome || comando.slice(0, 80),
+        documento: d.cnpj_cpf || d.cliente_documento,
+        telefone: d.telefone,
+        email: d.email,
+        endereco: d.endereco,
+      });
+      criados.push({ entidade: "Cliente", id: registro.id, descricao: registro.nome });
+      stamp(`Cliente criado (id ${registro.id})`);
+      break;
+    }
+
+    case "criar_categoria": {
+      registro_entidade = "CategoriaFinanceira";
+      registro = await base44.entities.CategoriaFinanceira.create({
+        nome: d.nome || d.categoria_nome || comando.slice(0, 80),
+        tipo: d.categoria_tipo_dre === "receita" ? "entrada" : "saida",
+        grupo: d.categoria_grupo,
+      });
+      criados.push({ entidade: "CategoriaFinanceira", id: registro.id, descricao: registro.nome });
+      stamp(`CategoriaFinanceira criada (id ${registro.id})`);
+      break;
+    }
+
+    case "criar_centro_custo": {
+      registro_entidade = "CentroCusto";
+      registro = await base44.entities.CentroCusto.create({
+        nome: d.nome || comando.slice(0, 80),
+        loja_id: d.loja_id || undefined,
+      });
+      criados.push({ entidade: "CentroCusto", id: registro.id, descricao: registro.nome });
+      stamp(`CentroCusto criado (id ${registro.id})`);
+      break;
+    }
+
+    case "criar_item":
+    case "criar_itens_lote": {
+      const itens = plano.intencao === "criar_item"
+        ? [{
+            nome: d.nome,
+            grupo: d.grupo || "insumo",
+            tipo_detalhado: d.tipo_detalhado || "insumo_producao",
+            categoria: d.categoria,
+            unidade_medida: d.unidade_medida,
+            entra_ficha_tecnica: d.entra_ficha_tecnica,
+            entra_cmv: d.entra_cmv,
+            impacta_dre: d.impacta_dre,
+            grupo_dre_sugerido: d.grupo_dre_sugerido,
+          }]
+        : (Array.isArray(d.itens) ? d.itens : []);
+
+      for (const it of itens) {
+        const grupo = it.grupo === "produto" ? "produto" : "insumo";
+        const Entity = grupo === "produto" ? base44.entities.Produto : base44.entities.Insumo;
+        const payload = {
+          nome: it.nome,
+          tipo_detalhado: it.tipo_detalhado,
+          categoria: it.categoria,
+          subcategoria: it.subcategoria,
+          unidade_medida: it.unidade_medida,
+          entra_ficha_tecnica: it.entra_ficha_tecnica ?? (grupo === "insumo"),
+          entra_cmv: it.entra_cmv ?? true,
+          impacta_dre: it.impacta_dre ?? true,
+          grupo_dre_sugerido: it.grupo_dre_sugerido,
+          estoque_minimo: it.estoque_minimo,
+          custo_referencia: it.custo_referencia,
+          origem_cadastro: "ia",
+          motivo_revisao: it.motivo_revisao,
+          prioridade_revisao: it.motivo_revisao ? "media" : "ok",
+          ativo: true,
+        };
+        const r = await Entity.create(payload);
+        criados.push({ entidade: grupo === "produto" ? "Produto" : "Insumo", id: r.id, descricao: r.nome });
+      }
+      registro_entidade = criados[0]?.entidade || "Insumo";
+      registro = criados[0] ? { id: criados[0].id } : null;
+      stamp(`Criados ${criados.length} itens em lote.`);
+      break;
+    }
+
+    case "atualizar_item": {
+      if (!d.item_alvo_id) throw new Error("Item alvo não identificado.");
+      registro_entidade = d.grupo === "produto" ? "Produto" : "Insumo";
+      const Entity = d.grupo === "produto" ? base44.entities.Produto : base44.entities.Insumo;
+      const update = {};
+      if (d.categoria) update.categoria = d.categoria;
+      if (d.subcategoria) update.subcategoria = d.subcategoria;
+      if (d.unidade_medida) update.unidade_medida = d.unidade_medida;
+      if (d.tipo_detalhado) update.tipo_detalhado = d.tipo_detalhado;
+      if (typeof d.entra_ficha_tecnica === "boolean") update.entra_ficha_tecnica = d.entra_ficha_tecnica;
+      if (typeof d.entra_cmv === "boolean") update.entra_cmv = d.entra_cmv;
+      if (typeof d.impacta_dre === "boolean") update.impacta_dre = d.impacta_dre;
+      registro = await Entity.update(d.item_alvo_id, update);
+      criados.push({ entidade: registro_entidade, id: d.item_alvo_id, descricao: `update ${d.item_alvo_nome || d.item_alvo_id}` });
+      stamp(`${registro_entidade} ${d.item_alvo_id} atualizado.`);
+      break;
+    }
+
+    case "atualizar_estoque_minimo": {
+      if (!d.item_alvo_id) throw new Error("Item alvo não identificado.");
+      registro_entidade = d.grupo === "produto" ? "Produto" : "Insumo";
+      const Entity = d.grupo === "produto" ? base44.entities.Produto : base44.entities.Insumo;
+      registro = await Entity.update(d.item_alvo_id, {
+        estoque_minimo: Number(d.novo_estoque_minimo) || 0,
+        ...(typeof d.novo_estoque_maximo === "number" ? { estoque_maximo: d.novo_estoque_maximo } : {}),
+      });
+      criados.push({ entidade: registro_entidade, id: d.item_alvo_id, descricao: `estoque mínimo = ${d.novo_estoque_minimo}` });
+      stamp(`Estoque mínimo de ${registro_entidade} ${d.item_alvo_id} atualizado.`);
+      break;
+    }
+
+    // -------- ESTOQUE --------
+    case "criar_entrada_estoque":
+    case "criar_saldo_inicial": {
+      if (!d.item_alvo_id) throw new Error("Item alvo não identificado.");
+      if (!d.loja_id) throw new Error("Loja não identificada.");
+      registro_entidade = "MovimentacaoEstoque";
+      registro = await base44.entities.MovimentacaoEstoque.create({
+        tipo: "entrada",
+        item_tipo: d.grupo === "produto" ? "produto" : "insumo",
+        item_id: d.item_alvo_id,
+        item_nome: d.item_alvo_nome,
+        quantidade: Number(d.movimentacao_quantidade) || 0,
         loja_id: d.loja_id,
-        prioridade: d.prioridade,
-        origem: "Agent Executor Operacional",
-        registro_relacionado: d.registro_alvo_id,
-      };
-      registro = await base44.entities.EventoAutomacao.create({
-        tipo_evento: "executor.mensagem.preparada",
-        origem: "agent",
-        destino: "n8n",
-        payload: JSON.stringify(payload),
-        status: "pendente",
+        data: dataIso(new Date().toISOString()),
+        motivo: plano.intencao === "criar_saldo_inicial" ? "Saldo inicial" : "Entrada simples (Executor ERP)",
+        origem_tipo: "manual",
+        usuario_email: usuario?.email,
       });
-      stamp(`Mensagem preparada para n8n (evento ${registro.id})`);
+      criados.push({ entidade: "MovimentacaoEstoque", id: registro.id, descricao: `${d.item_alvo_nome} +${d.movimentacao_quantidade}` });
+      stamp(`MovimentacaoEstoque criada (id ${registro.id})`);
       break;
     }
 
-    case "consultar_pendencias":
-    case "consultar_tarefas":
-    case "consultar_chamados":
-    case "consultar_checklists":
-    case "consultar_manutencao":
-    case "consultar_fotos_checklist":
-    case "gerar_resumo_operacional": {
-      // Consultas são respondidas no chat por geração de texto.
-      // Marcamos como executado só para fins de log; o texto fica na resposta da IA.
-      stamp(`Consulta executada (sem registro persistente).`);
+    // -------- COMPRAS --------
+    case "criar_compra":
+    case "criar_compra_com_itens": {
+      registro_entidade = "Compra";
+      const fornecedor_id = await resolverFornecedor({ id: d.fornecedor_id, nome: d.fornecedor_nome });
+      registro = await base44.entities.Compra.create({
+        fornecedor_id: fornecedor_id || undefined,
+        loja_id: d.loja_id,
+        data: dataIso(d.compra_data_iso) || dataIso(new Date().toISOString()),
+        valor_total: Number(d.compra_valor_total) || 0,
+        itens: Array.isArray(d.itens) ? d.itens.map((i) => ({
+          item_tipo: i.grupo === "produto" ? "produto" : "insumo",
+          item_id: i.item_alvo_id || undefined,
+          item_nome: i.nome,
+          quantidade: Number(i.quantidade) || 0,
+          custo_unitario: Number(i.custo_referencia) || 0,
+          total: (Number(i.quantidade) || 0) * (Number(i.custo_referencia) || 0),
+        })) : [],
+        conta_pagar_prevista: !!d.compra_gerar_conta_pagar,
+        observacoes: d.observacoes,
+        status: "lancada",
+      });
+      criados.push({ entidade: "Compra", id: registro.id, descricao: `Compra R$ ${registro.valor_total}` });
+      stamp(`Compra criada (id ${registro.id})`);
+
+      if (d.compra_gerar_conta_pagar) {
+        const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "despesa" });
+        const cp = await base44.entities.ContaPagar.create({
+          descricao: `Compra ${registro.id}${d.fornecedor_nome ? ` — ${d.fornecedor_nome}` : ""}`,
+          valor: Number(d.compra_valor_total) || 0,
+          data_vencimento: dataIso(d.compra_vencimento_iso) || dataIso(new Date().toISOString()),
+          loja_id: d.loja_id,
+          fornecedor_id: fornecedor_id || undefined,
+          categoria_id: categoria_id || undefined,
+          compra_id: registro.id,
+          status: "aberta",
+        });
+        criados.push({ entidade: "ContaPagar", id: cp.id, descricao: cp.descricao });
+        stamp(`ContaPagar gerada a partir da compra (id ${cp.id})`);
+      }
+      break;
+    }
+
+    case "gerar_conta_pagar_compra": {
+      if (!d.item_alvo_id) throw new Error("ID da compra não informado.");
+      registro_entidade = "ContaPagar";
+      const compra = await base44.entities.Compra.get(d.item_alvo_id);
+      const categoria_id = await resolverCategoria({ id: d.categoria_id, nome: d.categoria_nome, tipo: "despesa" });
+      registro = await base44.entities.ContaPagar.create({
+        descricao: `Compra ${compra.id}`,
+        valor: Number(compra.valor_total) || 0,
+        data_vencimento: dataIso(d.compra_vencimento_iso) || dataIso(new Date().toISOString()),
+        loja_id: compra.loja_id,
+        fornecedor_id: compra.fornecedor_id,
+        categoria_id: categoria_id || undefined,
+        compra_id: compra.id,
+        status: "aberta",
+      });
+      criados.push({ entidade: "ContaPagar", id: registro.id, descricao: registro.descricao });
+      stamp(`ContaPagar gerada a partir de compra existente (id ${registro.id})`);
+      break;
+    }
+
+    // -------- CONSULTAS / ORGANIZAÇÃO --------
+    case "consultar_contas_pagar":
+    case "consultar_contas_receber":
+    case "consultar_estoque":
+    case "classificar_despesa":
+    case "separar_lista_por_tipo":
+    case "categorizar_lista":
+    case "identificar_duplicidades":
+    case "classificar_itens": {
+      stamp(`Consulta/análise executada (sem registro persistente).`);
       break;
     }
 
@@ -373,6 +663,7 @@ export async function executarPlano({ plano, comando, usuario }) {
   return {
     registro_entidade,
     registro_id: registro?.id || null,
+    registros_criados: criados,
     log_execucao: log.join("\n"),
     dados_depois: registro ? JSON.stringify(registro) : null,
   };
