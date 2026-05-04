@@ -71,6 +71,22 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
   const isPF = data.natureza === "PF_USO_OPERACIONAL";
   const isCartao = data.tipo_conta === "cartao_credito_pf";
   const isCheque = data.tipo_conta === "cheque_especial_pf";
+  const isCorrente = data.tipo_conta === "conta_corrente_pj" || data.tipo_conta === "conta_corrente_pf";
+  // Limite/juros aplicáveis: cartão, cheque especial e qualquer conta corrente (cheque embutido)
+  const showLimiteJuros = isCartao || isCheque || isCorrente;
+
+  // Cálculos de uso de cheque especial
+  const saldoNum = Number(data.saldo_inicial) || 0;
+  const limiteNum = Number(data.limite_credito) || 0;
+  const jurosMesNum = Number(data.taxa_juros_mensal) || 0;
+  const negativo = saldoNum < 0;
+  const usoCheque = negativo ? Math.abs(saldoNum) : 0;
+  const estouroLimite = negativo && limiteNum > 0 && usoCheque > limiteNum;
+  // Juros diário a partir do mensal: (1+i)^(1/30) - 1
+  const jurosDia = jurosMesNum > 0 ? (Math.pow(1 + jurosMesNum / 100, 1 / 30) - 1) * 100 : 0;
+  const jurosDiaValor = jurosDia > 0 ? (usoCheque * jurosDia) / 100 : 0;
+  const jurosMesValor = jurosMesNum > 0 ? (usoCheque * jurosMesNum) / 100 : 0;
+  const fmt = (n) => `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const salvar = async () => {
     if (!data.nome) return;
@@ -102,13 +118,14 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
       await base44.entities.ContaBancaria.update(id, rest);
     } else {
       const created = await base44.entities.ContaBancaria.create(payload);
-      if (Number(data.saldo_inicial) !== 0) {
+      const saldo = Number(data.saldo_inicial) || 0;
+      if (saldo !== 0) {
         await base44.entities.MovimentacaoBancaria.create({
           conta_bancaria_id: created.id,
           tipo: "saldo_inicial",
           data: new Date().toISOString().slice(0, 10),
-          valor: Math.abs(Number(data.saldo_inicial)),
-          descricao: "Saldo inicial",
+          valor: Math.abs(saldo),
+          descricao: saldo < 0 ? "Saldo inicial (uso de cheque especial)" : "Saldo inicial",
           loja_id: data.loja_id,
           origem_tipo: "saldo_inicial",
         });
@@ -184,25 +201,47 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
             <LojaSingleSelect value={data.loja_id} onChange={(v) => setData({ ...data, loja_id: v })} />
           </Field>
 
-          {(isCartao || isCheque) && (
+          {showLimiteJuros && (
             <>
-              <Field label="Limite de crédito (R$)">
-                <Input type="number" step="0.01" value={data.limite_credito ?? 0} onChange={(e) => setData({ ...data, limite_credito: parseFloat(e.target.value) || 0 })} disabled={isView} />
+              <Field
+                label={isCorrente ? "Limite cheque especial (R$)" : "Limite de crédito (R$)"}
+                hint={isCorrente ? "Quanto o banco libera além do saldo zero" : undefined}
+              >
+                <Input type="number" step="0.01" min="0" value={data.limite_credito ?? ""} onChange={(e) => setData({ ...data, limite_credito: e.target.value })} disabled={isView} placeholder="0,00" />
               </Field>
-              <Field label="Juros mensal (%)">
-                <Input type="number" step="0.01" value={data.taxa_juros_mensal ?? 0} onChange={(e) => setData({ ...data, taxa_juros_mensal: parseFloat(e.target.value) || 0 })} disabled={isView} />
+              <Field label="Juros mensal (%)" hint={isCorrente ? "Juros do cheque especial" : undefined}>
+                <Input type="number" step="0.01" min="0" value={data.taxa_juros_mensal ?? ""} onChange={(e) => setData({ ...data, taxa_juros_mensal: e.target.value })} disabled={isView} placeholder="Ex: 8,00" />
               </Field>
             </>
           )}
           {isCartao && (
             <Field label="Vencimento da fatura (dia)">
-              <Input type="number" min="1" max="31" value={data.vencimento_fatura ?? ""} onChange={(e) => setData({ ...data, vencimento_fatura: parseInt(e.target.value) || "" })} disabled={isView} />
+              <Input type="number" min="1" max="31" value={data.vencimento_fatura ?? ""} onChange={(e) => setData({ ...data, vencimento_fatura: e.target.value })} disabled={isView} />
             </Field>
           )}
 
-          <Field label="Saldo inicial (R$)">
-            <Input type="number" step="0.01" value={data.saldo_inicial ?? ""} onChange={(e) => setData({ ...data, saldo_inicial: parseFloat(e.target.value) || 0 })} disabled={isView || record} />
+          <Field label="Saldo inicial (R$)" hint="Use valor negativo se a conta está no cheque especial">
+            <Input type="number" step="0.01" value={data.saldo_inicial ?? ""} onChange={(e) => setData({ ...data, saldo_inicial: e.target.value })} disabled={isView || record} placeholder="0,00" />
           </Field>
+
+          {negativo && !record && (
+            <div className={`col-span-2 rounded-md border p-3 text-xs ${estouroLimite ? "bg-red-50 border-red-200 text-red-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+              <div className="font-semibold mb-1">
+                {estouroLimite ? "⚠ Saldo negativo acima do limite informado" : "⚠ Conta entrando no cheque especial"}
+              </div>
+              <div>Uso do cheque especial: <strong>{fmt(usoCheque)}</strong>{limiteNum > 0 && <> de <strong>{fmt(limiteNum)}</strong> de limite</>}.</div>
+              {jurosMesNum > 0 ? (
+                <div className="mt-1">
+                  Juros estimados: <strong>{fmt(jurosDiaValor)}/dia</strong> · <strong>{fmt(jurosMesValor)}/mês</strong> ({jurosMesNum.toFixed(2)}% a.m. · {jurosDia.toFixed(3)}% a.d.)
+                </div>
+              ) : (
+                <div className="mt-1 text-[11px]">Informe a taxa de juros mensal para estimar o custo.</div>
+              )}
+              <div className="mt-1 text-[11px] opacity-80">
+                Os juros do cheque especial entram na DRE como despesa financeira (FIN.JUROS) quando lançados.
+              </div>
+            </div>
+          )}
 
           {!isView && (
             <div className="col-span-2 flex items-center gap-3">
