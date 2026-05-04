@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 import ItemPicker from "./ItemPicker";
+import ItemQuickDialog from "./dialogs/ItemQuickDialog";
 
 // Editor genérico de itens em documentos (compras, transferências).
 // Props:
@@ -11,6 +13,8 @@ import ItemPicker from "./ItemPicker";
 // - showCusto: boolean (Compra exibe custo, Transferência não)
 // - tipoItens: "ambos" | "insumo" | "produto"
 export default function ItemLineEditor({ itens = [], onChange, showCusto = false, tipoItens = "ambos" }) {
+  const [quickIdx, setQuickIdx] = useState(null);
+
   const update = (idx, patch) => {
     const next = itens.map((it, i) => (i === idx ? { ...it, ...patch } : it));
     if (showCusto && (patch.quantidade !== undefined || patch.custo_unitario !== undefined)) {
@@ -50,11 +54,18 @@ export default function ItemLineEditor({ itens = [], onChange, showCusto = false
           <div className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-12 md:col-span-6">
               <div className="text-[11px] text-muted-foreground mb-1">Item</div>
-              <ItemPicker
-                tipo={tipoItens}
-                value={{ item_tipo: it.item_tipo, item_id: it.item_id, item_nome: it.item_nome }}
-                onChange={(v) => update(idx, v)}
-              />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <ItemPicker
+                    tipo={tipoItens}
+                    value={{ item_tipo: it.item_tipo, item_id: it.item_id, item_nome: it.item_nome }}
+                    onChange={(v) => update(idx, v)}
+                  />
+                </div>
+                <Button type="button" variant="outline" size="icon" onClick={() => setQuickIdx(idx)} title="Cadastro rápido">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             <div className="col-span-6 md:col-span-2">
               <div className="text-[11px] text-muted-foreground mb-1">Qtd</div>
@@ -102,6 +113,16 @@ export default function ItemLineEditor({ itens = [], onChange, showCusto = false
           </div>
         )}
       </div>
+
+      <ItemQuickDialog
+        open={quickIdx !== null}
+        tipo={tipoItens}
+        onClose={() => setQuickIdx(null)}
+        onCreated={(v) => {
+          if (quickIdx !== null) update(quickIdx, v);
+          setQuickIdx(null);
+        }}
+      />
     </div>
   );
 }
