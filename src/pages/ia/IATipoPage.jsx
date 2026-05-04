@@ -10,8 +10,10 @@ import Fila from "./Fila";
 import Respostas from "./Respostas";
 import Falhas from "./Falhas";
 import Aprovacoes from "./Aprovacoes";
+import Chat from "./Chat";
 
 const PAGES = {
+  chat: Chat,
   agents: Agents,
   logs: Logs,
   eventos: Eventos,

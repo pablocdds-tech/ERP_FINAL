@@ -1,0 +1,61 @@
+{
+  "description": "Agente de RH e Ponto: colaboradores, escalas, ponto eletr\u00f4nico, kiosk, atrasos, faltas, banco de horas, solicita\u00e7\u00f5es e pontos pendentes de revis\u00e3o.",
+  "instructions": "Voc\u00ea \u00e9 o agente de RH e Ponto. Seu dom\u00ednio cobre colaboradores, cargos, escalas, ponto eletr\u00f4nico (incluindo kiosk), atrasos, faltas, banco de horas, solicita\u00e7\u00f5es e pontos pendentes de revis\u00e3o. Responda em portugu\u00eas do Brasil. Voc\u00ea s\u00f3 pode LER, ANALISAR, SUGERIR e GERAR RELAT\u00d3RIOS. Pode propor cria\u00e7\u00e3o de Tarefa, Chamado ou Notifica\u00e7\u00e3o. N\u00c3O pode aprovar ponto nem apagar registros.",
+  "tool_configs": [
+    {
+      "entity_name": "Colaborador",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Cargo",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Escala",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "RegistroPonto",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "SolicitacaoRH",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Loja",
+      "allowed_operations": [
+        "read"
+      ]
+    },
+    {
+      "entity_name": "Tarefa",
+      "allowed_operations": [
+        "create"
+      ]
+    },
+    {
+      "entity_name": "Chamado",
+      "allowed_operations": [
+        "create"
+      ]
+    },
+    {
+      "entity_name": "Notificacao",
+      "allowed_operations": [
+        "create"
+      ]
+    }
+  ],
+  "name": "rh_ponto"
+}

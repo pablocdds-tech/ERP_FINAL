@@ -1,6 +1,6 @@
 import {
   Bot, FileText, Activity, Webhook, Workflow, MessageSquare,
-  Send, Inbox, AlertOctagon, Settings,
+  Send, Inbox, AlertOctagon, Settings, MessagesSquare,
 } from "lucide-react";
 
 // 20 agents previstos
@@ -28,6 +28,7 @@ export const AGENTS = [
 ];
 
 export const IA_LIST = [
+  { tipo: "chat", nome: "Chat com Agentes", descricao: "Converse com os agentes (Orquestrador, Financeiro, Operações...).", icon: MessagesSquare },
   { tipo: "agents", nome: "Agents", descricao: "Catálogo dos agents internos da plataforma.", icon: Bot },
   { tipo: "logs", nome: "Logs de Agents", descricao: "Histórico de ações sugeridas e executadas.", icon: FileText },
   { tipo: "eventos", nome: "Eventos de Automação", descricao: "Eventos enviados/recebidos do sistema.", icon: Activity },
