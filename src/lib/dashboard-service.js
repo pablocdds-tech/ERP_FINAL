@@ -451,16 +451,16 @@ export function gerarAlertas(base, lojaId, de, ate) {
   // Caixa: cheque especial PF em uso
   const caixa = calcularCaixa(base, lojaId);
   if (caixa.chequeEspecialPF > 0) {
-    a.push({ severidade: "alta", titulo: "Cheque especial PF em uso", detalhe: `R$ ${caixa.chequeEspecialPF.toFixed(2)} consumido(s)`, link: "/admin/financeiro/socio-empresa/dashboard" });
+    a.push({ severidade: "alta", titulo: "Cheque especial PF em uso", detalhe: `R$ ${caixa.chequeEspecialPF.toFixed(2)} consumido(s)`, link: "/admin/financeiro/real/pf-pj" });
   }
 
   // Contas: vencidas, vence hoje
   const contas = calcularContasPeriodo(base, lojaId);
   if (contas.vencidasCP.length > 0) {
-    a.push({ severidade: "critica", titulo: `${contas.vencidasCP.length} conta(s) a pagar vencida(s)`, detalhe: `R$ ${contas.valorVencidasCP.toFixed(2)}`, link: "/admin/financeiro/contas-a-pagar/contas" });
+    a.push({ severidade: "critica", titulo: `${contas.vencidasCP.length} conta(s) a pagar vencida(s)`, detalhe: `R$ ${contas.valorVencidasCP.toFixed(2)}`, link: "/admin/financeiro/real/contas-pagar" });
   }
   if (contas.hojeCP.length > 0) {
-    a.push({ severidade: "alta", titulo: `${contas.hojeCP.length} conta(s) vencendo hoje`, detalhe: `R$ ${contas.valorHojeCP.toFixed(2)}`, link: "/admin/financeiro/contas-a-pagar/contas" });
+    a.push({ severidade: "alta", titulo: `${contas.hojeCP.length} conta(s) vencendo hoje`, detalhe: `R$ ${contas.valorHojeCP.toFixed(2)}`, link: "/admin/financeiro/real/contas-pagar" });
   }
 
   // Fechamento não lançado
@@ -503,7 +503,7 @@ export function gerarAlertas(base, lojaId, de, ate) {
   // Sócio: retirada acima do limite (R$ 10k/mês default — placeholder)
   const se = calcularSocioEmpresa(base, lojaId, de, ate);
   if (se.recebidoEmPF > 0) {
-    a.push({ severidade: "alta", titulo: "Vendas recebidas em conta PF", detalhe: `R$ ${se.recebidoEmPF.toFixed(2)} ainda não transferido para PJ`, link: "/admin/financeiro/socio-empresa/dashboard" });
+    a.push({ severidade: "alta", titulo: "Vendas recebidas em conta PF", detalhe: `R$ ${se.recebidoEmPF.toFixed(2)} ainda não transferido para PJ`, link: "/admin/financeiro/real/pf-pj" });
   }
 
   const ordem = { critica: 0, alta: 1, media: 2, baixa: 3 };

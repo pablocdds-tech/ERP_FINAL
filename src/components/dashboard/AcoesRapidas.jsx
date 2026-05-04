@@ -5,14 +5,15 @@ import { Receipt, ShoppingCart, FileText, CheckSquare, AlertTriangle, ClipboardL
 const ACOES = [
   { l: "Lançar fechamento", icon: Receipt, to: "/admin/vendas/fechamentos" },
   { l: "Lançar compra", icon: ShoppingCart, to: "/admin/operacoes/compras" },
-  { l: "Contas a pagar", icon: Wallet, to: "/admin/financeiro/contas-a-pagar/contas" },
-  { l: "Registrar pagamento", icon: Banknote, to: "/admin/financeiro/contas-a-pagar/contas" },
+  { l: "Contas a pagar", icon: Wallet, to: "/admin/financeiro/real/contas-pagar" },
+  { l: "Contas a receber", icon: Banknote, to: "/admin/financeiro/real/contas-receber" },
+  { l: "Movimentações", icon: Banknote, to: "/admin/financeiro/real/movimentacoes" },
   { l: "Notas pendentes", icon: FileWarning, to: "/admin/operacoes/notas-fiscais" },
   { l: "Estoque crítico", icon: AlertTriangle, to: "/admin/operacoes/estoque" },
   { l: "Abrir chamado", icon: FileText, to: "/admin/rotinas/chamados" },
   { l: "Checklists", icon: CheckSquare, to: "/admin/rotinas/checklists" },
   { l: "Ponto / RH", icon: Users, to: "/admin/pessoas/ponto" },
-  { l: "Sócio x Empresa", icon: ClipboardList, to: "/admin/financeiro/socio-empresa/dashboard" },
+  { l: "Sócio x Empresa", icon: ClipboardList, to: "/admin/financeiro/real/pf-pj" },
 ];
 
 export default function AcoesRapidas() {

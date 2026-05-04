@@ -10,7 +10,7 @@ export default function BlocoSocioEmpresa({ se, caixa }) {
   if (se.recebidoEmPF > 0) alertas.push(`Vendas recebidas em PF não transferidas: ${fmtBRL(se.recebidoEmPF)}`);
 
   return (
-    <Bloco titulo="Sócio x Empresa" icone={UserCog} verMais="/admin/financeiro/socio-empresa/dashboard">
+    <Bloco titulo="Sócio x Empresa" icone={UserCog} verMais="/admin/financeiro/real/pf-pj">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
         <StatCard label="Empresa deve ao sócio" value={fmtBRL(se.empresaDeveSocio)} tone="alerta" />
         <StatCard label="Sócio deve à empresa" value={fmtBRL(se.socioDeveEmpresa)} tone="info" />

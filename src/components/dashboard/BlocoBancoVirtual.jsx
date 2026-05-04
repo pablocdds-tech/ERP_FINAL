@@ -8,7 +8,7 @@ const lojaNome = (lojas, id) => lojas.find((l) => l.id === id)?.nome || "—";
 
 export default function BlocoBancoVirtual({ bv, lojas }) {
   return (
-    <Bloco titulo="Banco virtual CD/Lojas" icone={Building2} verMais="/admin/financeiro/interno/saldos">
+    <Bloco titulo="Banco virtual CD/Lojas" icone={Building2} verMais="/admin/financeiro/virtual/interno-saldos">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
         <StatCard label="Lojas devem ao CD" value={fmtBRL(bv.total)} tone={bv.total > 0 ? "alerta" : "default"} />
         <StatCard label="Liquidações pendentes" value={bv.pendentes} />

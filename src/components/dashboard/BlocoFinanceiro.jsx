@@ -27,7 +27,7 @@ export default function BlocoFinanceiro({ caixa, contas, movs }) {
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-semibold text-muted-foreground">Próximas a pagar</div>
-            <Link to="/admin/financeiro/contas-a-pagar/contas" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
+            <Link to="/admin/financeiro/real/contas-pagar" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
           </div>
           {contas.prox7CP.length === 0 ? (
             <div className="text-xs text-muted-foreground italic py-3">Nenhuma conta a pagar nos próximos 7 dias.</div>
@@ -45,7 +45,7 @@ export default function BlocoFinanceiro({ caixa, contas, movs }) {
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-semibold text-muted-foreground">Principais a receber</div>
-            <Link to="/admin/financeiro/contas-a-receber/contas" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
+            <Link to="/admin/financeiro/real/contas-receber" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
           </div>
           {contas.prox7CR.length === 0 ? (
             <div className="text-xs text-muted-foreground italic py-3">Nenhuma conta a receber nos próximos 7 dias.</div>
@@ -63,7 +63,7 @@ export default function BlocoFinanceiro({ caixa, contas, movs }) {
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-semibold text-muted-foreground">Movimentações recentes</div>
-            <Link to="/admin/financeiro/movimentacoes" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
+            <Link to="/admin/financeiro/real/movimentacoes" className="text-xs text-muted-foreground hover:text-foreground"><ChevronRight className="w-3 h-3" /></Link>
           </div>
           {(!movs || movs.length === 0) ? (
             <div className="text-xs text-muted-foreground italic py-3">Sem movimentações registradas.</div>
