@@ -14,6 +14,10 @@ import InternoLancamentos from "./InternoLancamentos";
 import InternoCupom from "./InternoCupom";
 import InternoHistorico from "./InternoHistorico";
 
+import PfPjDashboard from "./PfPjDashboard";
+import PfPjLancamento from "./PfPjLancamento";
+import PfPjResumo from "./PfPjResumo";
+
 const PAGES = {
   "real/contas-pagar": ContasPagar,
   "real/contas-receber": ContasReceber,
@@ -22,6 +26,9 @@ const PAGES = {
   "real/fluxo-caixa": FluxoCaixa,
   "real/importar-ofx": ImportarOFX,
   "real/conciliacao": Conciliacao,
+  "real/pf-pj": PfPjDashboard,
+  "real/pf-pj-lancamento": PfPjLancamento,
+  "real/pf-pj-resumo": PfPjResumo,
 
   "virtual/interno-saldos": InternoSaldos,
   "virtual/interno-lancamentos": InternoLancamentos,

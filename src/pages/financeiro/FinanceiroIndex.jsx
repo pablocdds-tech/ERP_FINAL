@@ -7,7 +7,7 @@ import { FINANCEIRO_REAL_LIST, FINANCEIRO_VIRTUAL_LIST } from "@/lib/financeiro-
 function CardLink({ item, prefix }) {
   const Icon = item.icon;
   return (
-    <Link to={`/financeiro/${prefix}/${item.slug}`}>
+    <Link to={`/admin/financeiro/${prefix}/${item.slug}`}>
       <Card className="p-5 h-full hover:border-foreground/30 transition-colors group">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">

@@ -11,7 +11,9 @@ import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
 
 const empty = () => ({
   nome: "", banco: "", agencia: "", numero: "",
-  tipo: "corrente", loja_id: "", saldo_inicial: 0, ativo: true,
+  tipo: "corrente", natureza: "pj", socio_nome: "",
+  limite: 0, taxa_juros_mensal: 0,
+  loja_id: "", saldo_inicial: 0, ativo: true,
 });
 
 export default function ContaBancariaDialog({ open, mode, record, onClose, onSaved }) {
@@ -65,10 +67,36 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
                 <SelectItem value="corrente">Conta corrente</SelectItem>
                 <SelectItem value="poupanca">Poupança</SelectItem>
                 <SelectItem value="caixa">Caixa físico</SelectItem>
+                <SelectItem value="cartao_pf">Cartão PF</SelectItem>
+                <SelectItem value="cheque_especial_pf">Cheque especial PF</SelectItem>
                 <SelectItem value="outro">Outro</SelectItem>
               </SelectContent>
             </Select>
           </Field>
+          <Field label="Natureza">
+            <Select value={data.natureza || "pj"} onValueChange={(v) => setData({ ...data, natureza: v })} disabled={isView}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pj">PJ — empresa</SelectItem>
+                <SelectItem value="pf">PF — sócio</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {data.natureza === "pf" && (
+            <Field label="Sócio titular">
+              <Input value={data.socio_nome || ""} onChange={(e) => setData({ ...data, socio_nome: e.target.value })} disabled={isView} placeholder="Nome do sócio" />
+            </Field>
+          )}
+          {(data.tipo === "cheque_especial_pf" || data.tipo === "cartao_pf") && (
+            <>
+              <Field label="Limite (R$)">
+                <Input type="number" step="0.01" value={data.limite ?? 0} onChange={(e) => setData({ ...data, limite: parseFloat(e.target.value) || 0 })} disabled={isView} />
+              </Field>
+              <Field label="Juros mensal (%)">
+                <Input type="number" step="0.01" value={data.taxa_juros_mensal ?? 0} onChange={(e) => setData({ ...data, taxa_juros_mensal: parseFloat(e.target.value) || 0 })} disabled={isView} />
+              </Field>
+            </>
+          )}
           <Field label="Agência">
             <Input value={data.agencia || ""} onChange={(e) => setData({ ...data, agencia: e.target.value })} disabled={isView} />
           </Field>

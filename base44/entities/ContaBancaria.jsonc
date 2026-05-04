@@ -21,9 +21,32 @@
         "corrente",
         "poupanca",
         "caixa",
+        "cartao_pf",
+        "cheque_especial_pf",
         "outro"
       ],
       "default": "corrente"
+    },
+    "natureza": {
+      "type": "string",
+      "enum": [
+        "pj",
+        "pf"
+      ],
+      "default": "pj",
+      "description": "PJ = empresa; PF = conta pessoal do s\u00f3cio usada na opera\u00e7\u00e3o"
+    },
+    "socio_nome": {
+      "type": "string",
+      "description": "Quando natureza=pf, nome do s\u00f3cio titular"
+    },
+    "limite": {
+      "type": "number",
+      "description": "Limite (cheque especial / cart\u00e3o PF)"
+    },
+    "taxa_juros_mensal": {
+      "type": "number",
+      "description": "Taxa de juros mensal (%) \u2014 usado em cheque_especial_pf / cartao_pf"
     },
     "loja_id": {
       "type": "string",

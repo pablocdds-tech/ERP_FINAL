@@ -1,0 +1,83 @@
+{
+  "name": "MovimentoSocio",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Sempre positivo. O sinal \u00e9 determinado pelo tipo."
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "despesa_empresa_paga_pf",
+        "despesa_pessoal_paga_empresa",
+        "recebimento_empresa_em_pf",
+        "aporte_socio",
+        "uso_cheque_especial_pf",
+        "juros_pf_empresa",
+        "reembolso_socio",
+        "retirada_socio",
+        "devolucao_socio",
+        "acerto_saldo"
+      ],
+      "description": "Tipo de movimento PF x PJ"
+    },
+    "socio_nome": {
+      "type": "string",
+      "default": "S\u00f3cio"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja relacionada"
+    },
+    "conta_bancaria_id": {
+      "type": "string",
+      "description": "Conta envolvida (PF ou PJ). Para fins de rastreabilidade."
+    },
+    "categoria_id": {
+      "type": "string",
+      "description": "Categoria financeira (quando aplic\u00e1vel: despesa empresa, recebimento, etc.)"
+    },
+    "centro_custo_id": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "comprovante_url": {
+      "type": "string"
+    },
+    "conta_pagar_id": {
+      "type": "string",
+      "description": "ContaPagar gerada (despesa_empresa_paga_pf ou juros)"
+    },
+    "conta_receber_id": {
+      "type": "string",
+      "description": "ContaReceber gerada (recebimento_empresa_em_pf)"
+    },
+    "movimentacao_id": {
+      "type": "string",
+      "description": "MovimentacaoBancaria gerada (quando h\u00e1 d\u00e9bito/cr\u00e9dito em conta)"
+    },
+    "afeta_dre": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marca se este movimento gerou lan\u00e7amento na DRE"
+    },
+    "usuario_email": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "data",
+    "valor",
+    "tipo"
+  ]
+}
