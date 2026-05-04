@@ -64,7 +64,10 @@ export function classificar(plano) {
   const intencao = plano.intencao;
   if (INTENCOES_PROIBIDAS[intencao]) return { tipo: "proibida", motivo: INTENCOES_PROIBIDAS[intencao] };
   if (!INTENCOES_SIMPLES.has(intencao)) {
-    return { tipo: "desconhecida", motivo: "Não consegui identificar uma ação ERP clara." };
+    return {
+      tipo: "desconhecida",
+      motivo: `Não consegui mapear a ação para uma intenção ERP suportada (recebi: "${intencao}"). Reformule o comando ou tente um exemplo dos atalhos.`,
+    };
   }
 
   // Ações que exigem confirmação explícita por critérios do plano:
@@ -240,6 +243,18 @@ INTENÇÕES ACEITAS:
 - Compras: criar_compra, criar_compra_com_itens, gerar_conta_pagar_compra
 - Organização: separar_lista_por_tipo, categorizar_lista, identificar_duplicidades
 
+⚠️ USE EXATAMENTE essas chaves. Mapeamento de sinônimos comuns:
+- "cadastrar item / cadastrar insumo / criar insumo / criar produto / cadastrar produto / cadastrar embalagem / cadastrar material" (1 item) → criar_item
+- "cadastrar itens / cadastrar insumos / cadastrar produtos / cadastrar embalagens / criar vários / lista de itens / cadastre os seguintes" (vários itens) → criar_itens_lote
+- "lançar conta a pagar / cadastrar despesa / lançar despesa / cadastrar conta de fornecedor" → criar_conta_pagar
+- "lançar conta a receber / cadastrar receita / cadastrar venda corporativa" → criar_conta_receber
+- "cadastrar fornecedor / criar fornecedor" → criar_fornecedor
+- "cadastrar cliente / criar cliente" → criar_cliente
+- "lançar entrada / lançar saldo / dar entrada de estoque" → criar_entrada_estoque
+- "lançar compra / cadastrar compra / criar compra" → criar_compra ou criar_compra_com_itens
+
+Se o comando incluir uma LISTA com mais de um item para cadastrar, use SEMPRE criar_itens_lote (mesmo que o usuário diga "cadastrar" e não "criar").
+
 INTENÇÕES PROIBIDAS (sinalize, não execute):
 apagar_dados_definitivamente, baixar_conta, alterar_saldo_bancario, alterar_banco_virtual,
 alterar_socio_empresa, aprovar_nota_fiscal, aprovar_ponto, aprovar_fechamento_caixa,
@@ -271,6 +286,58 @@ REGRAS GERAIS:
 - Resolva loja_id, fornecedor_id, categoria_id, centro_custo_id usando os IDs exatos das listas acima sempre que possível.`;
 }
 
+// Normaliza intenções entregues pela IA para a chave canônica usada pelo executor.
+const SINONIMOS_INTENCAO = {
+  cadastrar_conta_pagar: "criar_conta_pagar",
+  lancar_conta_pagar: "criar_conta_pagar",
+  cadastrar_despesa: "criar_conta_pagar",
+  lancar_despesa: "criar_conta_pagar",
+  cadastrar_conta_receber: "criar_conta_receber",
+  lancar_conta_receber: "criar_conta_receber",
+  cadastrar_receita: "criar_conta_receber",
+  cadastrar_item: "criar_item",
+  cadastrar_insumo: "criar_item",
+  cadastrar_produto: "criar_item",
+  cadastrar_embalagem: "criar_item",
+  cadastrar_material: "criar_item",
+  cadastrar_material_operacional: "criar_item",
+  criar_insumo: "criar_item",
+  criar_produto: "criar_item",
+  criar_embalagem: "criar_item",
+  cadastrar_itens: "criar_itens_lote",
+  cadastrar_insumos: "criar_itens_lote",
+  cadastrar_produtos: "criar_itens_lote",
+  cadastrar_embalagens: "criar_itens_lote",
+  cadastrar_materiais: "criar_itens_lote",
+  cadastrar_materiais_operacionais: "criar_itens_lote",
+  criar_insumos: "criar_itens_lote",
+  criar_produtos: "criar_itens_lote",
+  criar_embalagens: "criar_itens_lote",
+  cadastrar_lote: "criar_itens_lote",
+  criar_lote: "criar_itens_lote",
+  cadastrar_fornecedor: "criar_fornecedor",
+  cadastrar_cliente: "criar_cliente",
+  cadastrar_categoria: "criar_categoria",
+  cadastrar_centro_custo: "criar_centro_custo",
+  lancar_entrada_estoque: "criar_entrada_estoque",
+  cadastrar_entrada_estoque: "criar_entrada_estoque",
+  cadastrar_saldo_inicial: "criar_saldo_inicial",
+  lancar_compra: "criar_compra",
+  cadastrar_compra: "criar_compra",
+  cadastrar_compra_com_itens: "criar_compra_com_itens",
+};
+
+function normalizarIntencao(raw, dados) {
+  if (!raw) return "desconhecida";
+  const k = String(raw).toLowerCase().trim().replace(/[^a-z0-9_]+/g, "_");
+  if (SINONIMOS_INTENCAO[k]) return SINONIMOS_INTENCAO[k];
+  // Já está canônica?
+  if (INTENCOES_SIMPLES.has(k) || INTENCOES_PROIBIDAS[k]) return k;
+  // Se tiver lista de itens, força criar_itens_lote
+  if (Array.isArray(dados?.itens) && dados.itens.length > 0) return "criar_itens_lote";
+  return k;
+}
+
 export async function interpretarComando({ comando, modelo }) {
   const [lojas, fornecedores, categorias, centrosCusto, unidades] = await Promise.all([
     base44.entities.Loja.list("-created_date", 200).catch(() => []),
@@ -288,8 +355,9 @@ export async function interpretarComando({ comando, modelo }) {
     systemContext,
   });
   const data = result.data || {};
+  const intencaoNormalizada = normalizarIntencao(data.intencao, data.dados);
   return {
-    intencao: data.intencao || "desconhecida",
+    intencao: intencaoNormalizada || "desconhecida",
     plano_resumo: data.plano_resumo || "Não consegui montar um plano para esse comando.",
     confianca: data.confianca ?? 0.5,
     precisa_esclarecimento: !!data.precisa_esclarecimento,
