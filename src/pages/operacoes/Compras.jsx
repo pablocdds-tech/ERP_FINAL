@@ -5,11 +5,16 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Eye, Ban } from "lucide-react";
+import { Plus, Search, Eye, Ban, Trash2 } from "lucide-react";
 import PageShell from "@/components/operacoes/PageShell";
 import OperacaoStatusBadge from "@/components/operacoes/OperacaoStatusBadge";
 import CompraDialog from "@/components/operacoes/dialogs/CompraDialog";
 import { format } from "date-fns";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export default function Compras() {
   const [compras, setCompras] = useState([]);
@@ -20,6 +25,7 @@ export default function Compras() {
   const [statusFilter, setStatusFilter] = useState("todas");
   const [lojaFilter, setLojaFilter] = useState("todas");
   const [dialog, setDialog] = useState({ open: false, mode: "create", record: null });
+  const [excluir, setExcluir] = useState({ open: false, record: null, processando: false });
 
   const load = async () => {
     setLoading(true);
@@ -54,6 +60,26 @@ export default function Compras() {
   const cancelar = async (c) => {
     await base44.entities.Compra.update(c.id, { status: "cancelada" });
     load();
+  };
+
+  const confirmarExcluir = async () => {
+    const c = excluir.record;
+    if (!c) return;
+    setExcluir((s) => ({ ...s, processando: true }));
+    try {
+      // Reverte movimentações de estoque geradas por esta compra
+      const movs = await base44.entities.MovimentacaoEstoque.filter({ origem_tipo: "compra", origem_id: c.id });
+      for (const m of (movs || [])) {
+        await base44.entities.MovimentacaoEstoque.delete(m.id);
+      }
+      await base44.entities.Compra.delete(c.id);
+      toast.success("Compra excluída.");
+      setExcluir({ open: false, record: null, processando: false });
+      load();
+    } catch (err) {
+      toast.error("Erro ao excluir compra.");
+      setExcluir((s) => ({ ...s, processando: false }));
+    }
   };
 
   return (
@@ -129,6 +155,9 @@ export default function Compras() {
                           <Ban className="w-4 h-4 text-destructive" />
                         </Button>
                       )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExcluir({ open: true, record: c, processando: false })} title="Excluir">
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -145,6 +174,36 @@ export default function Compras() {
         onClose={() => setDialog((d) => ({ ...d, open: false }))}
         onSaved={load}
       />
+
+      <AlertDialog open={excluir.open} onOpenChange={(o) => !o && setExcluir({ open: false, record: null, processando: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir compra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {excluir.record && (
+                <>
+                  Compra <strong>{excluir.record.numero || "sem número"}</strong> de{" "}
+                  <strong>{fornecedorNome(excluir.record.fornecedor_id)}</strong> no valor de{" "}
+                  <strong>R$ {Number(excluir.record.valor_total || 0).toFixed(2)}</strong>.
+                  <br /><br />
+                  As movimentações de estoque geradas por esta compra serão revertidas.
+                  Esta ação não pode ser desfeita.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluir.processando}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmarExcluir(); }}
+              disabled={excluir.processando}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {excluir.processando ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }
