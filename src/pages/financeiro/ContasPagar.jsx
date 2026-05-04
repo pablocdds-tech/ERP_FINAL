@@ -9,6 +9,7 @@ import PageShell from "@/components/financeiro/PageShell";
 import ContasDocumentoTable from "@/components/financeiro/ContasDocumentoTable";
 import ContaDocumentoDialog from "@/components/financeiro/ContaDocumentoDialog";
 import BaixaDialog from "@/components/financeiro/BaixaDialog";
+import ExcluirContaDialog from "@/components/financeiro/ExcluirContaDialog";
 import { aplicarVencimento } from "@/lib/financeiro-service";
 
 export default function ContasPagar() {
@@ -20,6 +21,7 @@ export default function ContasPagar() {
   const [lojaFilter, setLojaFilter] = useState("todas");
   const [dialog, setDialog] = useState({ open: false, mode: "create", record: null });
   const [baixa, setBaixa] = useState({ open: false, record: null });
+  const [excluir, setExcluir] = useState({ open: false, record: null });
 
   const load = async () => {
     const [c, l, f] = await Promise.all([
@@ -97,6 +99,7 @@ export default function ContasPagar() {
         onView={(d) => setDialog({ open: true, mode: "view", record: d })}
         onEdit={(d) => setDialog({ open: true, mode: "edit", record: d })}
         onBaixar={(d) => setBaixa({ open: true, record: d })}
+        onExcluir={(d) => setExcluir({ open: true, record: d })}
       />
 
       <ContaDocumentoDialog
@@ -114,6 +117,14 @@ export default function ContasPagar() {
         documento_tipo="conta_pagar"
         onClose={() => setBaixa({ open: false, record: null })}
         onSaved={load}
+      />
+
+      <ExcluirContaDialog
+        open={excluir.open}
+        documento={excluir.record}
+        documento_tipo="conta_pagar"
+        onClose={() => setExcluir({ open: false, record: null })}
+        onDeleted={load}
       />
     </PageShell>
   );

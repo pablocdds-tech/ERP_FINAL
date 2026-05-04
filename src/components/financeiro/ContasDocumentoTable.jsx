@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Pencil, Banknote } from "lucide-react";
+import { Eye, Pencil, Banknote, Trash2 } from "lucide-react";
 import ContaStatusBadge from "./ContaStatusBadge";
 import { format } from "date-fns";
 
-export default function ContasDocumentoTable({ items, lojas, isPagar, onView, onEdit, onBaixar }) {
+export default function ContasDocumentoTable({ items, lojas, isPagar, onView, onEdit, onBaixar, onExcluir }) {
   const lojaNome = (id) => lojas.find((l) => l.id === id)?.nome || "—";
 
   return (
@@ -29,6 +29,8 @@ export default function ContasDocumentoTable({ items, lojas, isPagar, onView, on
               <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">Nenhum lançamento.</TableCell></TableRow>
             ) : items.map((d) => {
               const podeBaixar = d.status !== "paga" && d.status !== "recebida" && d.status !== "cancelada";
+              const valorMov = Number((isPagar ? d.valor_pago : d.valor_recebido) || 0);
+              const podeExcluir = valorMov === 0 && d.status !== "paga" && d.status !== "recebida";
               return (
                 <TableRow key={d.id} className="hover:bg-muted/30">
                   <TableCell>{d.data_vencimento ? format(new Date(d.data_vencimento), "dd/MM/yyyy") : "—"}</TableCell>
@@ -51,6 +53,11 @@ export default function ContasDocumentoTable({ items, lojas, isPagar, onView, on
                       {podeBaixar && (
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onBaixar(d)} title="Baixar">
                           <Banknote className="w-4 h-4 text-emerald-600" />
+                        </Button>
+                      )}
+                      {onExcluir && podeExcluir && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onExcluir(d)} title="Excluir">
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       )}
                     </div>
