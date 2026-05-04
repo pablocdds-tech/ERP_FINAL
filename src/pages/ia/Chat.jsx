@@ -7,9 +7,12 @@ import PageShell from "@/components/ia/PageShell";
 import AgentPicker from "@/components/ia/chat/AgentPicker";
 import ModelPicker from "@/components/ia/chat/ModelPicker";
 import ChatMessage from "@/components/ia/chat/ChatMessage";
+import PlanoCard from "@/components/ia/chat/PlanoCard";
 import { askAI } from "@/lib/ai-provider";
 import { logInteracao } from "@/lib/ai-log";
 import { getAgent } from "@/lib/agents-config";
+import { base44 } from "@/api/base44Client";
+import { criarComando, confirmarComando, cancelarComando } from "@/lib/executor-comando-service";
 import { toast } from "sonner";
 
 export default function Chat() {
@@ -18,9 +21,11 @@ export default function Chat() {
   const [mensagens, setMensagens] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acaoLoading, setAcaoLoading] = useState(null);
   const scrollRef = useRef(null);
 
   const agent = getAgent(agentChave);
+  const isExecutor = !!agent?.modoExecutor;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -30,10 +35,25 @@ export default function Chat() {
     const pergunta = input.trim();
     if (!pergunta || loading) return;
     setInput("");
-    const novaUser = { role: "user", content: pergunta };
-    setMensagens((m) => [...m, novaUser]);
+    setMensagens((m) => [...m, { role: "user", content: pergunta }]);
     setLoading(true);
     const t0 = Date.now();
+
+    // Modo Executor: interpreta como comando estruturado e exibe plano
+    if (isExecutor) {
+      try {
+        const usuario = await base44.auth.me().catch(() => null);
+        const { comando } = await criarComando({ comando: pergunta, modelo, usuario });
+        setMensagens((m) => [...m, { role: "assistant", tipo: "plano", comando }]);
+      } catch (e) {
+        const erro = e?.message || "Falha ao interpretar comando";
+        setMensagens((m) => [...m, { role: "assistant", content: `⚠️ ${erro}`, modelo }]);
+        toast.error(erro);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const { text, model } = await askAI({
@@ -66,6 +86,38 @@ export default function Chat() {
       toast.error("Falha na consulta à IA");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const atualizarComandoNaLista = (atualizado) => {
+    setMensagens((m) => m.map((msg) =>
+      msg.tipo === "plano" && msg.comando.id === atualizado.id ? { ...msg, comando: atualizado } : msg
+    ));
+  };
+
+  const handleConfirmar = async (id) => {
+    setAcaoLoading(id);
+    try {
+      const out = await confirmarComando({ comandoId: id });
+      atualizarComandoNaLista(out);
+      toast.success(out.status === "executado" ? "Executado." : "Concluído com erro.");
+    } catch (e) {
+      toast.error(e?.message || "Falha");
+    } finally {
+      setAcaoLoading(null);
+    }
+  };
+
+  const handleCancelarComando = async (id) => {
+    setAcaoLoading(id);
+    try {
+      const out = await cancelarComando({ comandoId: id });
+      atualizarComandoNaLista(out);
+      toast.success("Cancelado");
+    } catch (e) {
+      toast.error(e?.message || "Falha");
+    } finally {
+      setAcaoLoading(null);
     }
   };
 
@@ -108,7 +160,17 @@ export default function Chat() {
               </div>
             )}
             {mensagens.map((m, i) => (
-              <ChatMessage key={i} role={m.role} content={m.content} modelo={m.modelo} />
+              m.tipo === "plano" ? (
+                <PlanoCard
+                  key={i}
+                  comando={m.comando}
+                  loading={acaoLoading === m.comando.id}
+                  onConfirmar={() => handleConfirmar(m.comando.id)}
+                  onCancelar={() => handleCancelarComando(m.comando.id)}
+                />
+              ) : (
+                <ChatMessage key={i} role={m.role} content={m.content} modelo={m.modelo} />
+              )
             ))}
             {loading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -119,7 +181,9 @@ export default function Chat() {
 
           <div className="border-t p-3 flex gap-2 items-end">
             <Textarea
-              placeholder={`Pergunte algo para ${agent?.nome}...`}
+              placeholder={isExecutor
+                ? "Digite o que deseja que o Executor faça (ex: Crie uma tarefa para João limpar a câmara fria às 15h)..."
+                : `Pergunte algo para ${agent?.nome}...`}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}

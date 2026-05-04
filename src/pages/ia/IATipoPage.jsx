@@ -11,9 +11,11 @@ import Respostas from "./Respostas";
 import Falhas from "./Falhas";
 import Aprovacoes from "./Aprovacoes";
 import Chat from "./Chat";
+import Comandos from "./Comandos";
 
 const PAGES = {
   chat: Chat,
+  comandos: Comandos,
   agents: Agents,
   logs: Logs,
   eventos: Eventos,

@@ -12,7 +12,7 @@
 //  ❌ disparar campanhas sem aprovação humana
 
 import {
-  Network, Wallet, Package, ShoppingCart, Users, ClipboardList, BarChart3,
+  Network, Wallet, Package, ShoppingCart, Users, ClipboardList, BarChart3, Wand2,
 } from "lucide-react";
 
 export const PERMISSOES_PADRAO = {
@@ -50,6 +50,16 @@ REGRAS GERAIS (válidas para todos os agentes):
 `.trim();
 
 export const AGENTS_CATALOG = [
+  {
+    chave: "executor_operacional",
+    nome: "Executor Operacional",
+    descricao: "Recebe comandos em linguagem natural e EXECUTA ações operacionais (criar tarefa, abrir chamado, cobrar checklist, gerar resumo, notificar). Sempre apresenta um plano antes de executar; ações sensíveis viram solicitação de aprovação.",
+    icon: Wand2,
+    cor: "violet",
+    modoExecutor: true,
+    fontes: ["Tarefa", "Chamado", "OcorrenciaOperacional", "Notificacao", "Checklist", "Colaborador", "Loja"],
+    papel: `Você é o Agent Executor Operacional. Diferente dos outros agentes, você EXECUTA ações no ERP a partir de comandos em linguagem natural — mas só após confirmação humana, e nunca para ações financeiras, de estoque ou aprovações sensíveis.\n\n${REGRAS_BASE}`,
+  },
   {
     chave: "orquestrador",
     nome: "Orquestrador",

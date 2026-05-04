@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import DashboardFiltros from "@/components/dashboard/DashboardFiltros";
 import AlertasCriticos from "@/components/dashboard/AlertasCriticos";
 import AcoesRapidas from "@/components/dashboard/AcoesRapidas";
+import ComandoRapidoOperacional from "@/components/dashboard/ComandoRapidoOperacional";
 import BlocoExecutivo from "@/components/dashboard/BlocoExecutivo";
 import BlocoVendas from "@/components/dashboard/BlocoVendas";
 import BlocoFinanceiro from "@/components/dashboard/BlocoFinanceiro";
@@ -98,6 +99,7 @@ export default function Dashboard() {
       />
 
       <AlertasCriticos alertas={dados.alertas} />
+      <ComandoRapidoOperacional />
       <AcoesRapidas />
 
       <BlocoExecutivo
