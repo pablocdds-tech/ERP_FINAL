@@ -7,13 +7,13 @@ export default function PfPjAlertas({ contas, movimentos, semana, limiteSemanaRe
   const alertas = [];
 
   // 1. Cheque especial PF em uso (saldo negativo em conta cheque_especial_pf)
-  for (const c of contas.filter((x) => x.tipo === "cheque_especial_pf")) {
+  for (const c of contas.filter((x) => x.tipo_conta === "cheque_especial_pf" || x.tipo === "cheque_especial_pf")) {
     const saldo = c._saldo ?? 0;
     if (saldo < 0) {
       alertas.push({
         sev: "alta",
         titulo: `Cheque especial PF em uso: ${c.nome}`,
-        detalhe: `Saldo atual ${fmt(saldo)}. Limite ${fmt(c.limite || 0)}.`,
+        detalhe: `Saldo atual ${fmt(saldo)}. Limite ${fmt(c.limite_credito || c.limite || 0)}.`,
       });
     }
   }
@@ -29,10 +29,10 @@ export default function PfPjAlertas({ contas, movimentos, semana, limiteSemanaRe
 
   // 3. Venda recebida em PF não devolvida
   const totalRecebidoPf = movimentos
-    .filter((m) => m.tipo === "recebimento_empresa_em_pf")
+    .filter((m) => m.tipo_movimento === "recebimento_empresa_em_pf" && m.status !== "cancelado")
     .reduce((s, m) => s + (Number(m.valor) || 0), 0);
   const totalDevolvido = movimentos
-    .filter((m) => m.tipo === "devolucao_socio")
+    .filter((m) => m.tipo_movimento === "devolucao_socio_empresa" && m.status !== "cancelado")
     .reduce((s, m) => s + (Number(m.valor) || 0), 0);
   const naoTransferido = totalRecebidoPf - totalDevolvido;
   if (naoTransferido > 0) {

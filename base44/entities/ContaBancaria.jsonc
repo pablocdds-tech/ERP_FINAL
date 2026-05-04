@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Apelido da conta (ex: Ita\u00fa Matriz)"
     },
+    "instituicao": {
+      "type": "string",
+      "description": "Institui\u00e7\u00e3o financeira / bandeira (ex: Ita\u00fa, Nubank, Visa)"
+    },
     "banco": {
       "type": "string"
     },
@@ -14,6 +18,59 @@
     },
     "numero": {
       "type": "string"
+    },
+    "ultimos_4_digitos": {
+      "type": "string",
+      "description": "\u00daltimos 4 d\u00edgitos do cart\u00e3o / conta (apresenta\u00e7\u00e3o)"
+    },
+    "tipo_conta": {
+      "type": "string",
+      "enum": [
+        "conta_corrente_pj",
+        "conta_corrente_pf",
+        "conta_pagamento_pf",
+        "cartao_credito_pf",
+        "cartao_debito_pf",
+        "cheque_especial_pf",
+        "maquininha_pf",
+        "pix_pf",
+        "caixa_fisico",
+        "banco_virtual",
+        "outro"
+      ],
+      "default": "conta_corrente_pj",
+      "description": "Tipo detalhado da conta"
+    },
+    "natureza": {
+      "type": "string",
+      "enum": [
+        "PJ",
+        "PF_USO_OPERACIONAL",
+        "VIRTUAL_INTERNO"
+      ],
+      "default": "PJ",
+      "description": "PJ=empresa real | PF_USO_OPERACIONAL=conta do s\u00f3cio usada na opera\u00e7\u00e3o | VIRTUAL_INTERNO=banco virtual CD/lojas"
+    },
+    "socio_vinculado": {
+      "type": "string",
+      "description": "S\u00f3cio titular quando natureza=PF_USO_OPERACIONAL"
+    },
+    "uso_temporario_operacional": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marca PF que est\u00e1 sendo usada temporariamente para a empresa"
+    },
+    "limite_credito": {
+      "type": "number",
+      "description": "Limite de cr\u00e9dito (cart\u00e3o / cheque especial)"
+    },
+    "vencimento_fatura": {
+      "type": "number",
+      "description": "Dia do m\u00eas de vencimento (cart\u00e3o)"
+    },
+    "taxa_juros_mensal": {
+      "type": "number",
+      "description": "Taxa de juros mensal (%) \u2014 cheque especial / rotativo"
     },
     "tipo": {
       "type": "string",
@@ -25,28 +82,8 @@
         "cheque_especial_pf",
         "outro"
       ],
-      "default": "corrente"
-    },
-    "natureza": {
-      "type": "string",
-      "enum": [
-        "pj",
-        "pf"
-      ],
-      "default": "pj",
-      "description": "PJ = empresa; PF = conta pessoal do s\u00f3cio usada na opera\u00e7\u00e3o"
-    },
-    "socio_nome": {
-      "type": "string",
-      "description": "Quando natureza=pf, nome do s\u00f3cio titular"
-    },
-    "limite": {
-      "type": "number",
-      "description": "Limite (cheque especial / cart\u00e3o PF)"
-    },
-    "taxa_juros_mensal": {
-      "type": "number",
-      "description": "Taxa de juros mensal (%) \u2014 usado em cheque_especial_pf / cartao_pf"
+      "default": "corrente",
+      "description": "[Legado] Tipo simples \u2014 mantido por compatibilidade. Usar tipo_conta."
     },
     "loja_id": {
       "type": "string",

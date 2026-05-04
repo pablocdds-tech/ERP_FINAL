@@ -2,45 +2,57 @@
   "name": "MovimentoSocio",
   "type": "object",
   "properties": {
-    "data": {
+    "socio_id": {
       "type": "string",
-      "format": "date"
-    },
-    "valor": {
-      "type": "number",
-      "description": "Sempre positivo. O sinal \u00e9 determinado pelo tipo."
-    },
-    "tipo": {
-      "type": "string",
-      "enum": [
-        "despesa_empresa_paga_pf",
-        "despesa_pessoal_paga_empresa",
-        "recebimento_empresa_em_pf",
-        "aporte_socio",
-        "uso_cheque_especial_pf",
-        "juros_pf_empresa",
-        "reembolso_socio",
-        "retirada_socio",
-        "devolucao_socio",
-        "acerto_saldo"
-      ],
-      "description": "Tipo de movimento PF x PJ"
+      "description": "Identificador do s\u00f3cio (livre \u2014 id ou nome normalizado)"
     },
     "socio_nome": {
       "type": "string",
       "default": "S\u00f3cio"
     },
     "loja_id": {
-      "type": "string",
-      "description": "Loja relacionada"
+      "type": "string"
     },
-    "conta_bancaria_id": {
+    "data": {
       "type": "string",
-      "description": "Conta envolvida (PF ou PJ). Para fins de rastreabilidade."
+      "format": "date"
+    },
+    "competencia": {
+      "type": "string",
+      "description": "AAAA-MM \u2014 m\u00eas de compet\u00eancia para DRE"
+    },
+    "tipo_movimento": {
+      "type": "string",
+      "enum": [
+        "despesa_empresa_paga_pela_pf",
+        "despesa_pessoal_paga_pela_empresa",
+        "recebimento_empresa_em_pf",
+        "aporte_socio",
+        "emprestimo_socio",
+        "uso_cheque_especial_pf",
+        "juros_cheque_especial_pf",
+        "reembolso_ao_socio",
+        "retirada_socio",
+        "devolucao_socio_empresa",
+        "acerto_saldo"
+      ],
+      "description": "Tipo do movimento PF x PJ"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Sempre positivo. O sinal \u00e9 determinado pelo tipo_movimento."
+    },
+    "conta_origem_id": {
+      "type": "string",
+      "description": "ContaBancaria de origem do recurso"
+    },
+    "conta_destino_id": {
+      "type": "string",
+      "description": "ContaBancaria de destino (quando aplic\u00e1vel)"
     },
     "categoria_id": {
       "type": "string",
-      "description": "Categoria financeira (quando aplic\u00e1vel: despesa empresa, recebimento, etc.)"
+      "description": "CategoriaFinanceira para impacto na DRE"
     },
     "centro_custo_id": {
       "type": "string"
@@ -51,33 +63,51 @@
     "comprovante_url": {
       "type": "string"
     },
-    "conta_pagar_id": {
+    "gerar_conta_pagar": {
+      "type": "boolean",
+      "default": false,
+      "description": "Solicitar gera\u00e7\u00e3o de ContaPagar em aberto"
+    },
+    "gerar_conta_receber": {
+      "type": "boolean",
+      "default": false,
+      "description": "Solicitar gera\u00e7\u00e3o de ContaReceber em aberto"
+    },
+    "data_vencimento": {
       "type": "string",
-      "description": "ContaPagar gerada (despesa_empresa_paga_pf ou juros)"
+      "format": "date",
+      "description": "Vencimento da CP/CR gerada"
+    },
+    "conta_pagar_id": {
+      "type": "string"
     },
     "conta_receber_id": {
-      "type": "string",
-      "description": "ContaReceber gerada (recebimento_empresa_em_pf)"
-    },
-    "movimentacao_id": {
-      "type": "string",
-      "description": "MovimentacaoBancaria gerada (quando h\u00e1 d\u00e9bito/cr\u00e9dito em conta)"
+      "type": "string"
     },
     "afeta_dre": {
       "type": "boolean",
       "default": false,
-      "description": "Marca se este movimento gerou lan\u00e7amento na DRE"
+      "description": "True quando o movimento gera lan\u00e7amento na DRE"
     },
-    "usuario_email": {
-      "type": "string"
+    "status": {
+      "type": "string",
+      "enum": [
+        "registrado",
+        "compensado",
+        "cancelado"
+      ],
+      "default": "registrado"
     },
     "observacoes": {
+      "type": "string"
+    },
+    "usuario_email": {
       "type": "string"
     }
   },
   "required": [
     "data",
     "valor",
-    "tipo"
+    "tipo_movimento"
   ]
 }

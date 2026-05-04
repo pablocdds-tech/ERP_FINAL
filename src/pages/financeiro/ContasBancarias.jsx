@@ -33,8 +33,13 @@ export default function ContasBancarias() {
     load();
   };
 
-  const totalGeral = items.filter((c) => c.ativo !== false)
-    .reduce((s, c) => s + (saldos.get(c.id)?.saldo || 0), 0);
+  const naturezaOf = (c) => c.natureza || (c.tipo === "cartao_pf" || c.tipo === "cheque_especial_pf" ? "PF_USO_OPERACIONAL" : "PJ");
+  const ativas = items.filter((c) => c.ativo !== false);
+  const totalPJ = ativas.filter((c) => naturezaOf(c) === "PJ").reduce((s, c) => s + (saldos.get(c.id)?.saldo || 0), 0);
+  const totalPF = ativas.filter((c) => naturezaOf(c) === "PF_USO_OPERACIONAL").reduce((s, c) => s + (saldos.get(c.id)?.saldo || 0), 0);
+  const totalVI = ativas.filter((c) => naturezaOf(c) === "VIRTUAL_INTERNO").reduce((s, c) => s + (saldos.get(c.id)?.saldo || 0), 0);
+  const NAT_LABEL = { PJ: "PJ", PF_USO_OPERACIONAL: "PF op.", VIRTUAL_INTERNO: "Virtual" };
+  const NAT_CLS = { PJ: "bg-emerald-50 text-emerald-700 border-emerald-200", PF_USO_OPERACIONAL: "bg-amber-50 text-amber-700 border-amber-200", VIRTUAL_INTERNO: "bg-blue-50 text-blue-700 border-blue-200" };
 
   return (
     <PageShell
@@ -42,10 +47,20 @@ export default function ContasBancarias() {
       description="Cadastro de contas e saldos bancários reais."
       actions={<Button onClick={() => setDialog({ open: true, mode: "create", record: null })}><Plus className="w-4 h-4 mr-1.5" />Nova conta</Button>}
     >
-      <Card className="p-4 mb-4 flex justify-between items-center">
-        <span className="text-sm text-muted-foreground">Saldo bancário total (contas ativas)</span>
-        <span className={`font-mono font-semibold text-lg ${totalGeral < 0 ? "text-destructive" : ""}`}>R$ {totalGeral.toFixed(2)}</span>
-      </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">Saldo PJ (empresa)</div>
+          <div className={`mt-1 font-mono font-semibold text-lg ${totalPJ < 0 ? "text-destructive" : ""}`}>R$ {totalPJ.toFixed(2)}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">Saldo PF operacional (sócio)</div>
+          <div className={`mt-1 font-mono font-semibold text-lg ${totalPF < 0 ? "text-destructive" : ""}`}>R$ {totalPF.toFixed(2)}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-muted-foreground">Banco virtual interno</div>
+          <div className={`mt-1 font-mono font-semibold text-lg ${totalVI < 0 ? "text-destructive" : ""}`}>R$ {totalVI.toFixed(2)}</div>
+        </Card>
+      </div>
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -55,6 +70,7 @@ export default function ContasBancarias() {
                 <TableHead>Conta</TableHead>
                 <TableHead>Banco</TableHead>
                 <TableHead>Tipo</TableHead>
+                <TableHead>Natureza</TableHead>
                 <TableHead>Loja</TableHead>
                 <TableHead className="text-right">Saldo atual</TableHead>
                 <TableHead>Status</TableHead>
@@ -63,14 +79,16 @@ export default function ContasBancarias() {
             </TableHeader>
             <TableBody>
               {items.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground text-sm">Nenhuma conta cadastrada.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">Nenhuma conta cadastrada.</TableCell></TableRow>
               ) : items.map((c) => {
                 const saldo = saldos.get(c.id)?.saldo || 0;
+                const nat = naturezaOf(c);
                 return (
                   <TableRow key={c.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{c.nome}</TableCell>
-                    <TableCell>{c.banco || "—"}</TableCell>
-                    <TableCell><span className="text-xs uppercase text-muted-foreground">{c.tipo}</span></TableCell>
+                    <TableCell className="font-medium">{c.nome}{c.ultimos_4_digitos ? <span className="text-xs text-muted-foreground"> •••{c.ultimos_4_digitos}</span> : null}</TableCell>
+                    <TableCell>{c.instituicao || c.banco || "—"}</TableCell>
+                    <TableCell><span className="text-xs uppercase text-muted-foreground">{(c.tipo_conta || c.tipo || "").replace(/_/g, " ")}</span></TableCell>
+                    <TableCell><span className={`text-[10px] px-1.5 py-0.5 rounded border ${NAT_CLS[nat]}`}>{NAT_LABEL[nat]}</span></TableCell>
                     <TableCell>{lojaNome(c.loja_id)}</TableCell>
                     <TableCell className={`text-right font-mono ${saldo < 0 ? "text-destructive" : ""}`}>R$ {saldo.toFixed(2)}</TableCell>
                     <TableCell><StatusBadge ativo={c.ativo} /></TableCell>

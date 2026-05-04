@@ -42,8 +42,9 @@ export default function PfPjDashboard() {
   const saldosMap = useMemo(() => calcularSaldosBancarios(contas, movs), [contas, movs]);
   const contasComSaldo = useMemo(() => contas.map((c) => ({ ...c, _saldo: saldosMap.get(c.id)?.saldo || 0 })), [contas, saldosMap]);
 
-  const caixaPj = contasComSaldo.filter((c) => (c.natureza || "pj") === "pj").reduce((s, c) => s + c._saldo, 0);
-  const caixaPf = contasComSaldo.filter((c) => c.natureza === "pf").reduce((s, c) => s + c._saldo, 0);
+  const naturezaOf = (c) => c.natureza || (c.tipo === "cartao_pf" || c.tipo === "cheque_especial_pf" ? "PF_USO_OPERACIONAL" : "PJ");
+  const caixaPj = contasComSaldo.filter((c) => naturezaOf(c) === "PJ").reduce((s, c) => s + c._saldo, 0);
+  const caixaPf = contasComSaldo.filter((c) => naturezaOf(c) === "PF_USO_OPERACIONAL").reduce((s, c) => s + c._saldo, 0);
 
   const aPagar7 = pagar.filter((d) => ["aberta", "vencida", "parcial"].includes(d.status) && inDays(d.data_vencimento, 7))
     .reduce((s, d) => s + (Number(d.valor) || 0) - (Number(d.valor_pago) || 0), 0);
@@ -57,7 +58,7 @@ export default function PfPjDashboard() {
     const hoje = new Date();
     const ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     return movsSocio
-      .filter((m) => m.tipo === "retirada_socio" && new Date(m.data) >= ini)
+      .filter((m) => m.tipo_movimento === "retirada_socio" && m.status !== "cancelado" && new Date(m.data) >= ini)
       .reduce((s, m) => s + (Number(m.valor) || 0), 0);
   }, [movsSocio]);
 
