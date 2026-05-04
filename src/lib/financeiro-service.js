@@ -22,11 +22,12 @@ export async function registrarAuditoria({ entidade, entidade_id, acao, snapshot
 }
 
 // --- Saldo bancário (real) ---
-// Calcula saldo de cada conta a partir de saldo_inicial + movimentações.
+// Calcula saldo de cada conta SOMENTE a partir das movimentações (incluindo a do tipo "saldo_inicial").
+// O campo saldo_inicial da entidade é apenas referência; não é somado aqui para evitar duplicação.
 export function calcularSaldosBancarios(contas, movimentacoes) {
   const map = new Map();
   for (const c of contas) {
-    map.set(c.id, { conta_id: c.id, conta_nome: c.nome, loja_id: c.loja_id, saldo: Number(c.saldo_inicial) || 0 });
+    map.set(c.id, { conta_id: c.id, conta_nome: c.nome, loja_id: c.loja_id, saldo: 0 });
   }
   for (const m of movimentacoes) {
     const cur = map.get(m.conta_bancaria_id);
