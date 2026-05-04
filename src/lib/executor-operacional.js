@@ -133,10 +133,43 @@ const PARCELA = {
   },
 };
 
+const INTENCOES_VALIDAS_ENUM = [
+  "criar_conta_pagar",
+  "criar_conta_receber",
+  "criar_parcelas_pagar",
+  "criar_parcelas_receber",
+  "consultar_contas_pagar",
+  "consultar_contas_receber",
+  "classificar_despesa",
+  "criar_item",
+  "criar_itens_lote",
+  "criar_fornecedor",
+  "criar_cliente",
+  "criar_categoria",
+  "criar_centro_custo",
+  "atualizar_item",
+  "classificar_itens",
+  "criar_entrada_estoque",
+  "criar_saldo_inicial",
+  "atualizar_estoque_minimo",
+  "consultar_estoque",
+  "criar_compra",
+  "criar_compra_com_itens",
+  "gerar_conta_pagar_compra",
+  "separar_lista_por_tipo",
+  "categorizar_lista",
+  "identificar_duplicidades",
+  "desconhecida",
+];
+
 const SCHEMA_PLANO = {
   type: "object",
   properties: {
-    intencao: { type: "string" },
+    intencao: {
+      type: "string",
+      enum: INTENCOES_VALIDAS_ENUM,
+      description: "OBRIGATÓRIO escolher exatamente um valor desta lista. Se houver lista de itens para cadastrar, use criar_itens_lote.",
+    },
     plano_resumo: { type: "string", description: "Frase curta executiva: 'Vou criar uma conta a pagar...'" },
     confianca: { type: "number" },
     precisa_esclarecimento: { type: "boolean" },
