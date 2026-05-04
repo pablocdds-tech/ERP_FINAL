@@ -33,8 +33,8 @@ const empty = () => ({
   nome: "", instituicao: "", banco: "", agencia: "", numero: "", ultimos_4_digitos: "",
   tipo_conta: "conta_corrente_pj", natureza: "PJ",
   socio_vinculado: "", uso_temporario_operacional: false,
-  limite_credito: 0, vencimento_fatura: "", taxa_juros_mensal: 0,
-  loja_id: "", saldo_inicial: 0, ativo: true,
+  limite_credito: "", vencimento_fatura: "", taxa_juros_mensal: "",
+  loja_id: "", saldo_inicial: "", ativo: true,
 });
 
 export default function ContaBancariaDialog({ open, mode, record, onClose, onSaved }) {
@@ -120,12 +120,13 @@ export default function ContaBancariaDialog({ open, mode, record, onClose, onSav
       const created = await base44.entities.ContaBancaria.create(payload);
       const saldo = Number(data.saldo_inicial) || 0;
       if (saldo !== 0) {
+        // Preserva o sinal: positivo = saldo_inicial, negativo = debito (uso de cheque especial)
         await base44.entities.MovimentacaoBancaria.create({
           conta_bancaria_id: created.id,
-          tipo: "saldo_inicial",
+          tipo: saldo < 0 ? "debito" : "saldo_inicial",
           data: new Date().toISOString().slice(0, 10),
           valor: Math.abs(saldo),
-          descricao: saldo < 0 ? "Saldo inicial (uso de cheque especial)" : "Saldo inicial",
+          descricao: saldo < 0 ? "Saldo inicial negativo — uso de cheque especial" : "Saldo inicial",
           loja_id: data.loja_id,
           origem_tipo: "saldo_inicial",
         });
