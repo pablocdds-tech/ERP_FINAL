@@ -9,6 +9,7 @@ import {
   uploadFotoBlob,
   obterProximoEvento,
 } from "@/lib/ponto-service";
+import { obterOuGerarDeviceId } from "@/lib/kiosk-device-service";
 import { podeRegistrarPonto } from "@/lib/ponto-permissoes";
 import { registrarLog } from "@/lib/auditoria-service";
 
@@ -207,7 +208,14 @@ export default function KioskAutoFlow({ device, config }) {
       agendarReset();
       return;
     }
-    if (!deviceIdRef.current) {
+    // Fonte da verdade: relê o device_id direto do localStorage no momento do envio.
+    // Se a ref tiver ficado dessincronizada (ex.: re-render, troca de rota interna), garante
+    // que o backend recebe o ID realmente persistido no tablet.
+    const deviceIdAtual = obterOuGerarDeviceId() || deviceIdRef.current;
+    if (deviceIdAtual && deviceIdAtual !== deviceIdRef.current) {
+      deviceIdRef.current = deviceIdAtual;
+    }
+    if (!deviceIdAtual) {
       setErroMsg("Dispositivo Kiosk não identificado. Reinicie o tablet.");
       setFase("erro");
       try {
@@ -244,7 +252,7 @@ export default function KioskAutoFlow({ device, config }) {
         tipo: dados.proximo,
         origem: "kiosk_auto",
         loja_id: lojaIdRef.current,
-        device_id: deviceIdRef.current,
+        device_id: deviceIdAtual,
         tem_selfie_url: !!selfie_url,
         match_score: dados.score,
         match_dist: dados.dist,
@@ -277,7 +285,7 @@ export default function KioskAutoFlow({ device, config }) {
         tipo: dados.proximo,
         selfie_url,
         origem: "kiosk_auto",
-        dispositivo: deviceIdRef.current, // ← sempre presente, vindo da ref
+        dispositivo: deviceIdAtual, // ← lido em tempo real do localStorage
         match_score: dados.score,
         match_dist: dados.dist,
         threshold_usado: threshold,
@@ -312,9 +320,19 @@ export default function KioskAutoFlow({ device, config }) {
           critico: true,
         });
       } catch { /* */ }
-      // Mensagem rica: motivo + código técnico (ajuda diagnóstico em produção)
+      // Mensagem rica: motivo + código técnico + device_id quando relevante.
+      // Ajuda muito a diagnosticar mismatch de device entre tablet e cadastro.
       const codigo = e?.codigo ? ` [${e.codigo}]` : "";
-      setErroMsg((e?.message || "Falha ao registrar.") + codigo);
+      let extra = "";
+      if (
+        e?.codigo === "device_nao_cadastrado" ||
+        e?.codigo === "device_nao_autorizado" ||
+        e?.codigo === "sem_device" ||
+        e?.codigo === "loja_divergente"
+      ) {
+        extra = `\nDevice atual: ${deviceIdAtual}`;
+      }
+      setErroMsg((e?.message || "Falha ao registrar.") + codigo + extra);
       setFase("erro");
       agendarReset();
     }
@@ -716,7 +734,7 @@ function PainelDireito({ fase, statusMsg, reconhecido, resultado, erroMsg, onCon
       <CenteredCol>
         <AlertCircle className="w-16 h-16 text-red-400 mb-3" />
         <div className="text-xl font-medium mb-2 text-center">Não foi possível registrar</div>
-        <div className="text-sm text-slate-400 text-center px-4">{erroMsg}</div>
+        <div className="text-sm text-slate-400 text-center px-4 whitespace-pre-line break-all">{erroMsg}</div>
       </CenteredCol>
     );
   }
