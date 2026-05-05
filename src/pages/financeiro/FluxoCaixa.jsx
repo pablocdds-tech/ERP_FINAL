@@ -36,8 +36,10 @@ export default function FluxoCaixa() {
     for (const m of movs) {
       if (!m.data || m.data < dataDe || m.data > dataAte) continue;
       if (lojaFilter !== "todas" && m.loja_id !== lojaFilter) continue;
+      // Saldo inicial é fotografia da conta, não movimento de caixa — ignora.
+      if (m.tipo === "saldo_inicial" || m.origem_tipo === "saldo_inicial") continue;
       const cur = map.get(m.data) || { data: m.data, entradas: 0, saidas: 0 };
-      const positivo = ["credito", "transferencia_entrada", "saldo_inicial"].includes(m.tipo);
+      const positivo = ["credito", "transferencia_entrada"].includes(m.tipo);
       const v = Number(m.valor) || 0;
       if (positivo) cur.entradas += v; else cur.saidas += v;
       map.set(m.data, cur);
