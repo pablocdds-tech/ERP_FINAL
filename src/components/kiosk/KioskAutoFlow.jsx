@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Loader2, CheckCircle2, AlertCircle, KeyRound, ShieldOff, X, UserCheck, Camera as CameraIcon } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, KeyRound, ShieldOff, UserCheck, Camera as CameraIcon } from "lucide-react";
 import { ensureModelsLoaded } from "@/lib/face-api-loader";
 import { extrairDescritor, melhorMatch, DEFAULT_THRESHOLD } from "@/lib/biometria";
 import {
@@ -20,31 +20,20 @@ const TIPO_LABEL = {
 };
 
 /**
- * Kiosk com detecção automática de rosto + confirmação manual.
- *
- * Estados (state.fase):
- *   iniciando_camera | aguardando_rosto | processando_reconhecimento
- *   reconhecido (aguardando_confirmacao) | registrando
- *   sucesso | erro | nao_reconhecido | fallback_pin | bloqueio_rebatida
- *
- * O loop de leitura é pausado durante: reconhecido, registrando, sucesso, erro,
- * fallback_pin e bloqueio_rebatida. Volta a aguardar_rosto após o reset.
+ * Kiosk com detecção automática de rosto.
+ * - Alta confiança (score >= scoreMinAuto): registra automaticamente sem clique.
+ * - Baixa confiança: mostra tela de confirmação manual.
+ * - Sem match após N tentativas: oferece fallback PIN (sempre exige foto).
  */
 export default function KioskAutoFlow({ device, config }) {
   const intervaloLeituraMs = Math.max(800, (Number(config?.["ponto.kiosk.intervalo_leitura_seg"]) || 2) * 1000);
   const tentativasAntesPin = Math.max(1, Number(config?.["ponto.kiosk.tentativas_antes_pin"]) || 3);
   const tempoResetMs = Math.max(2, Number(config?.["ponto.kiosk.tempo_reset_seg"]) || 5) * 1000;
-  const tempoMsgSucessoMs = Math.max(1, Number(config?.["ponto.kiosk.tempo_msg_sucesso_seg"]) || 3) * 1000;
   const bloqueioRebatidaSeg = Math.max(10, Number(config?.["ponto.kiosk.bloqueio_rebatida_seg"]) || 60);
   const threshold = Number(config?.["ponto.bio.threshold_match"]) || DEFAULT_THRESHOLD;
-  // Auto-registro com alta confiança: dispensa o clique em "Confirmar ponto".
-  // O `score` é a similaridade [0..1] (ver lib/biometria.js: similaridade()).
-  // Padrão 0.78 = aproximadamente distância <= 0.26, alta confiança em ambiente real.
   const autoRegistroAtivo = config?.["ponto.kiosk.auto_registro"] !== false;
-  const autoRegistroScoreMin = Math.max(
-    0.5,
-    Number(config?.["ponto.kiosk.auto_registro_score_min"]) || 0.78
-  );
+  const scoreMinAuto = Math.max(0, Math.min(1, Number(config?.["ponto.kiosk.auto_registro_score_min"]) || 0.78));
+  const tempoMsgSucessoMs = Math.max(1, Number(config?.["ponto.kiosk.tempo_msg_sucesso_seg"]) || 3) * 1000;
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -52,20 +41,19 @@ export default function KioskAutoFlow({ device, config }) {
   const loopRef = useRef(null);
   const processandoRef = useRef(false);
   const candidatosRef = useRef([]);
-  const ultimasBatidasRef = useRef(new Map()); // colaborador_id -> timestamp ms
+  const ultimasBatidasRef = useRef(new Map());
   const tentativasFalhaRef = useRef(0);
 
   const [fase, setFase] = useState("iniciando_camera");
   const [statusMsg, setStatusMsg] = useState("Iniciando câmera...");
   const [cameraErro, setCameraErro] = useState(null);
-  const [reconhecido, setReconhecido] = useState(null); // { colaborador, score, dist, proximo, frameBlob, frameUrl }
-  const [resultado, setResultado] = useState(null); // { colaborador, tipo, status, offline }
+  const [reconhecido, setReconhecido] = useState(null);
+  const [resultado, setResultado] = useState(null);
   const [erroMsg, setErroMsg] = useState(null);
   const [pin, setPin] = useState("");
   const [pinErro, setPinErro] = useState(null);
   const [pinSelfieBlob, setPinSelfieBlob] = useState(null);
 
-  // ---------- INIT (modelos + base de templates + câmera) ----------
   const iniciarCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -128,7 +116,6 @@ export default function KioskAutoFlow({ device, config }) {
     };
   }, [device?.loja_id, iniciarCamera]);
 
-  // ---------- LOOP DE LEITURA ----------
   const podeLerAgora = () => fase === "aguardando_rosto" || fase === "nao_reconhecido";
 
   useEffect(() => {
@@ -154,6 +141,63 @@ export default function KioskAutoFlow({ device, config }) {
     return { dataUrl, blob };
   };
 
+  const agendarReset = (ms = tempoResetMs) => {
+    setTimeout(() => {
+      setReconhecido(null);
+      setResultado(null);
+      setErroMsg(null);
+      setPin("");
+      setPinErro(null);
+      setPinSelfieBlob(null);
+      setFase("aguardando_rosto");
+      setStatusMsg("Aproxime-se e olhe para a câmera");
+    }, ms);
+  };
+
+  /**
+   * Executa o registro do ponto (foto -> upload -> registrarBatida -> backend seguro).
+   * Reutilizado tanto no auto-registro de alta confiança quanto na confirmação manual.
+   */
+  const executarRegistro = async (dados) => {
+    if (!dados?.colaborador || !dados?.proximo) return;
+    setFase("registrando");
+    setStatusMsg(`Registrando ${TIPO_LABEL[dados.proximo] || dados.proximo}...`);
+    try {
+      const selfie_url = dados.frameBlob
+        ? await uploadFotoBlob(dados.frameBlob, `kiosk-auto-${dados.colaborador.id}.jpg`)
+        : null;
+      if (!selfie_url) {
+        setErroMsg("Falha ao salvar foto. Tente novamente.");
+        setFase("erro");
+        agendarReset();
+        return;
+      }
+      const out = await registrarBatida({
+        colaborador: dados.colaborador,
+        tipo: dados.proximo,
+        selfie_url,
+        origem: "kiosk_auto",
+        dispositivo: device?.device_id,
+        match_score: dados.score,
+        match_dist: dados.dist,
+        threshold_usado: threshold,
+      });
+      ultimasBatidasRef.current.set(dados.colaborador.id, Date.now());
+      setResultado({
+        colaborador: dados.colaborador,
+        tipo: dados.proximo,
+        status: out?.registro?.status || "registrado",
+        offline: out?.offline,
+      });
+      setFase("sucesso");
+      agendarReset(tempoMsgSucessoMs);
+    } catch (e) {
+      setErroMsg(e?.message || "Falha ao registrar.");
+      setFase("erro");
+      agendarReset();
+    }
+  };
+
   const tentarReconhecer = async () => {
     if (processandoRef.current) return;
     if (!podeLerAgora()) return;
@@ -163,7 +207,6 @@ export default function KioskAutoFlow({ device, config }) {
       setStatusMsg("Reconhecendo...");
       const det = await extrairDescritor(videoRef.current);
       if (!det) {
-        // não tem rosto na frente — volta a aguardar (não conta tentativa)
         setFase("aguardando_rosto");
         setStatusMsg("Aproxime-se e olhe para a câmera");
         return;
@@ -191,11 +234,9 @@ export default function KioskAutoFlow({ device, config }) {
         return;
       }
 
-      // Match aprovado — captura frame para registrar com a foto
       const frame = await capturarFrame();
       const colaborador = match.match;
 
-      // Permissão de canal
       const permissao = podeRegistrarPonto(colaborador, "kiosk_auto");
       if (!permissao.ok) {
         setErroMsg(permissao.motivo);
@@ -204,7 +245,6 @@ export default function KioskAutoFlow({ device, config }) {
         return;
       }
 
-      // Bloqueio anti-rebatida (somente o colaborador atual — não trava a fila)
       const ultima = ultimasBatidasRef.current.get(colaborador.id);
       if (ultima && (Date.now() - ultima) < bloqueioRebatidaSeg * 1000) {
         try {
@@ -212,16 +252,15 @@ export default function KioskAutoFlow({ device, config }) {
             modulo: "rh", acao: "bloquear", entidade: "RegistroPonto",
             descricao: `Tentativa duplicada bloqueada (${colaborador.nome}) — kiosk_auto`,
             origem: "humano", loja_id: device?.loja_id,
-            valor_novo: { dispositivo: device?.device_id, colaborador_id: colaborador.id, score: match.score }, critico: false,
+            valor_novo: { dispositivo: device?.device_id, colaborador_id: colaborador.id }, critico: false,
           });
         } catch { /* */ }
         setReconhecido({ colaborador, score: match.score, dist: match.dist });
         setFase("bloqueio_rebatida");
-        agendarReset();
+        agendarReset(tempoMsgSucessoMs);
         return;
       }
 
-      // Próximo evento
       const { proximo } = await obterProximoEvento(colaborador.id);
       if (!proximo) {
         setReconhecido({ colaborador, score: match.score, dist: match.dist });
@@ -232,52 +271,34 @@ export default function KioskAutoFlow({ device, config }) {
       }
 
       tentativasFalhaRef.current = 0;
-      // Frame é obrigatório (sem foto não registra, nem manual nem automático)
-      if (!frame?.blob) {
-        setErroMsg("Não foi possível capturar a foto. Tente novamente.");
-        setFase("erro");
-        agendarReset();
-        return;
-      }
-
       const dadosReconhecido = {
         colaborador,
         score: match.score,
         dist: match.dist,
         proximo,
-        frameBlob: frame.blob,
-        frameUrl: frame.dataUrl,
+        frameBlob: frame?.blob,
+        frameUrl: frame?.dataUrl,
       };
       setReconhecido(dadosReconhecido);
 
-      // Decisão: alta confiança → auto-registro; baixa confiança → confirmação manual
-      const altaConfianca = autoRegistroAtivo && match.score >= autoRegistroScoreMin;
+      const altaConfianca = autoRegistroAtivo && match.score >= scoreMinAuto && !!frame?.blob;
       try {
         await registrarLog({
           modulo: "rh", acao: "outros", entidade: "Kiosk",
-          descricao: altaConfianca
-            ? `Reconhecimento OK (auto-registro): ${colaborador.nome}`
-            : `Reconhecimento OK (baixa confiança — aguardando confirmação): ${colaborador.nome}`,
+          descricao: `Reconhecimento OK: ${colaborador.nome} (kiosk_auto) — ${altaConfianca ? "auto-registro" : "confirmação manual"}`,
           origem: "humano", loja_id: device?.loja_id,
           valor_novo: {
-            dispositivo: device?.device_id,
-            colaborador_id: colaborador.id,
-            score: match.score,
-            dist: match.dist,
-            threshold_match: threshold,
-            threshold_auto_registro: autoRegistroScoreMin,
-            auto_registro: altaConfianca,
-            proximo,
+            dispositivo: device?.device_id, colaborador_id: colaborador.id,
+            score: match.score, dist: match.dist, proximo,
+            score_min_auto: scoreMinAuto, alta_confianca: altaConfianca,
           },
           critico: false,
         });
       } catch { /* */ }
 
       if (altaConfianca) {
-        // Registra direto, sem botão "Confirmar"
         await executarRegistro(dadosReconhecido);
       } else {
-        // Mantém fluxo manual: usuário precisa clicar em Confirmar/Não sou eu
         setFase("reconhecido");
       }
     } catch (e) {
@@ -289,84 +310,7 @@ export default function KioskAutoFlow({ device, config }) {
     }
   };
 
-  // ---------- AÇÕES ----------
-  const agendarReset = (ms) => {
-    setTimeout(() => {
-      setReconhecido(null);
-      setResultado(null);
-      setErroMsg(null);
-      setPin("");
-      setPinErro(null);
-      setPinSelfieBlob(null);
-      setFase("aguardando_rosto");
-      setStatusMsg("Aproxime-se e olhe para a câmera");
-    }, ms ?? tempoResetMs);
-  };
-
-  /**
-   * Registra ponto via backend seguro. Usado tanto no auto-registro (alta confiança)
-   * quanto na confirmação manual (baixa confiança).
-   */
-  const executarRegistro = async (dados) => {
-    if (!dados?.colaborador || !dados?.frameBlob) {
-      setErroMsg("Foto ausente. Tente novamente.");
-      setFase("erro");
-      agendarReset();
-      return;
-    }
-    setFase("registrando");
-    setStatusMsg(`Registrando ${TIPO_LABEL[dados.proximo]?.toLowerCase() || "ponto"}...`);
-    try {
-      const selfie_url = await uploadFotoBlob(
-        dados.frameBlob,
-        `kiosk-auto-${dados.colaborador.id}.jpg`
-      );
-      if (!selfie_url) {
-        setErroMsg("Falha ao salvar foto. Tente novamente.");
-        setFase("erro");
-        agendarReset();
-        return;
-      }
-      const out = await registrarBatida({
-        colaborador: dados.colaborador,
-        tipo: dados.proximo,
-        selfie_url,
-        origem: "kiosk_auto",
-        dispositivo: device?.device_id,
-        match_score: dados.score,
-        match_dist: dados.dist,
-        threshold_usado: threshold,
-      });
-      ultimasBatidasRef.current.set(dados.colaborador.id, Date.now());
-      setResultado({
-        colaborador: dados.colaborador,
-        tipo: dados.proximo,
-        status: out?.registro?.status || "registrado",
-        offline: out?.offline,
-      });
-      setFase("sucesso");
-      // Sucesso reseta no tempo curto da mensagem para liberar a fila
-      agendarReset(tempoMsgSucessoMs);
-    } catch (e) {
-      try {
-        await registrarLog({
-          modulo: "rh", acao: "outros", entidade: "Kiosk",
-          descricao: `Erro no auto-registro: ${dados.colaborador.nome} — ${e?.message || "erro"}`,
-          origem: "humano", loja_id: device?.loja_id,
-          valor_novo: { dispositivo: device?.device_id, colaborador_id: dados.colaborador.id, score: dados.score }, critico: true,
-        });
-      } catch { /* */ }
-      setErroMsg(e?.message || "Falha ao registrar.");
-      setFase("erro");
-      agendarReset();
-    }
-  };
-
-  // Confirmação manual (apenas para casos de baixa confiança)
-  const confirmarPonto = async () => {
-    if (!reconhecido) return;
-    await executarRegistro(reconhecido);
-  };
+  const confirmarPonto = () => executarRegistro(reconhecido);
 
   const naoSouEu = async () => {
     try {
@@ -392,7 +336,6 @@ export default function KioskAutoFlow({ device, config }) {
     setFase("registrando");
     setStatusMsg("Validando PIN...");
     try {
-      // Foto é obrigatória — se não capturamos antes, captura agora
       let selfieBlob = pinSelfieBlob;
       if (!selfieBlob) {
         const frame = await capturarFrame();
@@ -438,7 +381,6 @@ export default function KioskAutoFlow({ device, config }) {
     }
   };
 
-  // ---------- RENDER ----------
   if (cameraErro) {
     return (
       <Overlay>
@@ -459,7 +401,7 @@ export default function KioskAutoFlow({ device, config }) {
 
   return (
     <div className="flex-1 flex flex-col landscape:flex-row items-stretch w-full min-h-0">
-      {/* Câmera — ocupa a maior parte: ~65vh em vertical, ~100% altura e ~60-70% largura em horizontal */}
+      {/* Câmera grande — ocupa a maior parte da tela */}
       <div
         className="relative bg-black overflow-hidden landscape:flex-1 portrait:w-full"
         style={{ minHeight: "min(65vh, 720px)" }}
@@ -472,7 +414,6 @@ export default function KioskAutoFlow({ device, config }) {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ transform: "scaleX(-1)" }}
         />
-        {/* Moldura oval grande e responsiva (clamp garante tamanho mínimo em tablet) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div
             className="rounded-[42%] border-[3px] border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)]"
@@ -482,13 +423,11 @@ export default function KioskAutoFlow({ device, config }) {
             }}
           />
         </div>
-        {/* Hint central abaixo da moldura */}
         {(fase === "aguardando_rosto" || fase === "nao_reconhecido" || fase === "processando_reconhecimento") && (
           <div className="absolute inset-x-0 bottom-6 text-center text-white text-base sm:text-lg font-medium drop-shadow-lg pointer-events-none">
             Enquadre seu rosto aqui
           </div>
         )}
-        {/* Badge de status */}
         <div className="absolute top-4 left-4 inline-flex items-center gap-2 bg-black/60 text-white text-sm px-3 py-1.5 rounded-full backdrop-blur">
           <span className={`w-2.5 h-2.5 rounded-full ${fase === "aguardando_rosto" || fase === "nao_reconhecido" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
           {labelFase(fase)}
@@ -556,11 +495,8 @@ function PainelDireito({ fase, statusMsg, reconhecido, resultado, erroMsg, onCon
   if (fase === "reconhecido" && reconhecido) {
     return (
       <div className="flex-1 flex flex-col">
-        <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-amber-400 mb-2">
-          <AlertCircle className="w-3.5 h-3.5" /> Baixa confiança — confirme
-        </div>
-        <div className="text-sm text-slate-400 mb-1">Parece ser:</div>
-        <div className="text-3xl font-semibold mb-1 leading-tight">{reconhecido.colaborador.nome}</div>
+        <div className="text-xs uppercase tracking-widest text-amber-400 mb-2">Confiança baixa — confirme</div>
+        <div className="text-3xl font-semibold mb-1 leading-tight">Parece ser {reconhecido.colaborador.nome}</div>
         <div className="text-sm text-slate-400 mb-6">
           Confiança: {(reconhecido.score * 100).toFixed(0)}%
         </div>
@@ -573,7 +509,7 @@ function PainelDireito({ fase, statusMsg, reconhecido, resultado, erroMsg, onCon
             onClick={onConfirmar}
             className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-md py-4 text-lg font-semibold"
           >
-            Sou eu — confirmar ponto
+            Confirmar ponto
           </button>
           <button
             onClick={onNaoSouEu}
@@ -589,8 +525,13 @@ function PainelDireito({ fase, statusMsg, reconhecido, resultado, erroMsg, onCon
   if (fase === "registrando") {
     return (
       <CenteredCol>
-        <Loader2 className="w-10 h-10 animate-spin text-slate-400 mb-4" />
-        <div className="text-lg">{statusMsg}</div>
+        {reconhecido?.colaborador && (
+          <div className="text-emerald-400 text-sm uppercase tracking-widest mb-2">
+            {reconhecido.colaborador.nome.split(" ")[0]} reconhecido
+          </div>
+        )}
+        <Loader2 className="w-12 h-12 animate-spin text-slate-300 mb-4" />
+        <div className="text-xl font-medium text-center">{statusMsg}</div>
       </CenteredCol>
     );
   }
@@ -598,16 +539,18 @@ function PainelDireito({ fase, statusMsg, reconhecido, resultado, erroMsg, onCon
   if (fase === "sucesso" && resultado) {
     return (
       <CenteredCol>
-        <CheckCircle2 className="w-20 h-20 text-emerald-400 mb-4" />
-        <div className="text-3xl font-semibold mb-1">Olá, {resultado.colaborador.nome.split(" ")[0]}!</div>
-        <div className="text-slate-300 text-base">{TIPO_LABEL[resultado.tipo] || resultado.tipo} registrada com sucesso</div>
-        <div className="mt-6 text-sm text-slate-500">Próximo colaborador pode se aproximar</div>
+        <CheckCircle2 className="w-24 h-24 text-emerald-400 mb-4" />
+        <div className="text-3xl font-semibold mb-1 text-center">Olá, {resultado.colaborador.nome.split(" ")[0]}!</div>
+        <div className="text-emerald-300 text-lg font-medium mb-1">
+          {TIPO_LABEL[resultado.tipo] || resultado.tipo} registrada
+        </div>
+        <div className="text-slate-400 text-sm">Próximo colaborador pode se aproximar</div>
         {resultado.status === "pendente_revisao" && (
           <div className="mt-4 inline-flex items-center gap-2 text-amber-400 text-xs">
             <AlertCircle className="w-4 h-4" /> Pendente de revisão
           </div>
         )}
-        {resultado.offline && <div className="mt-2 text-xs text-slate-500">Salvo offline</div>}
+        {resultado.offline && <div className="mt-4 text-xs text-slate-500">Salvo offline</div>}
       </CenteredCol>
     );
   }
