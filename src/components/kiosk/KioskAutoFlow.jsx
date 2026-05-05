@@ -237,6 +237,41 @@ export default function KioskAutoFlow({ device, config }) {
         return;
       }
 
+      // Validação final do payload (frontend) antes de chamar o backend.
+      // Bloqueia chamadas com campos críticos ausentes e expõe o motivo na tela.
+      const payloadDebug = {
+        colaborador_id: dados.colaborador.id,
+        tipo: dados.proximo,
+        origem: "kiosk_auto",
+        loja_id: lojaIdRef.current,
+        device_id: deviceIdRef.current,
+        tem_selfie_url: !!selfie_url,
+        match_score: dados.score,
+        match_dist: dados.dist,
+        threshold_usado: threshold,
+      };
+      // Log seguro (sem PIN, sem foto) — visível no console do tablet para diagnóstico
+      // eslint-disable-next-line no-console
+      console.log("[Kiosk] payload kiosk_auto →", payloadDebug);
+
+      const camposObrigatorios = ["colaborador_id", "tipo", "origem", "device_id", "tem_selfie_url"];
+      const ausentes = camposObrigatorios.filter((k) => !payloadDebug[k]);
+      if (ausentes.length) {
+        const motivo = `Campos ausentes no envio: ${ausentes.join(", ")}`;
+        try {
+          await registrarLog({
+            modulo: "rh", acao: "bloquear", entidade: "RegistroPonto",
+            descricao: `Payload bloqueado no frontend: ${motivo}`,
+            origem: "humano", loja_id: lojaIdRef.current,
+            valor_novo: payloadDebug, critico: true,
+          });
+        } catch { /* */ }
+        setErroMsg(motivo);
+        setFase("erro");
+        agendarReset();
+        return;
+      }
+
       const out = await registrarBatida({
         colaborador: dados.colaborador,
         tipo: dados.proximo,
