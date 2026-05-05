@@ -11,6 +11,7 @@ import { gerarAFD, verificarIntegridade, baixarTexto } from "@/lib/afd-service";
 export default function AfdActions() {
   const [lojas, setLojas] = useState([]);
   const [lojaId, setLojaId] = useState("");
+  const [filtroLoja, setFiltroLoja] = useState("batida"); // "batida" | "principal"
   const hoje = new Date().toISOString().slice(0, 10);
   const [de, setDe] = useState(hoje.slice(0, 8) + "01");
   const [ate, setAte] = useState(hoje);
@@ -27,7 +28,7 @@ export default function AfdActions() {
     setCarregando(true);
     setResultado(null);
     try {
-      const r = await gerarAFD({ loja_id: lojaId || null, dataInicio: de, dataFim: ate });
+      const r = await gerarAFD({ loja_id: lojaId || null, dataInicio: de, dataFim: ate, filtro_loja: filtroLoja });
       baixarTexto(r.nome_arquivo, r.conteudo);
       setResultado(r);
     } finally {
@@ -54,7 +55,7 @@ export default function AfdActions() {
         <Badge variant="outline" className="text-[10px]">Portaria 671-like</Badge>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-3 mb-3">
+      <div className="flex flex-col md:flex-row gap-3 mb-3 flex-wrap">
         <Select value={lojaId} onValueChange={setLojaId}>
           <SelectTrigger className="w-full md:w-[220px]">
             <SelectValue placeholder="Todas as lojas" />
@@ -64,6 +65,15 @@ export default function AfdActions() {
             {lojas.map((l) => (
               <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={filtroLoja} onValueChange={setFiltroLoja} disabled={!lojaId}>
+          <SelectTrigger className="w-full md:w-[200px]">
+            <SelectValue placeholder="Critério da loja" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="batida">Loja onde foi batido</SelectItem>
+            <SelectItem value="principal">Loja principal do colaborador</SelectItem>
           </SelectContent>
         </Select>
         <Input type="date" value={de} onChange={(e) => setDe(e.target.value)} className="md:w-[170px]" />

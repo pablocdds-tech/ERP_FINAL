@@ -47,13 +47,14 @@ export async function calcularHashRegistro(registro, hashAnterior) {
 /* ---------- NSR + ENCADEAMENTO ---------- */
 
 /**
- * Calcula próximo NSR e hash_anterior para uma loja.
- * NSR é monotônico por loja (independente da data).
+ * Calcula próximo NSR e hash_anterior.
+ * NSR é GLOBAL e monotônico em toda a empresa — uma única cadeia, mesmo
+ * com batidas cruzadas entre lojas. Evita NSR duplicado em multi-loja.
+ *
+ * Mantido o parâmetro loja_id por retrocompat mas IGNORADO.
  */
-export async function proximoNsrEHash(loja_id) {
-  const filtros = loja_id ? { loja_id } : {};
-  // Pega o último registro existente da loja
-  const ultimos = await base44.entities.RegistroPonto.filter(filtros, "-nsr", 1);
+export async function proximoNsrEHash(/* loja_id ignorado */) {
+  const ultimos = await base44.entities.RegistroPonto.filter({}, "-nsr", 1);
   const ultimo = ultimos[0];
   return {
     nsr: (ultimo?.nsr || 0) + 1,
@@ -89,17 +90,31 @@ function fmtDataHora(iso) {
 /**
  * Gera AFD-like (texto). Formato simplificado, inspirado na Portaria 671.
  * Layout: NSR(9) | TIPO(1) | DATA(8) | HORA(4) | CPF(11) | HASH(64) | HASH_ANT(64)
+ *
+ * Multi-loja:
+ *  - filtro_loja: "batida" (default) → filtra pela loja onde o ponto foi batido
+ *                 "principal"          → filtra pela loja principal do colaborador
+ *  - se loja_id vazio, exporta TODAS as lojas (NSR global)
  */
-export async function gerarAFD({ loja_id, dataInicio, dataFim }) {
-  const filtros = {};
-  if (loja_id) filtros.loja_id = loja_id;
-  const todos = await base44.entities.RegistroPonto.filter(filtros, "nsr", 50000);
+export async function gerarAFD({ loja_id, dataInicio, dataFim, filtro_loja = "batida" }) {
+  // Sempre buscamos todos e filtramos em memória — assim conseguimos suportar
+  // tanto loja_batida_id quanto loja_colaborador_id sem múltiplas queries.
+  const todos = await base44.entities.RegistroPonto.filter({}, "nsr", 50000);
 
   const registros = todos.filter((r) => {
     if (!r.nsr) return false;
     if (r.status === "rejeitado") return false;
     if (dataInicio && r.data < dataInicio) return false;
     if (dataFim && r.data > dataFim) return false;
+    if (loja_id) {
+      const lojaBatida = r.loja_batida_id || r.loja_id;
+      const lojaPrincipal = r.loja_colaborador_id;
+      if (filtro_loja === "principal") {
+        if (lojaPrincipal !== loja_id) return false;
+      } else {
+        if (lojaBatida !== loja_id) return false;
+      }
+    }
     return true;
   });
 

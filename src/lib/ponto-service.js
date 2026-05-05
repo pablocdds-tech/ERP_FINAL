@@ -241,13 +241,23 @@ export async function salvarTemplateBiometrico(colaborador_id, { descriptor, has
 }
 
 /**
- * Lista colaboradores ativos com template biométrico carregado para matching 1:N.
+ * Lista colaboradores ativos com template biométrico para matching 1:N.
+ *
+ * Multi-loja: o Kiosk reconhece QUALQUER colaborador ativo da empresa,
+ * não apenas os da loja do dispositivo. O parâmetro loja_id é ignorado
+ * propositalmente — mantido na assinatura por retrocompatibilidade.
+ *
+ * Filtros aplicados (defesa em profundidade — backend revalida tudo):
+ *  - status === "ativo"
+ *  - !bloqueado_para_ponto
+ *  - pode_bater_ponto_pelo_kiosk !== false
+ *  - tem template biométrico
  */
-export async function listarColaboradoresComTemplate(loja_id) {
-  const filtros = { status: "ativo" };
-  if (loja_id) filtros.loja_id = loja_id;
-  const list = await base44.entities.Colaborador.filter(filtros, "nome", 500);
+export async function listarColaboradoresComTemplate(/* loja_id ignorado */) {
+  const list = await base44.entities.Colaborador.filter({ status: "ativo" }, "nome", 2000);
   return list
+    .filter((c) => !c.bloqueado_para_ponto)
+    .filter((c) => c.pode_bater_ponto_pelo_kiosk !== false)
     .filter((c) => c.biometria_template)
     .map((c) => {
       try {
@@ -265,12 +275,18 @@ export async function listarColaboradoresComTemplate(loja_id) {
  * Estratégia: pega todos da loja ativos e filtra por hash usando o salt de cada um.
  * O custo é baixo (uma loja típica tem dezenas de colaboradores).
  */
-export async function identificarColaboradorPorPin(pin, loja_id) {
+/**
+ * Lookup de colaborador via PIN no Kiosk.
+ * Multi-loja: busca qualquer colaborador ativo da empresa, não só da loja
+ * do dispositivo. A validação real do PIN acontece no backend.
+ * O parâmetro loja_id é ignorado propositalmente (retrocompat).
+ */
+export async function identificarColaboradorPorPin(pin /* , loja_id ignorado */) {
   if (!pin) return null;
-  const filtros = { status: "ativo" };
-  if (loja_id) filtros.loja_id = loja_id;
-  const list = await base44.entities.Colaborador.filter(filtros, "nome", 500);
+  const list = await base44.entities.Colaborador.filter({ status: "ativo" }, "nome", 2000);
   for (const c of list) {
+    if (c.bloqueado_para_ponto) continue;
+    if (c.pode_bater_ponto_pelo_kiosk === false) continue;
     if (!c.pin_ponto_hash || !c.pin_ponto_salt) continue;
     const calc = await sha256Hex(`${c.pin_ponto_salt}|${pin}`);
     if (calc === c.pin_ponto_hash) return c;

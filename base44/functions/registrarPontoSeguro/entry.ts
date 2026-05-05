@@ -50,9 +50,11 @@ async function calcularHashRegistro(registro, hashAnterior) {
   return sha256Hex(`${hashAnterior}|${payloadCanonico(registro)}`);
 }
 
-async function proximoNsrEHash(serviceRole, loja_id) {
-  const filtros = loja_id ? { loja_id } : {};
-  const ultimos = await serviceRole.entities.RegistroPonto.filter(filtros, '-nsr', 1);
+async function proximoNsrEHash(serviceRole) {
+  // NSR é GLOBAL e único — uma cadeia só para toda a empresa,
+  // independente da loja onde a batida ocorreu. Evita NSR duplicado
+  // em cenários de batida cruzada entre lojas.
+  const ultimos = await serviceRole.entities.RegistroPonto.filter({}, '-nsr', 1);
   const ultimo = ultimos[0];
   return {
     nsr: (ultimo?.nsr || 0) + 1,
@@ -231,14 +233,12 @@ Deno.serve(async (req) => {
         valor_novo: { colaborador_id, origem, device_id, ip, ua } });
       return fail('device_nao_autorizado', 'Dispositivo Kiosk não autorizado.', 403);
     }
-    // Pertencimento à loja
+    // Multi-loja: a batida pode ocorrer em qualquer Kiosk autorizado.
+    // loja_id_final = loja onde a batida ACONTECEU (loja do Kiosk).
+    // loja_colaborador = loja PRINCIPAL do colaborador (snapshot).
+    // Se forem diferentes, registramos batida_fora_loja_principal=true e
+    // criamos um alerta informativo (não bloqueia).
     loja_id_final = device.loja_id;
-    if (colaborador.loja_id && device.loja_id && colaborador.loja_id !== device.loja_id) {
-      await logAud(sr, { ...auditCommon, acao: 'bloquear', critico: true,
-        descricao: `Loja divergente: colab=${colaborador.loja_id} kiosk=${device.loja_id}`,
-        valor_novo: { colaborador_id, origem, device_id, ip, ua }, loja_id: device.loja_id });
-      return fail('loja_divergente', 'Este colaborador não pertence à loja deste Kiosk.', 403);
-    }
   }
 
   // 7) Fallback PIN — exige hash + valida
@@ -285,14 +285,28 @@ Deno.serve(async (req) => {
   else if (ia_resultado === 'baixa_confianca' || ia_resultado === 'precisa_revisao') status = 'pendente_revisao';
   else if (ia_resultado === 'aprovado') status = 'registrado';
 
-  // 10) NSR + hash
+  // 10) NSR (global) + hash
   const horario = offline_ts || new Date().toISOString();
   const data = horario.slice(0, 10);
-  const { nsr, hash_anterior } = await proximoNsrEHash(sr, loja_id_final);
+  const { nsr, hash_anterior } = await proximoNsrEHash(sr);
+
+  // Multi-loja: snapshot da loja principal do colaborador e da loja do dispositivo.
+  const loja_colaborador_id = colaborador.loja_id || null;
+  const loja_batida_id = loja_id_final || null;
+  const fora_loja_principal =
+    !!(loja_colaborador_id && loja_batida_id && loja_colaborador_id !== loja_batida_id);
+
   const baseRegistro = {
-    colaborador_id, loja_id: loja_id_final, data, tipo, horario,
+    colaborador_id,
+    loja_id: loja_id_final, // retrocompat: loja da batida
+    loja_colaborador_id,
+    loja_batida_id,
+    batida_fora_loja_principal: fora_loja_principal,
+    data, tipo, horario,
     latitude: lat, longitude: lng, selfie_url, origem,
-    dispositivo: device_id, fallback_pin: !!fallback_pin,
+    dispositivo: device_id,
+    kiosk_device_id: (origem === 'kiosk' || origem === 'kiosk_auto') ? device_id : null,
+    fallback_pin: !!fallback_pin,
   };
   const hash_registro = await calcularHashRegistro({ ...baseRegistro, nsr }, hash_anterior);
 
@@ -321,6 +335,23 @@ Deno.serve(async (req) => {
     valor_novo: { ...baseRegistro, status, nsr, ip, ua },
     critico: status !== 'registrado',
   });
+
+  // 12) Alerta informativo de batida fora da loja principal (não bloqueia)
+  if (fora_loja_principal) {
+    await logAud(sr, {
+      ...auditCommon,
+      loja_id: loja_batida_id,
+      acao: 'outros',
+      entidade: 'RegistroPonto',
+      entidade_id: registro.id,
+      descricao: `Colaborador bateu ponto fora da loja principal (${colaborador.nome}): principal=${loja_colaborador_id} · batida=${loja_batida_id}`,
+      valor_novo: {
+        colaborador_id, origem, device_id,
+        loja_colaborador_id, loja_batida_id,
+      },
+      critico: false,
+    });
+  }
 
   return Response.json({ ok: true, registro });
 });

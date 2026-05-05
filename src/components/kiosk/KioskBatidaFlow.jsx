@@ -35,7 +35,8 @@ export default function KioskBatidaFlow({ device, onClose }) {
     (async () => {
       try {
         await ensureModelsLoaded();
-        const cands = await listarColaboradoresComTemplate(device?.loja_id);
+        // Multi-loja: reconhece qualquer colaborador ativo, não só da loja do device
+        const cands = await listarColaboradoresComTemplate();
         if (cancel) return;
         candidatosRef.current = cands;
         setFase("camera");
@@ -145,7 +146,7 @@ export default function KioskBatidaFlow({ device, onClose }) {
       setPinErro("Foto não capturada. Tente o reconhecimento facial novamente.");
       return;
     }
-    const colaborador = await identificarColaboradorPorPin(pin, device?.loja_id);
+    const colaborador = await identificarColaboradorPorPin(pin);
     if (!colaborador) {
       setPinErro("PIN inválido.");
       return;

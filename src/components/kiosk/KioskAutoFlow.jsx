@@ -119,7 +119,9 @@ export default function KioskAutoFlow({ device, config }) {
         await ensureModelsLoaded();
         if (cancel) return;
         setStatusMsg("Carregando colaboradores...");
-        candidatosRef.current = await listarColaboradoresComTemplate(lojaIdRef.current);
+        // Multi-loja: Kiosk reconhece qualquer colaborador ativo da empresa,
+        // não apenas os da loja do dispositivo.
+        candidatosRef.current = await listarColaboradoresComTemplate();
         if (cancel) return;
         const ok = await iniciarCamera();
         if (cancel) return;
@@ -496,7 +498,7 @@ export default function KioskAutoFlow({ device, config }) {
         agendarReset();
         return;
       }
-      const colaborador = await identificarColaboradorPorPin(pin, lojaIdRef.current);
+      const colaborador = await identificarColaboradorPorPin(pin);
       if (!colaborador) {
         setPinErro("PIN inválido.");
         setFase("fallback_pin");

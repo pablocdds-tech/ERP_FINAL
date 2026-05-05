@@ -6,7 +6,21 @@
       "type": "string"
     },
     "loja_id": {
-      "type": "string"
+      "type": "string",
+      "description": "Loja onde a batida ocorreu (loja do Kiosk/dispositivo). Mantido para retrocompatibilidade \u2014 preferir loja_batida_id em novas leituras."
+    },
+    "loja_colaborador_id": {
+      "type": "string",
+      "description": "Loja principal do colaborador no momento da batida (snapshot)."
+    },
+    "loja_batida_id": {
+      "type": "string",
+      "description": "Loja onde o ponto foi efetivamente registrado (loja do Kiosk/dispositivo). Igual ao loja_id."
+    },
+    "batida_fora_loja_principal": {
+      "type": "boolean",
+      "default": false,
+      "description": "true quando loja_colaborador_id \u2260 loja_batida_id."
     },
     "data": {
       "type": "string",
@@ -107,15 +121,20 @@
       "default": false
     },
     "dispositivo": {
-      "type": "string"
+      "type": "string",
+      "description": "device_id do tablet/Kiosk usado na batida (string livre, mantida por retrocompatibilidade)"
+    },
+    "kiosk_device_id": {
+      "type": "string",
+      "description": "device_id do KioskDevice usado (mesmo valor de dispositivo, exposto como campo nomeado para relat\u00f3rios)"
     },
     "nsr": {
       "type": "number",
-      "description": "N\u00famero Sequencial de Registro (Portaria 671) \u2014 \u00fanico por loja, monot\u00f4nico"
+      "description": "N\u00famero Sequencial de Registro (Portaria 671) \u2014 \u00fanico e monot\u00f4nico globalmente"
     },
     "hash_anterior": {
       "type": "string",
-      "description": "SHA-256 do registro anterior na cadeia (loja+data) \u2014 primeiro registro = '0'"
+      "description": "SHA-256 do registro anterior na cadeia \u2014 primeiro registro = '0'"
     },
     "hash_registro": {
       "type": "string",
