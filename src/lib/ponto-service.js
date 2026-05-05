@@ -2,7 +2,6 @@ import { base44 } from "@/api/base44Client";
 import { proximoEventoPonto } from "./rh-service";
 import { registrarLog } from "./auditoria-service";
 import { enfileirarBatida } from "./ponto-offline-queue";
-import { proximoNsrEHash, calcularHashRegistro } from "./afd-service";
 import { podeRegistrarPonto } from "./ponto-permissoes";
 
 /**
@@ -15,124 +14,79 @@ export async function uploadFotoBlob(blob, name = "selfie.jpg") {
 }
 
 /**
- * Registra batida de ponto com selfie + valida via Gemini.
- * Aceita opcionalmente { match_score, match_dist } da comparação biométrica local (face-api).
- * Se o navegador estiver offline, salva na fila local (IndexedDB) e retorna { offline: true }.
- * Retorna { registro, ia } ou { offline: true, fila_id }.
+ * Registra batida de ponto via backend SEGURO (registrarPontoSeguro).
+ *
+ * Esta é a ÚNICA forma oficial de criar RegistroPonto a partir do frontend.
+ * Toda validação (status, permissão, dispositivo, loja, PIN, foto, NSR/hash)
+ * acontece no servidor.
+ *
+ * Se offline, salva na fila local (sincroniza depois via mesmo backend).
+ *
+ * Parâmetros:
+ *  { colaborador, tipo, selfie_url, origem, dispositivo, fallback_pin, pin,
+ *    lat, lng, match_score, match_dist, threshold_usado,
+ *    ia_resultado, ia_confianca, ia_motivo, ia_detalhes }
+ *
+ * Retorna { registro } | { offline: true, fila_id, registro }.
+ * Lança Error com .codigo/.bloqueio em caso de falha de validação.
  */
-export async function registrarBatida({ colaborador, tipo, selfie_url, origem = "pwa", dispositivo, fallback_pin = false, lat, lng, match_score, match_dist }) {
+export async function registrarBatida({
+  colaborador, tipo, selfie_url, origem = "pwa",
+  dispositivo, fallback_pin = false, pin,
+  lat, lng, match_score, match_dist, threshold_usado,
+  ia_resultado, ia_confianca, ia_motivo, ia_detalhes,
+}) {
   if (!colaborador?.id || !tipo) throw new Error("Dados insuficientes");
 
-  // Validação de permissão por canal (camada de serviço — última linha de defesa)
-  const permissao = podeRegistrarPonto(colaborador, origem);
+  // Pré-validação client-side (UX) — backend revalida tudo
+  const permissao = podeRegistrarPonto(colaborador, origem === "kiosk_auto" ? "kiosk" : origem);
   if (!permissao.ok) {
-    try {
-      await registrarLog({
-        modulo: "rh",
-        acao: "bloquear",
-        entidade: "RegistroPonto",
-        descricao: `Tentativa bloqueada (${origem}) para ${colaborador.nome}: ${permissao.motivo}`,
-        origem: "humano",
-        valor_novo: { colaborador_id: colaborador.id, origem, codigo: permissao.codigo, tipo, dispositivo },
-        loja_id: colaborador.loja_id,
-        critico: true,
-      });
-    } catch { /* auditoria nunca bloqueia */ }
     const err = new Error(permissao.motivo);
     err.codigo = permissao.codigo;
     err.bloqueio = true;
     throw err;
   }
 
-  const agora = new Date();
-  const baseRegistro = {
+  if (!selfie_url && !fallback_pin) {
+    const err = new Error("Selfie obrigatória.");
+    err.codigo = "sem_foto"; err.bloqueio = true;
+    throw err;
+  }
+  if (!selfie_url && fallback_pin) {
+    const err = new Error("Não é possível registrar ponto por PIN sem foto.");
+    err.codigo = "sem_foto"; err.bloqueio = true;
+    throw err;
+  }
+
+  const payload = {
     colaborador_id: colaborador.id,
+    tipo, origem,
     loja_id: colaborador.loja_id,
-    data: agora.toISOString().slice(0, 10),
-    tipo,
-    horario: agora.toISOString(),
-    latitude: lat,
-    longitude: lng,
-    selfie_url,
-    origem,
-    dispositivo,
-    fallback_pin,
+    device_id: dispositivo,
+    selfie_url, lat, lng,
+    fallback_pin: !!fallback_pin, pin: fallback_pin ? pin : undefined,
+    match_score, match_dist, threshold_usado,
+    ia_resultado, ia_confianca, ia_motivo, ia_detalhes,
   };
 
-  // Modo OFFLINE: enfileira sem validar IA, marca pendente_revisao
+  // Modo OFFLINE: enfileira para sincronizar
   if (typeof navigator !== "undefined" && !navigator.onLine) {
-    const registro = {
-      ...baseRegistro,
-      status: "pendente_revisao",
-      ia_resultado: "nao_avaliado",
-      ia_motivo: "Registrado offline — pendente de validação",
-      observacoes: "[offline]",
-    };
-    const fila_id = await enfileirarBatida({ registro, match_score, match_dist });
-    return { offline: true, fila_id, registro };
-  }
-
-  // Chama validação IA (não bloqueia em caso de falha — vira pendente)
-  let ia = null;
-  try {
-    const res = await base44.functions.invoke("validarPontoFacial", {
-      colaborador_id: colaborador.id,
-      selfie_url,
-      match_score,
-      match_dist,
+    const fila_id = await enfileirarBatida({
+      payload: { ...payload, offline_ts: new Date().toISOString() },
     });
-    ia = res?.data || null;
-  } catch (e) {
-    ia = { resultado: "precisa_revisao", confianca: 0, motivo: "Falha ao validar com IA" };
+    return { offline: true, fila_id, registro: null };
   }
 
-  // Determina status final
-  let status = "registrado";
-  if (fallback_pin) {
-    status = "pendente_revisao";
-  } else if (ia?.resultado === "reprovado") {
-    status = "rejeitado";
-  } else if (ia?.resultado === "baixa_confianca" || ia?.resultado === "precisa_revisao") {
-    status = "pendente_revisao";
-  } else if (ia?.resultado === "aprovado") {
-    status = "registrado";
-  } else {
-    status = "pendente_revisao";
+  // Chama backend seguro
+  const res = await base44.functions.invoke("registrarPontoSeguro", payload);
+  const data = res?.data || {};
+  if (!data.ok) {
+    const err = new Error(data.motivo || "Falha ao registrar ponto.");
+    err.codigo = data.codigo || "erro";
+    err.bloqueio = true;
+    throw err;
   }
-
-  // NSR + hash encadeado (Portaria 671-like)
-  const { nsr, hash_anterior } = await proximoNsrEHash(colaborador.loja_id);
-  const paraHash = { ...baseRegistro, nsr };
-  const hash_registro = await calcularHashRegistro(paraHash, hash_anterior);
-
-  const registro = await base44.entities.RegistroPonto.create({
-    ...baseRegistro,
-    nsr,
-    hash_anterior,
-    hash_registro,
-    status,
-    ia_resultado: ia?.resultado || "nao_avaliado",
-    ia_confianca: ia?.confianca ?? null,
-    ia_motivo: ia?.motivo || "",
-    ia_detalhes: ia ? JSON.stringify({ ...ia, match_score, match_dist }) : "",
-  });
-
-  // Auditoria
-  try {
-    await registrarLog({
-      modulo: "rh",
-      acao: "criar",
-      entidade: "RegistroPonto",
-      entidade_id: registro.id,
-      descricao: `Ponto ${tipo} de ${colaborador.nome} (${status})${fallback_pin ? " · PIN" : ""}`,
-      origem: "humano",
-      valor_novo: registro,
-      loja_id: colaborador.loja_id,
-      critico: status === "pendente_revisao" || status === "rejeitado",
-    });
-  } catch { /* auditoria nunca bloqueia */ }
-
-  return { registro, ia };
+  return { registro: data.registro, ia: ia_resultado ? { resultado: ia_resultado, confianca: ia_confianca, motivo: ia_motivo } : null };
 }
 
 /**
@@ -291,12 +245,28 @@ export async function listarColaboradoresComTemplate(loja_id) {
 }
 
 /**
- * Identifica colaborador por PIN (fallback do Kiosk).
+ * Identifica colaborador no Kiosk a partir do PIN (apenas para LOOKUP — nunca confirma a batida).
+ * Retorna o colaborador candidato; a validação real do PIN acontece no backend
+ * (registrarPontoSeguro com fallback_pin=true e pin enviado).
+ *
+ * Estratégia: pega todos da loja ativos e filtra por hash usando o salt de cada um.
+ * O custo é baixo (uma loja típica tem dezenas de colaboradores).
  */
-export async function buscarPorPin(pin, loja_id) {
+export async function identificarColaboradorPorPin(pin, loja_id) {
   if (!pin) return null;
-  const filtros = { pin_ponto: pin, status: "ativo" };
+  const filtros = { status: "ativo" };
   if (loja_id) filtros.loja_id = loja_id;
-  const list = await base44.entities.Colaborador.filter(filtros);
-  return list[0] || null;
+  const list = await base44.entities.Colaborador.filter(filtros, "nome", 500);
+  for (const c of list) {
+    if (!c.pin_ponto_hash || !c.pin_ponto_salt) continue;
+    const calc = await sha256Hex(`${c.pin_ponto_salt}|${pin}`);
+    if (calc === c.pin_ponto_hash) return c;
+  }
+  return null;
+}
+
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }

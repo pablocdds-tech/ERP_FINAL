@@ -110,6 +110,26 @@
       "type": "string"
     },
     "pin_ponto": {
+      "type": "string",
+      "description": "[DEPRECATED] Mantido s\u00f3 para migra\u00e7\u00e3o. Novos cadastros gravam apenas pin_ponto_hash."
+    },
+    "pin_ponto_hash": {
+      "type": "string",
+      "description": "Hash SHA-256 (com salt) do PIN do colaborador. Nunca cont\u00e9m o PIN em texto."
+    },
+    "pin_ponto_salt": {
+      "type": "string",
+      "description": "Salt aleat\u00f3rio usado para o hash do PIN."
+    },
+    "pin_ponto_versao": {
+      "type": "string",
+      "description": "Vers\u00e3o do algoritmo usado (ex.: sha256-v1)."
+    },
+    "pin_atualizado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pin_atualizado_por": {
       "type": "string"
     },
     "biometria_template": {

@@ -1,9 +1,8 @@
 // Fila offline de batidas de ponto, baseada em IndexedDB.
-// Salva localmente quando offline e sincroniza quando voltar conexão.
+// Salva localmente quando offline e sincroniza chamando o backend SEGURO.
 import { openDB } from "idb";
 import { base44 } from "@/api/base44Client";
 import { registrarLog } from "./auditoria-service";
-import { proximoNsrEHash, calcularHashRegistro } from "./afd-service";
 
 const DB_NAME = "ponto-offline";
 const STORE = "fila";
@@ -20,12 +19,13 @@ async function db() {
 }
 
 /**
- * Salva uma batida na fila local. Retorna o id local.
+ * Salva uma batida na fila local. Espera { payload } compatível com registrarPontoSeguro.
+ * Retorna o id local.
  */
-export async function enfileirarBatida(payload) {
+export async function enfileirarBatida(item) {
   const d = await db();
   const id = await d.add(STORE, {
-    ...payload,
+    ...item,
     criado_em: new Date().toISOString(),
     tentativas: 0,
   });
@@ -50,7 +50,8 @@ export async function atualizarTentativa(id, dados) {
 }
 
 /**
- * Sincroniza a fila enviando para o backend. Retorna { enviados, falhas }.
+ * Sincroniza a fila enviando para o backend seguro.
+ * Cada item carrega { payload } pronto para registrarPontoSeguro.
  */
 export async function sincronizarFila() {
   if (!navigator.onLine) return { enviados: 0, falhas: 0, motivo: "offline" };
@@ -58,28 +59,23 @@ export async function sincronizarFila() {
   let enviados = 0, falhas = 0;
   for (const item of itens) {
     try {
-      // Atribui NSR + hash na sincronização (cadeia respeita a ordem de chegada no servidor)
-      const { nsr, hash_anterior } = await proximoNsrEHash(item.registro.loja_id);
-      const paraHash = { ...item.registro, nsr };
-      const hash_registro = await calcularHashRegistro(paraHash, hash_anterior);
-      const registro = await base44.entities.RegistroPonto.create({
-        ...item.registro,
-        nsr,
-        hash_anterior,
-        hash_registro,
-        observacoes: (item.registro.observacoes || "") + " [sync_offline]",
-      });
+      const res = await base44.functions.invoke("registrarPontoSeguro", item.payload);
+      const data = res?.data || {};
+      if (!data.ok) {
+        await atualizarTentativa(item.id, {
+          tentativas: (item.tentativas || 0) + 1,
+          ultimo_erro: data.motivo || data.codigo || "erro_backend",
+        });
+        falhas++;
+        continue;
+      }
       try {
         await registrarLog({
-          modulo: "rh",
-          acao: "criar",
-          entidade: "RegistroPonto",
-          entidade_id: registro.id,
-          descricao: `Ponto sincronizado da fila offline (${item.registro.tipo})`,
-          origem: "sistema",
-          valor_novo: registro,
-          loja_id: item.registro.loja_id,
-          critico: false,
+          modulo: "rh", acao: "criar", entidade: "RegistroPonto",
+          entidade_id: data.registro?.id,
+          descricao: `Ponto sincronizado da fila offline (${item.payload?.tipo})`,
+          origem: "sistema", valor_novo: data.registro,
+          loja_id: data.registro?.loja_id, critico: false,
         });
       } catch { /* */ }
       await removerDaFila(item.id);
@@ -105,9 +101,7 @@ export function instalarAutoSync() {
   autoSyncInstalado = true;
   const trigger = () => { sincronizarFila().catch(() => {}); };
   window.addEventListener("online", trigger);
-  // Também tenta a cada 60s (caso o evento online não dispare)
   setInterval(() => { if (navigator.onLine) trigger(); }, 60000);
-  // Tenta uma vez ao instalar
   trigger();
 }
 

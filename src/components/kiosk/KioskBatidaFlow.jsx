@@ -3,7 +3,7 @@ import { Loader2, CheckCircle2, AlertCircle, KeyRound, Camera, X, ArrowLeft } fr
 import CameraCapture from "@/components/ponto/CameraCapture";
 import { ensureModelsLoaded } from "@/lib/face-api-loader";
 import { extrairDescritor, melhorMatch, DEFAULT_THRESHOLD } from "@/lib/biometria";
-import { listarColaboradoresComTemplate, buscarPorPin, registrarBatida, uploadFotoBlob, obterProximoEvento } from "@/lib/ponto-service";
+import { listarColaboradoresComTemplate, identificarColaboradorPorPin, registrarBatida, uploadFotoBlob, obterProximoEvento } from "@/lib/ponto-service";
 import { podeRegistrarPonto } from "@/lib/ponto-permissoes";
 
 const TIPO_LABEL = {
@@ -60,7 +60,13 @@ export default function KioskBatidaFlow({ device, onClose }) {
     setTimeout(() => onClose?.(), ms);
   };
 
-  const processarColaborador = async (colaborador, selfieBlob, { fallback_pin = false, match_score, match_dist } = {}) => {
+  const processarColaborador = async (colaborador, selfieBlob, { fallback_pin = false, pin, match_score, match_dist } = {}) => {
+    if (!selfieBlob) {
+      setFase("falha");
+      setMensagem("Não é possível registrar ponto por PIN sem foto.");
+      fecharComDelay();
+      return;
+    }
     const permissao = podeRegistrarPonto(colaborador, "kiosk");
     if (!permissao.ok) {
       setFase("falha");
@@ -71,7 +77,7 @@ export default function KioskBatidaFlow({ device, onClose }) {
     setFase("processando");
     setMensagem("Registrando ponto...");
     try {
-      const selfie_url = selfieBlob ? await uploadFotoBlob(selfieBlob, `kiosk-${colaborador.id}.jpg`) : null;
+      const selfie_url = await uploadFotoBlob(selfieBlob, `kiosk-${colaborador.id}.jpg`);
       const { proximo } = await obterProximoEvento(colaborador.id);
       const tipo = proximo || "entrada";
       const out = await registrarBatida({
@@ -79,10 +85,9 @@ export default function KioskBatidaFlow({ device, onClose }) {
         tipo,
         selfie_url,
         origem: "kiosk",
-        dispositivo: device?.nome_dispositivo || device?.device_id,
-        fallback_pin,
-        match_score,
-        match_dist,
+        dispositivo: device?.device_id,
+        fallback_pin, pin,
+        match_score, match_dist,
       });
       setResultado({ colaborador, tipo, status: out?.registro?.status || "registrado", offline: out?.offline });
       setFase("sucesso");
@@ -136,12 +141,16 @@ export default function KioskBatidaFlow({ device, onClose }) {
       setPinErro("PIN inválido.");
       return;
     }
-    const colaborador = await buscarPorPin(pin, device?.loja_id);
-    if (!colaborador) {
-      setPinErro("PIN não encontrado.");
+    if (!pinSelfieBlob) {
+      setPinErro("Foto não capturada. Tente o reconhecimento facial novamente.");
       return;
     }
-    await processarColaborador(colaborador, pinSelfieBlob, { fallback_pin: true });
+    const colaborador = await identificarColaboradorPorPin(pin, device?.loja_id);
+    if (!colaborador) {
+      setPinErro("PIN inválido.");
+      return;
+    }
+    await processarColaborador(colaborador, pinSelfieBlob, { fallback_pin: true, pin });
   };
 
   // ---------- RENDER ----------

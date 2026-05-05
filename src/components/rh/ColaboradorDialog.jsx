@@ -18,18 +18,22 @@ const empty = () => ({
   bloqueado_para_ponto: false,
   bloqueado_motivo: "",
   status: "ativo", salario: 0, endereco: "", observacoes: "",
-  pin_ponto: "",
 });
 
 export default function ColaboradorDialog({ open, mode, record, onClose, onSaved }) {
   const [data, setData] = useState(empty());
   const [cargos, setCargos] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [pinNovo, setPinNovo] = useState("");
+  const [pinSalvando, setPinSalvando] = useState(false);
+  const [pinMsg, setPinMsg] = useState(null);
   const isView = mode === "view";
 
   useEffect(() => {
     if (open) {
       setData(record ? { ...record } : empty());
+      setPinNovo("");
+      setPinMsg(null);
       base44.entities.Cargo.filter({ ativo: true }).then(setCargos);
     }
   }, [open, record]);
@@ -39,13 +43,41 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
   const salvar = async () => {
     if (!data.nome) return;
     setSaving(true);
+    // Nunca persistir pin_ponto em texto via update direto — PIN tem fluxo dedicado
+    // eslint-disable-next-line no-unused-vars
+    const { pin_ponto, pin_ponto_hash, pin_ponto_salt, pin_ponto_versao, ...safe } = data;
     if (record?.id) {
-      const { id, ...rest } = data;
+      const { id, ...rest } = safe;
       await base44.entities.Colaborador.update(id, rest);
-    } else await base44.entities.Colaborador.create(data);
+    } else await base44.entities.Colaborador.create(safe);
     setSaving(false);
     onSaved?.();
     onClose?.();
+  };
+
+  const salvarPin = async (pinValue) => {
+    if (!data.id) return;
+    setPinSalvando(true);
+    setPinMsg(null);
+    try {
+      const res = await base44.functions.invoke("setColaboradorPin", {
+        colaborador_id: data.id, pin: pinValue,
+      });
+      const out = res?.data || {};
+      if (!out.ok) {
+        setPinMsg({ tipo: "erro", texto: out.motivo || "Falha ao salvar PIN." });
+      } else {
+        setPinMsg({ tipo: "ok", texto: pinValue ? "PIN atualizado." : "PIN removido." });
+        setPinNovo("");
+        // recarrega para refletir pin_ponto_versao
+        const fresh = await base44.entities.Colaborador.filter({ id: data.id });
+        if (fresh[0]) setData({ ...fresh[0] });
+      }
+    } catch (e) {
+      setPinMsg({ tipo: "erro", texto: e?.message || "Erro ao salvar PIN." });
+    } finally {
+      setPinSalvando(false);
+    }
   };
 
   const recarregar = async () => {
@@ -175,8 +207,48 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           <Field label="Data desligamento">
             <Input type="date" value={data.data_desligamento || ""} onChange={(e) => set("data_desligamento", e.target.value)} disabled={isView} />
           </Field>
-          <Field label="PIN ponto (Kiosk)" hint="4-6 dígitos para identificação no tablet">
-            <Input value={data.pin_ponto || ""} onChange={(e) => set("pin_ponto", e.target.value.replace(/\D/g, ""))} disabled={isView} maxLength={6} />
+          <Field label="PIN ponto (Kiosk)" hint="4-6 dígitos. O PIN é salvo apenas como hash — não fica visível depois.">
+            {!data.id ? (
+              <Input disabled placeholder="Salve o colaborador primeiro" />
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder={data.pin_ponto_versao ? "PIN definido — digite para alterar" : "Definir PIN"}
+                  value={pinNovo}
+                  onChange={(e) => setPinNovo(e.target.value.replace(/\D/g, ""))}
+                  disabled={isView || pinSalvando}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isView || pinSalvando || !pinNovo || pinNovo.length < 4}
+                  onClick={() => salvarPin(pinNovo)}
+                >
+                  {pinSalvando ? "..." : "Salvar PIN"}
+                </Button>
+                {data.pin_ponto_versao && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={isView || pinSalvando}
+                    onClick={() => salvarPin("")}
+                    className="text-destructive"
+                  >
+                    Remover
+                  </Button>
+                )}
+              </div>
+            )}
+            {pinMsg && (
+              <div className={`text-[11px] mt-1 ${pinMsg.tipo === "ok" ? "text-emerald-700" : "text-destructive"}`}>
+                {pinMsg.texto}
+              </div>
+            )}
           </Field>
           <Field label="Endereço" className="col-span-2">
             <Input value={data.endereco || ""} onChange={(e) => set("endereco", e.target.value)} disabled={isView} />

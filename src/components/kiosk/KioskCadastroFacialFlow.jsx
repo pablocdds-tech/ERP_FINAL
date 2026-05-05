@@ -3,7 +3,7 @@ import { Loader2, CheckCircle2, AlertCircle, X, ArrowLeft, KeyRound, UserCheck }
 import CameraCapture from "@/components/ponto/CameraCapture";
 import { ensureModelsLoaded } from "@/lib/face-api-loader";
 import { extrairDescritor, mediaDescritores, hashTemplate, MODEL_VERSION } from "@/lib/biometria";
-import { uploadFotoBlob, salvarCadastroFacial, salvarTemplateBiometrico, buscarPorPin } from "@/lib/ponto-service";
+import { uploadFotoBlob, salvarCadastroFacial, salvarTemplateBiometrico, identificarColaboradorPorPin } from "@/lib/ponto-service";
 
 const POSES = [
   { key: "frontal", label: "Frontal", hint: "Olhe direto para a câmera" },
@@ -38,10 +38,10 @@ export default function KioskCadastroFacialFlow({ device, onClose }) {
     setFase("processando");
     setMensagem("Identificando...");
     try {
-      const c = await buscarPorPin(pin, device?.loja_id);
+      const c = await identificarColaboradorPorPin(pin, device?.loja_id);
       if (!c) {
         setFase("pin");
-        setPinErro("PIN não encontrado. Peça ao gestor para cadastrar você no sistema.");
+        setPinErro("PIN inválido. Peça ao gestor para cadastrar você no sistema.");
         return;
       }
       setColaborador(c);

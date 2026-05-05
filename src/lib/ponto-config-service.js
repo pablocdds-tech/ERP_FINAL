@@ -64,12 +64,12 @@ export const PONTO_PARAMS = {
     grupo: "bio",
   },
   // Operação
-  "ponto.kiosk.pin_saida": {
+  "ponto.kiosk.pin_saida_hash": {
     categoria: "operacional",
-    descricao: "PIN de 4 dígitos para sair do modo Kiosk (apenas gestor/admin).",
-    default: "1234",
+    descricao: "Hash do PIN para sair do modo Kiosk. Configurado por admin (não digitar PIN aqui).",
+    default: "",
     tipo: "string",
-    label: "PIN de saída do Kiosk",
+    label: "PIN de saída do Kiosk (hash)",
     grupo: "operacao",
   },
   "ponto.alerta.notificar_gestor_fraude": {

@@ -4,7 +4,7 @@ import { ensureModelsLoaded } from "@/lib/face-api-loader";
 import { extrairDescritor, melhorMatch, DEFAULT_THRESHOLD } from "@/lib/biometria";
 import {
   listarColaboradoresComTemplate,
-  buscarPorPin,
+  identificarColaboradorPorPin,
   registrarBatida,
   uploadFotoBlob,
   obterProximoEvento,
@@ -283,9 +283,10 @@ export default function KioskAutoFlow({ device, config }) {
         tipo: reconhecido.proximo,
         selfie_url,
         origem: "kiosk_auto",
-        dispositivo: device?.nome_dispositivo || device?.device_id,
+        dispositivo: device?.device_id,
         match_score: reconhecido.score,
         match_dist: reconhecido.dist,
+        threshold_usado: threshold,
       });
       ultimasBatidasRef.current.set(reconhecido.colaborador.id, Date.now());
       setResultado({
@@ -327,30 +328,34 @@ export default function KioskAutoFlow({ device, config }) {
     setFase("registrando");
     setStatusMsg("Validando PIN...");
     try {
-      const colaborador = await buscarPorPin(pin, device?.loja_id);
-      if (!colaborador) {
-        setPinErro("PIN não encontrado.");
-        setFase("fallback_pin");
-        return;
+      // Foto é obrigatória — se não capturamos antes, captura agora
+      let selfieBlob = pinSelfieBlob;
+      if (!selfieBlob) {
+        const frame = await capturarFrame();
+        selfieBlob = frame?.blob || null;
       }
-      const permissao = podeRegistrarPonto(colaborador, "kiosk");
-      if (!permissao.ok) {
-        setErroMsg(permissao.motivo);
+      if (!selfieBlob) {
+        setErroMsg("Não é possível registrar ponto por PIN sem foto.");
         setFase("erro");
         agendarReset();
         return;
       }
-      const selfie_url = pinSelfieBlob
-        ? await uploadFotoBlob(pinSelfieBlob, `kiosk-pin-${colaborador.id}.jpg`)
-        : null;
+      const colaborador = await identificarColaboradorPorPin(pin, device?.loja_id);
+      if (!colaborador) {
+        setPinErro("PIN inválido.");
+        setFase("fallback_pin");
+        return;
+      }
+      const selfie_url = await uploadFotoBlob(selfieBlob, `kiosk-pin-${colaborador.id}.jpg`);
       const { proximo } = await obterProximoEvento(colaborador.id);
       const out = await registrarBatida({
         colaborador,
         tipo: proximo || "entrada",
         selfie_url,
         origem: "kiosk",
-        dispositivo: device?.nome_dispositivo || device?.device_id,
+        dispositivo: device?.device_id,
         fallback_pin: true,
+        pin,
       });
       ultimasBatidasRef.current.set(colaborador.id, Date.now());
       tentativasFalhaRef.current = 0;
