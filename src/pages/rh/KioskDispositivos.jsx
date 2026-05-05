@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tablet, CheckCircle2, XCircle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
+import { Tablet, CheckCircle2, XCircle, RefreshCw, ShieldCheck, ShieldOff, ExternalLink } from "lucide-react";
 import { autorizarDispositivo, revogarDispositivo } from "@/lib/kiosk-device-service";
 import PageHeader from "@/components/common/PageHeader";
 import { format } from "date-fns";
@@ -51,11 +51,30 @@ export default function KioskDispositivos() {
         title="Tablets de Ponto (Kiosk)"
         description="Aprove e gerencie os tablets fixos de cada loja."
         actions={
-          <Button variant="outline" size="sm" onClick={carregar}>
-            <RefreshCw className="w-4 h-4 mr-2" />Atualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open("/kiosk", "_blank")}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />Abrir Kiosk
+            </Button>
+            <Button variant="outline" size="sm" onClick={carregar}>
+              <RefreshCw className="w-4 h-4 mr-2" />Atualizar
+            </Button>
+          </div>
         }
       />
+
+      <Card className="bg-slate-50 border-dashed">
+        <CardContent className="p-4 text-sm text-slate-600">
+          <strong className="text-slate-900">Como cadastrar um novo tablet:</strong>{" "}
+          no próprio tablet, abra o navegador e acesse{" "}
+          <code className="bg-white px-1.5 py-0.5 rounded border text-xs">/kiosk</code>{" "}
+          (ou clique em <em>Abrir Kiosk</em> aqui para testar). O tablet aparecerá em{" "}
+          <strong>Aguardando aprovação</strong> abaixo.
+        </CardContent>
+      </Card>
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Carregando...</div>
