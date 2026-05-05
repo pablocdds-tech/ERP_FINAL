@@ -47,8 +47,12 @@ import PwaNotificacoes from '@/pages/pwa/PwaNotificacoes';
 import PwaAprovacoes from '@/pages/pwa/PwaAprovacoes';
 import PwaDashboard from '@/pages/pwa/PwaDashboard';
 import PwaEquipe from '@/pages/pwa/PwaEquipe';
-import PwaKioskPonto from '@/pages/pwa/PwaKioskPonto';
 import PwaPontosPendentes from '@/pages/pwa/PwaPontosPendentes';
+import KioskGuard from '@/components/guards/KioskGuard';
+import KioskLayout from '@/components/layout/KioskLayout';
+import KioskHome from '@/pages/kiosk/KioskHome';
+import KioskSetup from '@/pages/kiosk/KioskSetup';
+import KioskLocked from '@/pages/kiosk/KioskLocked';
 
 // Redireciona /pwa/algo → /app/algo (compatibilidade com links antigos)
 const PwaCompatRedirect = () => {
@@ -86,10 +90,20 @@ const AuthenticatedApp = () => {
       {/* Raiz: redireciona conforme perfil */}
       <Route path="/" element={<RootRedirect />} />
 
+      {/* PWA Kiosk (/kiosk) — tablet fixo na loja, sem login individual de funcionário */}
+      <Route element={<KioskGuard />}>
+        <Route element={<KioskLayout />}>
+          <Route path="/kiosk" element={<KioskHome />} />
+          <Route path="/kiosk/setup" element={<KioskSetup />} />
+          <Route path="/kiosk/locked" element={<KioskLocked />} />
+        </Route>
+      </Route>
+
+      {/* Compatibilidade: rota antiga do Kiosk dentro do /app */}
+      <Route path="/app/kiosk-ponto" element={<Navigate to="/kiosk" replace />} />
+
       {/* PWA Mobile (/app) — funcionário + gestor */}
       <Route element={<AppGuard />}>
-        {/* Kiosk: rota fora do PwaLayout (tela cheia, sem nav) */}
-        <Route path="/app/kiosk-ponto" element={<PwaKioskPonto />} />
         <Route element={<PwaLayout />}>
           <Route path="/app" element={<PwaHome />} />
           <Route path="/app/ponto" element={<PwaPonto />} />

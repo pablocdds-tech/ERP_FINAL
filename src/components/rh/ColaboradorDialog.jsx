@@ -13,6 +13,10 @@ const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
   cargo_id: "", loja_id: "", data_admissao: "",
   perfil_pwa: "funcionario", usa_pwa: false,
+  pode_bater_ponto_pelo_pwa: false,
+  pode_bater_ponto_pelo_kiosk: true,
+  bloqueado_para_ponto: false,
+  bloqueado_motivo: "",
   status: "ativo", salario: 0, endereco: "", observacoes: "",
   pin_ponto: "",
 });
@@ -116,9 +120,55 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
                 <SelectItem value="ativo">Ativo</SelectItem>
                 <SelectItem value="afastado">Afastado</SelectItem>
                 <SelectItem value="desligado">Desligado</SelectItem>
+                <SelectItem value="bloqueado">Bloqueado</SelectItem>
               </SelectContent>
             </Select>
           </Field>
+
+          <Field label="Bater ponto pelo PWA?" hint="Funcionário comum: Não. Liberar apenas para gestor/líder autorizado.">
+            <Select
+              value={data.pode_bater_ponto_pelo_pwa ? "sim" : "nao"}
+              onValueChange={(v) => set("pode_bater_ponto_pelo_pwa", v === "sim")}
+              disabled={isView}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nao">Não — só Kiosk</SelectItem>
+                <SelectItem value="sim">Sim — pode bater pelo celular</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Bater ponto pelo Kiosk?" hint="Padrão para funcionário de loja.">
+            <Select
+              value={data.pode_bater_ponto_pelo_kiosk === false ? "nao" : "sim"}
+              onValueChange={(v) => set("pode_bater_ponto_pelo_kiosk", v === "sim")}
+              disabled={isView}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sim">Sim</SelectItem>
+                <SelectItem value="nao">Não</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Bloqueado para ponto?" hint="Bloqueia ponto sem desligar o colaborador.">
+            <Select
+              value={data.bloqueado_para_ponto ? "sim" : "nao"}
+              onValueChange={(v) => set("bloqueado_para_ponto", v === "sim")}
+              disabled={isView}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nao">Não</SelectItem>
+                <SelectItem value="sim">Sim — bloqueado</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {data.bloqueado_para_ponto && (
+            <Field label="Motivo do bloqueio">
+              <Input value={data.bloqueado_motivo || ""} onChange={(e) => set("bloqueado_motivo", e.target.value)} disabled={isView} />
+            </Field>
+          )}
           <Field label="Salário (R$)">
             <Input type="number" step="0.01" value={data.salario ?? ""} onChange={(e) => set("salario", parseFloat(e.target.value) || 0)} disabled={isView} />
           </Field>

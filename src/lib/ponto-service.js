@@ -3,6 +3,7 @@ import { proximoEventoPonto } from "./rh-service";
 import { registrarLog } from "./auditoria-service";
 import { enfileirarBatida } from "./ponto-offline-queue";
 import { proximoNsrEHash, calcularHashRegistro } from "./afd-service";
+import { podeRegistrarPonto } from "./ponto-permissoes";
 
 /**
  * Faz upload de um Blob como arquivo (jpg).
@@ -21,6 +22,27 @@ export async function uploadFotoBlob(blob, name = "selfie.jpg") {
  */
 export async function registrarBatida({ colaborador, tipo, selfie_url, origem = "pwa", dispositivo, fallback_pin = false, lat, lng, match_score, match_dist }) {
   if (!colaborador?.id || !tipo) throw new Error("Dados insuficientes");
+
+  // Validação de permissão por canal (camada de serviço — última linha de defesa)
+  const permissao = podeRegistrarPonto(colaborador, origem);
+  if (!permissao.ok) {
+    try {
+      await registrarLog({
+        modulo: "rh",
+        acao: "bloquear",
+        entidade: "RegistroPonto",
+        descricao: `Tentativa bloqueada (${origem}) para ${colaborador.nome}: ${permissao.motivo}`,
+        origem: "humano",
+        valor_novo: { colaborador_id: colaborador.id, origem, codigo: permissao.codigo, tipo, dispositivo },
+        loja_id: colaborador.loja_id,
+        critico: true,
+      });
+    } catch { /* auditoria nunca bloqueia */ }
+    const err = new Error(permissao.motivo);
+    err.codigo = permissao.codigo;
+    err.bloqueio = true;
+    throw err;
+  }
 
   const agora = new Date();
   const baseRegistro = {

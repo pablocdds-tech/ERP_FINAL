@@ -45,12 +45,32 @@
       "default": false,
       "description": "Se o colaborador acessa o PWA pessoal (precisa email/login). Quando false, bate ponto apenas pelo Kiosk via facial/PIN."
     },
+    "pode_bater_ponto_pelo_pwa": {
+      "type": "boolean",
+      "default": false,
+      "description": "Permite registrar ponto pelo PWA pessoal. Funcion\u00e1rio comum = false. Gestor/l\u00edder autorizado = true."
+    },
+    "pode_bater_ponto_pelo_kiosk": {
+      "type": "boolean",
+      "default": true,
+      "description": "Permite registrar ponto pelo Kiosk da loja (facial/PIN)."
+    },
+    "bloqueado_para_ponto": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bloqueia o registro de ponto em todos os canais, sem desligar o colaborador."
+    },
+    "bloqueado_motivo": {
+      "type": "string",
+      "description": "Motivo do bloqueio para ponto"
+    },
     "status": {
       "type": "string",
       "enum": [
         "ativo",
         "afastado",
-        "desligado"
+        "desligado",
+        "bloqueado"
       ],
       "default": "ativo"
     },

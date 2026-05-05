@@ -1,0 +1,51 @@
+{
+  "name": "KioskDevice",
+  "type": "object",
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "description": "ID \u00fanico do dispositivo (gerado e salvo no localStorage do tablet)"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja em que o tablet est\u00e1 fixado"
+    },
+    "nome_dispositivo": {
+      "type": "string",
+      "description": "Nome amig\u00e1vel (ex: Tablet Caixa 1)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "autorizado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se false, o tablet n\u00e3o pode registrar ponto (modo locked)."
+    },
+    "criado_por": {
+      "type": "string",
+      "description": "Email do gestor/admin que autorizou o dispositivo"
+    },
+    "ultimo_acesso_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ultima_sincronizacao_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "app_version": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "observacao": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "device_id"
+  ]
+}

@@ -9,8 +9,10 @@ import CameraCapture from "@/components/ponto/CameraCapture";
 import { usePwa } from "@/lib/PwaContext";
 import { labelPonto } from "@/lib/rh-service";
 import { obterProximoEvento, registrarBatida, uploadFotoBlob } from "@/lib/ponto-service";
+import { podeRegistrarPonto } from "@/lib/ponto-permissoes";
 import { extrairDescritor, distancia, similaridade, DEFAULT_THRESHOLD } from "@/lib/biometria";
 import { format } from "date-fns";
+import { Lock } from "lucide-react";
 
 export default function PwaPonto() {
   const { colaborador } = usePwa() || {};
@@ -83,7 +85,11 @@ export default function PwaPonto() {
         });
       }
     } catch (e) {
-      setResultado({ ok: false, status: "erro", msg: "Falha ao registrar. Tente novamente." });
+      setResultado({
+        ok: false,
+        status: e?.bloqueio ? "bloqueado" : "erro",
+        msg: e?.bloqueio ? e.message : "Falha ao registrar. Tente novamente.",
+      });
     } finally {
       setBatendo(false);
       load();
@@ -106,6 +112,23 @@ export default function PwaPonto() {
         <PageTitle title="Ponto" />
         <Card className="p-5 text-sm text-muted-foreground">
           Seu usuário não está vinculado a um colaborador. Procure o gestor.
+        </Card>
+      </div>
+    );
+  }
+
+  // Checagem de permissão para bater ponto pelo PWA
+  const permissaoPwa = podeRegistrarPonto(colaborador, "pwa");
+  if (!permissaoPwa.ok) {
+    return (
+      <div>
+        <PageTitle title="Ponto" subtitle={colaborador.nome} />
+        <Card className="p-6 text-center">
+          <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-6 h-6 text-slate-500" />
+          </div>
+          <div className="text-base font-medium mb-1">Registro pelo celular indisponível</div>
+          <div className="text-sm text-muted-foreground">{permissaoPwa.motivo}</div>
         </Card>
       </div>
     );
