@@ -1,5 +1,5 @@
 import {
-  Users, Briefcase, CalendarRange, Clock, FileText, GraduationCap, FileSignature, SlidersHorizontal,
+  Users, Briefcase, CalendarRange, Clock, FileText, GraduationCap, FileSignature, SlidersHorizontal, Tablet,
 } from "lucide-react";
 
 export const RH_LIST = [
@@ -8,6 +8,7 @@ export const RH_LIST = [
   { tipo: "escalas", nome: "Escalas e Jornadas", descricao: "Programação de turnos por colaborador.", icon: CalendarRange },
   { tipo: "ponto", nome: "Espelho de Ponto", descricao: "Registros, atrasos, faltas e horas.", icon: Clock },
   { tipo: "configuracao-ponto", nome: "Configuração do Ponto", descricao: "Tolerâncias, biometria, fraude e Kiosk.", icon: SlidersHorizontal },
+  { tipo: "kiosk-dispositivos", nome: "Tablets de Ponto", descricao: "Aprovar e gerenciar tablets do Kiosk.", icon: Tablet },
   { tipo: "solicitacoes", nome: "Solicitações", descricao: "Folgas, trocas, ajustes e justificativas.", icon: FileSignature },
   { tipo: "documentos", nome: "Documentos", descricao: "Atestados, contratos e arquivos.", icon: FileText },
   { tipo: "treinamentos", nome: "Treinamentos", descricao: "Treinamentos, presenças e certificados.", icon: GraduationCap },
