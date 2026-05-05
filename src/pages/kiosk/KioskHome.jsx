@@ -2,11 +2,13 @@ import { useOutletContext } from "react-router-dom";
 import { Clock, Camera } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
+import KioskBatidaFlow from "@/components/kiosk/KioskBatidaFlow";
 
 export default function KioskHome() {
   const ctx = useOutletContext() || {};
   const device = ctx.device;
   const [agora, setAgora] = useState(new Date());
+  const [batendo, setBatendo] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setAgora(new Date()), 1000);
@@ -27,7 +29,7 @@ export default function KioskHome() {
       </div>
       <button
         className="mt-12 inline-flex items-center gap-3 bg-white text-slate-900 rounded-full px-10 py-5 text-xl font-medium shadow-lg active:scale-[0.98] transition"
-        onClick={() => alert("Fluxo de batida será implementado nos próximos checkpoints (6+).")}
+        onClick={() => setBatendo(true)}
       >
         <Camera className="w-6 h-6" />
         Bater ponto
@@ -35,6 +37,7 @@ export default function KioskHome() {
       <div className="absolute bottom-4 right-6 text-[10px] text-slate-600">
         {device?.device_id}
       </div>
+      {batendo && <KioskBatidaFlow device={device} onClose={() => setBatendo(false)} />}
     </div>
   );
 }
