@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, AlertCircle } from "lucide-react";
 import PageTitle from "@/components/pwa/PageTitle";
+import PainelPontoIndicadores from "@/components/rh/PainelPontoIndicadores";
 import { usePwa } from "@/lib/PwaContext";
 import { labelPonto } from "@/lib/rh-service";
 import { aprovarRegistroPontoManual, rejeitarRegistroPontoManual } from "@/lib/ponto-service";
@@ -53,10 +54,22 @@ export default function PwaPontosPendentes() {
 
   return (
     <div>
-      <PageTitle title="Pontos pendentes" subtitle={`${pendentes.length} em revisão`} />
+      <PageTitle
+        title="Revisão de ponto"
+        subtitle={`${pendentes.length} exceç${pendentes.length === 1 ? "ão" : "ões"} a revisar hoje`}
+      />
+
+      <div className="mb-3">
+        <PainelPontoIndicadores compact />
+      </div>
+
+      <Card className="p-3 mb-3 text-[12px] text-muted-foreground bg-muted/30 border-dashed">
+        Pontos normais são aprovados automaticamente. Aqui aparecem apenas exceções:
+        baixa confiança facial, uso de PIN, ponto offline, fora de escala, ajuste manual ou divergências.
+      </Card>
 
       {pendentes.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">Sem pendências.</Card>
+        <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma exceção a revisar.</Card>
       ) : (
         <div className="space-y-2">
           {pendentes.map((r) => {
