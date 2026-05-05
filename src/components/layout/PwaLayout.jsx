@@ -1,7 +1,11 @@
 import { Outlet, Link } from "react-router-dom";
-import { Bell, Monitor } from "lucide-react";
+import { Bell, Monitor, LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import PwaBottomNav from "./PwaBottomNav";
 import { PwaProvider, usePwa } from "@/lib/PwaContext";
 import { canAccessAdmin } from "@/lib/perfil";
@@ -56,6 +60,29 @@ function PwaShell() {
               >
                 <Monitor className="w-3 h-3" />Ir para ERP
               </Link>
+            )}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 flex items-center justify-center text-xs font-semibold">
+                    {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="text-sm font-medium truncate">{user.full_name || "Usuário"}</div>
+                    <div className="text-[11px] text-muted-foreground font-normal truncate">{user.email}</div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => base44.auth.logout()}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </header>
