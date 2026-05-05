@@ -12,7 +12,8 @@ import SecaoFacialColaborador from "@/components/ponto/SecaoFacialColaborador";
 const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
   cargo_id: "", loja_id: "", data_admissao: "",
-  perfil_pwa: "funcionario", status: "ativo", salario: 0, endereco: "", observacoes: "",
+  perfil_pwa: "funcionario", usa_pwa: false,
+  status: "ativo", salario: 0, endereco: "", observacoes: "",
   pin_ponto: "",
 });
 
@@ -61,10 +62,33 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
             <Input value={data.nome} onChange={(e) => set("nome", e.target.value)} disabled={isView} />
           </Field>
           <Field label="CPF"><Input value={data.cpf || ""} onChange={(e) => set("cpf", e.target.value)} disabled={isView} /></Field>
-          <Field label="Email (login)" hint="Mesmo email do User para vincular login">
-            <Input type="email" value={data.email || ""} onChange={(e) => set("email", e.target.value)} disabled={isView} />
-          </Field>
           <Field label="Telefone"><Input value={data.telefone || ""} onChange={(e) => set("telefone", e.target.value)} disabled={isView} /></Field>
+
+          <Field label="Usa PWA pessoal?" required hint="Se 'Não', bate ponto só pelo Kiosk (sem precisar de login)">
+            <Select
+              value={data.usa_pwa ? "sim" : "nao"}
+              onValueChange={(v) => {
+                const usa = v === "sim";
+                setData({ ...data, usa_pwa: usa, ...(usa ? {} : { email: "" }) });
+              }}
+              disabled={isView}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nao">Não — só Kiosk (facial/PIN)</SelectItem>
+                <SelectItem value="sim">Sim — login pessoal no PWA</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Email (login)" hint={data.usa_pwa ? "Obrigatório quando usa PWA pessoal" : "Não é necessário se não usa PWA"}>
+            <Input
+              type="email"
+              value={data.email || ""}
+              onChange={(e) => set("email", e.target.value)}
+              disabled={isView || !data.usa_pwa}
+              placeholder={data.usa_pwa ? "" : "—"}
+            />
+          </Field>
           <Field label="Data admissão"><Input type="date" value={data.data_admissao || ""} onChange={(e) => set("data_admissao", e.target.value)} disabled={isView} /></Field>
           <Field label="Cargo">
             <Select value={data.cargo_id || "__none__"} onValueChange={(v) => set("cargo_id", v === "__none__" ? "" : v)} disabled={isView}>
@@ -77,7 +101,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           </Field>
           <Field label="Loja"><LojaSingleSelect value={data.loja_id} onChange={(v) => set("loja_id", v)} /></Field>
           <Field label="Perfil PWA" required>
-            <Select value={data.perfil_pwa} onValueChange={(v) => set("perfil_pwa", v)} disabled={isView}>
+            <Select value={data.perfil_pwa} onValueChange={(v) => set("perfil_pwa", v)} disabled={isView || !data.usa_pwa}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="funcionario">Funcionário</SelectItem>

@@ -10,7 +10,7 @@
     },
     "email": {
       "type": "string",
-      "description": "Email do User para vincular login"
+      "description": "Email do User para vincular login (opcional \u2014 s\u00f3 se usar PWA pessoal)"
     },
     "telefone": {
       "type": "string"
@@ -39,6 +39,11 @@
         "gestor"
       ],
       "default": "funcionario"
+    },
+    "usa_pwa": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o colaborador acessa o PWA pessoal (precisa email/login). Quando false, bate ponto apenas pelo Kiosk via facial/PIN."
     },
     "status": {
       "type": "string",
