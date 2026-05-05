@@ -171,6 +171,7 @@ export default function KioskCadastroFacialFlow({ device, onClose }) {
     const pose = POSES[poseAtual];
     return (
       <CameraCapture
+        key={`pose-${pose.key}-${poseAtual}`}
         hint={`${colaborador.nome.split(" ")[0]} — ${pose.label} (${poseAtual + 1}/${POSES.length}): ${pose.hint}`}
         onCancel={onClose}
         onCapture={onCapture}
