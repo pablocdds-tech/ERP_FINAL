@@ -1,0 +1,28 @@
+{
+  "name": "Departamento",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do departamento (ex: Opera\u00e7\u00e3o, Administrativo, Delivery)"
+    },
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo curto opcional"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "responsavel_id": {
+      "type": "string",
+      "description": "Colaborador respons\u00e1vel pelo departamento"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

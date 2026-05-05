@@ -36,11 +36,11 @@ export const RH_GRUPOS = [
     icon: Users,
     itens: [
       item({ tipo: "colaboradores", nome: "Colaboradores", descricao: "Cadastro de pessoas, vínculos e status.", icon: Users }),
-      item({ tipo: "lojas", nome: "Lojas / Unidades", descricao: "Unidades de negócio e responsáveis.", icon: Building2, disponivel: false }),
-      item({ tipo: "times", nome: "Times / Setores", descricao: "Cozinha, atendimento, delivery, etc.", icon: Layers, disponivel: false }),
-      item({ tipo: "departamentos", nome: "Departamentos", descricao: "Operação, administrativo, produção.", icon: Layers, disponivel: false }),
+      item({ tipo: "lojas", nome: "Lojas / Unidades", descricao: "Unidades de negócio e responsáveis.", icon: Building2, link: "/admin/cadastros/lojas" }),
+      item({ tipo: "times", nome: "Times / Setores", descricao: "Cozinha, atendimento, delivery, etc.", icon: Layers }),
+      item({ tipo: "departamentos", nome: "Departamentos", descricao: "Operação, administrativo, produção.", icon: Layers }),
       item({ tipo: "cargos", nome: "Cargos", descricao: "Cargos, jornada e salário base.", icon: Briefcase }),
-      item({ tipo: "centros-custo", nome: "Centros de Custo", descricao: "Distribuição de custos por área.", icon: Wallet, disponivel: false }),
+      item({ tipo: "centros-custo", nome: "Centros de Custo", descricao: "Distribuição de custos por área.", icon: Wallet, link: "/admin/cadastros/centros-custo" }),
     ],
   },
   {

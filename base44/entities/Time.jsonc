@@ -1,0 +1,36 @@
+{
+  "name": "Time",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do time/setor (ex: Cozinha, Atendimento, Entregas)"
+    },
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo curto opcional"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "departamento_id": {
+      "type": "string",
+      "description": "Departamento ao qual o time pertence"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja vinculada. Vazio = corporativo / todas as lojas."
+    },
+    "responsavel_id": {
+      "type": "string",
+      "description": "Colaborador l\u00edder do time"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

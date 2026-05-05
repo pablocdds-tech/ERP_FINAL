@@ -55,7 +55,7 @@ export default function RHIndex() {
                     );
                   }
                   return (
-                    <Link key={`${grupo.id}-${item.tipo}`} to={`/admin/pessoas/${item.tipo}`}>
+                    <Link key={`${grupo.id}-${item.tipo}`} to={item.link || `/admin/pessoas/${item.tipo}`}>
                       <Card className="p-5 h-full hover:border-foreground/30 transition-colors group">
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">

@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 import Colaboradores from "./Colaboradores";
 import Cargos from "./Cargos";
+import Departamentos from "./Departamentos";
+import Times from "./Times";
 import Escalas from "./Escalas";
 import EspelhoPonto from "./EspelhoPonto";
 import Solicitacoes from "./Solicitacoes";
@@ -16,6 +18,8 @@ import KioskDispositivos from "./KioskDispositivos";
 const PAGES = {
   colaboradores: Colaboradores,
   cargos: Cargos,
+  departamentos: Departamentos,
+  times: Times,
   escalas: Escalas,
   ponto: EspelhoPonto,
   "configuracao-ponto": ConfiguracaoPonto,

@@ -14,7 +14,9 @@ import { registrarLog } from "@/lib/auditoria-service";
 
 const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
-  cargo_id: "", loja_id: "", data_admissao: "",
+  cargo_id: "", loja_id: "",
+  departamento_id: "", time_id: "", centro_custo_id: "",
+  data_admissao: "",
   perfil_pwa: "funcionario", usa_pwa: false,
   pode_bater_ponto_pelo_pwa: false,
   pode_bater_ponto_pelo_kiosk: true,
@@ -26,6 +28,9 @@ const empty = () => ({
 export default function ColaboradorDialog({ open, mode, record, onClose, onSaved }) {
   const [data, setData] = useState(empty());
   const [cargos, setCargos] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
+  const [times, setTimes] = useState([]);
+  const [centrosCusto, setCentrosCusto] = useState([]);
   const [saving, setSaving] = useState(false);
   const [erros, setErros] = useState({});
   const [avisoReativar, setAvisoReativar] = useState(null);
@@ -44,6 +49,9 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
       setPinNovo("");
       setPinMsg(null);
       base44.entities.Cargo.filter({ ativo: true }).then(setCargos);
+      base44.entities.Departamento.filter({ ativo: true }).then(setDepartamentos).catch(() => setDepartamentos([]));
+      base44.entities.Time.filter({ ativo: true }).then(setTimes).catch(() => setTimes([]));
+      base44.entities.CentroCusto.filter({ ativo: true }).then(setCentrosCusto).catch(() => setCentrosCusto([]));
     }
   }, [open, record]);
 
@@ -211,6 +219,38 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
             </Select>
           </Field>
           <Field label="Loja"><LojaSingleSelect value={data.loja_id} onChange={(v) => set("loja_id", v)} /></Field>
+          <Field label="Departamento">
+            <Select value={data.departamento_id || "__none__"} onValueChange={(v) => set("departamento_id", v === "__none__" ? "" : v)} disabled={isView}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Nenhum —</SelectItem>
+                {departamentos.map((d) => <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Time / Setor">
+            <Select value={data.time_id || "__none__"} onValueChange={(v) => set("time_id", v === "__none__" ? "" : v)} disabled={isView}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Nenhum —</SelectItem>
+                {times
+                  .filter((t) => !data.departamento_id || !t.departamento_id || t.departamento_id === data.departamento_id)
+                  .filter((t) => !data.loja_id || !t.loja_id || t.loja_id === data.loja_id)
+                  .map((t) => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Centro de Custo">
+            <Select value={data.centro_custo_id || "__none__"} onValueChange={(v) => set("centro_custo_id", v === "__none__" ? "" : v)} disabled={isView}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Nenhum —</SelectItem>
+                {centrosCusto
+                  .filter((cc) => !data.loja_id || !cc.loja_id || cc.loja_id === data.loja_id)
+                  .map((cc) => <SelectItem key={cc.id} value={cc.id}>{cc.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
           <Field label="Perfil PWA" required>
             <Select value={data.perfil_pwa} onValueChange={(v) => set("perfil_pwa", v)} disabled={isView || !data.usa_pwa}>
               <SelectTrigger><SelectValue /></SelectTrigger>
