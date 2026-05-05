@@ -1,14 +1,16 @@
 import { useOutletContext } from "react-router-dom";
-import { Clock, Camera } from "lucide-react";
+import { Clock, Camera, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import KioskBatidaFlow from "@/components/kiosk/KioskBatidaFlow";
+import KioskCadastroFacialFlow from "@/components/kiosk/KioskCadastroFacialFlow";
 
 export default function KioskHome() {
   const ctx = useOutletContext() || {};
   const device = ctx.device;
   const [agora, setAgora] = useState(new Date());
   const [batendo, setBatendo] = useState(false);
+  const [cadastrando, setCadastrando] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setAgora(new Date()), 1000);
@@ -34,10 +36,18 @@ export default function KioskHome() {
         <Camera className="w-6 h-6" />
         Bater ponto
       </button>
+      <button
+        className="mt-4 inline-flex items-center gap-2 text-slate-300 hover:text-white text-sm underline-offset-4 hover:underline"
+        onClick={() => setCadastrando(true)}
+      >
+        <UserPlus className="w-4 h-4" />
+        Cadastrar minha facial
+      </button>
       <div className="absolute bottom-4 right-6 text-[10px] text-slate-600">
         {device?.device_id}
       </div>
       {batendo && <KioskBatidaFlow device={device} onClose={() => setBatendo(false)} />}
+      {cadastrando && <KioskCadastroFacialFlow device={device} onClose={() => setCadastrando(false)} />}
     </div>
   );
 }
