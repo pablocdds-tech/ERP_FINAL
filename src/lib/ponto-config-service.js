@@ -80,6 +80,55 @@ export const PONTO_PARAMS = {
     label: "Notificar gestor em caso de fraude",
     grupo: "operacao",
   },
+  // Kiosk — detecção automática
+  "ponto.kiosk.deteccao_automatica": {
+    categoria: "operacional",
+    descricao: "Câmera fica ativa e reconhece o rosto automaticamente, sem clicar em Bater Ponto.",
+    default: "true",
+    tipo: "bool",
+    label: "Detecção automática de rosto",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.exigir_confirmacao_manual": {
+    categoria: "operacional",
+    descricao: "Após reconhecer, pedir confirmação manual antes de registrar o ponto.",
+    default: "true",
+    tipo: "bool",
+    label: "Exigir confirmação manual",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.intervalo_leitura_seg": {
+    categoria: "operacional",
+    descricao: "Intervalo entre tentativas de reconhecimento (em segundos).",
+    default: "2",
+    tipo: "number",
+    label: "Intervalo de leitura (s)",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.tentativas_antes_pin": {
+    categoria: "operacional",
+    descricao: "Quantas tentativas sem reconhecer antes de oferecer o PIN como fallback.",
+    default: "3",
+    tipo: "number",
+    label: "Tentativas antes do PIN",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.tempo_reset_seg": {
+    categoria: "operacional",
+    descricao: "Após sucesso/erro, quanto tempo (s) até voltar a aguardar novo rosto.",
+    default: "5",
+    tipo: "number",
+    label: "Tempo de reset (s)",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.bloqueio_rebatida_seg": {
+    categoria: "operacional",
+    descricao: "Tempo (s) que o mesmo colaborador fica bloqueado de bater novamente.",
+    default: "60",
+    tipo: "number",
+    label: "Bloqueio de rebatida (s)",
+    grupo: "kiosk",
+  },
 };
 
 const PREFIX = "ponto.";

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin, Clock, Fingerprint, Settings2, Save, RotateCcw, ShieldCheck } from "lucide-react";
+import { Loader2, MapPin, Clock, Fingerprint, Settings2, Save, RotateCcw, ShieldCheck, Tablet } from "lucide-react";
 import { toast } from "sonner";
 import PageHeader from "@/components/common/PageHeader";
 import {
@@ -19,6 +19,7 @@ const GRUPOS = [
   { key: "horario", titulo: "Horário e Tolerância", descricao: "Janela aceitável em relação à escala.", icon: Clock },
   { key: "bio", titulo: "Biometria e IA", descricao: "Reconhecimento facial e detecção de fraude.", icon: Fingerprint },
   { key: "operacao", titulo: "Operação", descricao: "Kiosk e notificações.", icon: Settings2 },
+  { key: "kiosk", titulo: "Kiosk — Detecção Automática", descricao: "Como o tablet fixo da loja reconhece e registra o ponto.", icon: Tablet },
 ];
 
 export default function ConfiguracaoPonto() {
