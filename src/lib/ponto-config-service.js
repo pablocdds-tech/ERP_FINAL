@@ -139,8 +139,8 @@ export const PONTO_PARAMS = {
   },
   "ponto.kiosk.auto_registro_score_min": {
     categoria: "operacional",
-    descricao: "Score mínimo de similaridade (0–1) para registrar automaticamente sem confirmação manual. Acima do threshold básico de match.",
-    default: "0.78",
+    descricao: "Score mínimo de similaridade (0–1) para registrar automaticamente sem confirmação manual. Em condições reais de tablet, valores entre 0.60 e 0.70 funcionam bem; acima disso o sistema pede confirmação. O score é derivado da distância euclidiana (1 - dist/1.2).",
+    default: "0.65",
     tipo: "number",
     label: "Score mínimo p/ auto-registro",
     grupo: "kiosk",

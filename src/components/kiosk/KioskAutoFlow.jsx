@@ -37,7 +37,7 @@ export default function KioskAutoFlow({ device, config }) {
   const bloqueioRebatidaSeg = Math.max(10, Number(config?.["ponto.kiosk.bloqueio_rebatida_seg"]) || 60);
   const threshold = Number(config?.["ponto.bio.threshold_match"]) || DEFAULT_THRESHOLD;
   const autoRegistroAtivo = config?.["ponto.kiosk.auto_registro"] !== false;
-  const scoreMinAuto = Math.max(0, Math.min(1, Number(config?.["ponto.kiosk.auto_registro_score_min"]) || 0.78));
+  const scoreMinAuto = Math.max(0, Math.min(1, Number(config?.["ponto.kiosk.auto_registro_score_min"]) || 0.65));
   const tempoMsgSucessoMs = Math.max(1, Number(config?.["ponto.kiosk.tempo_msg_sucesso_seg"]) || 3) * 1000;
 
   // ---------- IDENTIDADE DO DISPOSITIVO (congela no mount, imune a re-render) ----------
@@ -272,11 +272,14 @@ export default function KioskAutoFlow({ device, config }) {
             match_score: dados.score,
             tipo: dados.proximo,
             codigo: e?.codigo,
+            status_http: e?.status,
           },
           critico: true,
         });
       } catch { /* */ }
-      setErroMsg(e?.message || "Falha ao registrar.");
+      // Mensagem rica: motivo + código técnico (ajuda diagnóstico em produção)
+      const codigo = e?.codigo ? ` [${e.codigo}]` : "";
+      setErroMsg((e?.message || "Falha ao registrar.") + codigo);
       setFase("erro");
       agendarReset();
     }
@@ -492,15 +495,19 @@ export default function KioskAutoFlow({ device, config }) {
     );
   }
 
-  // Em modo de confirmação manual, vertical: câmera reduzida + painel sticky no rodapé
-  const confirmandoVertical = fase === "reconhecido";
+  // Em modo de confirmação OU PIN, vertical: câmera reduzida + painel fixo no rodapé
+  const confirmandoVertical = fase === "reconhecido" || fase === "fallback_pin";
 
   return (
     <div className="flex-1 flex flex-col landscape:flex-row items-stretch w-full min-h-0 relative">
-      {/* Câmera — em vertical reduz para 45vh quando confirmando, dando espaço ao painel */}
+      {/* Câmera — em vertical, quando confirmando, fica limitada a 45dvh para liberar espaço ao painel */}
       <div
-        className={`relative bg-black overflow-hidden landscape:flex-1 portrait:w-full ${confirmandoVertical ? "portrait:h-[45vh]" : ""}`}
-        style={{ minHeight: confirmandoVertical ? "45vh" : "min(60vh, 720px)" }}
+        className="relative bg-black overflow-hidden landscape:flex-1 portrait:w-full shrink-0"
+        style={{
+          minHeight: confirmandoVertical ? "auto" : "min(60vh, 720px)",
+          maxHeight: confirmandoVertical ? "45dvh" : undefined,
+          height: confirmandoVertical ? "45dvh" : undefined,
+        }}
       >
         <video
           ref={videoRef}
@@ -534,8 +541,8 @@ export default function KioskAutoFlow({ device, config }) {
       {/* Painel —
           - landscape: lateral fixa à direita
           - portrait normal: ocupa o resto da altura
-          - portrait CONFIRMANDO: scrollável + botões sticky no fundo (sempre visíveis) */}
-      <div className="bg-slate-900 text-white flex flex-col landscape:w-[clamp(360px,32vw,460px)] portrait:w-full portrait:flex-1 min-h-0">
+          - portrait CONFIRMANDO: conteúdo scroll + botões fixos no rodapé (sempre visíveis) */}
+      <div className="bg-slate-900 text-white flex flex-col landscape:w-[clamp(360px,32vw,460px)] portrait:w-full flex-1 min-h-0 overflow-hidden">
         <PainelDireito
           fase={fase}
           statusMsg={statusMsg}

@@ -77,9 +77,22 @@ export async function registrarBatida({
     return { offline: true, fila_id, registro: null };
   }
 
-  // Chama backend seguro
-  const res = await base44.functions.invoke("registrarPontoSeguro", payload);
-  const data = res?.data || {};
+  // Chama backend seguro — captura motivo técnico real mesmo em status 4xx
+  let res, data;
+  try {
+    res = await base44.functions.invoke("registrarPontoSeguro", payload);
+    data = res?.data || {};
+  } catch (httpErr) {
+    // SDK pode lançar em 4xx/5xx — extrai o body do erro com motivo técnico
+    const body = httpErr?.response?.data || httpErr?.data || {};
+    const status = httpErr?.response?.status || httpErr?.status;
+    const motivo = body.motivo || httpErr?.message || `Erro HTTP ${status || ""}`.trim();
+    const err = new Error(motivo);
+    err.codigo = body.codigo || "erro_http";
+    err.status = status;
+    err.bloqueio = true;
+    throw err;
+  }
   if (!data.ok) {
     const err = new Error(data.motivo || "Falha ao registrar ponto.");
     err.codigo = data.codigo || "erro";
