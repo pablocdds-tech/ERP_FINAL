@@ -129,6 +129,30 @@ export const PONTO_PARAMS = {
     label: "Bloqueio de rebatida (s)",
     grupo: "kiosk",
   },
+  "ponto.kiosk.auto_registro": {
+    categoria: "operacional",
+    descricao: "Registrar ponto automaticamente quando o reconhecimento for de alta confiança (sem clique em Confirmar).",
+    default: "true",
+    tipo: "bool",
+    label: "Auto-registro com alta confiança",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.auto_registro_score_min": {
+    categoria: "operacional",
+    descricao: "Score mínimo de similaridade (0–1) para registrar automaticamente sem confirmação manual. Acima do threshold básico de match.",
+    default: "0.78",
+    tipo: "number",
+    label: "Score mínimo p/ auto-registro",
+    grupo: "kiosk",
+  },
+  "ponto.kiosk.tempo_msg_sucesso_seg": {
+    categoria: "operacional",
+    descricao: "Quanto tempo (s) a mensagem de sucesso fica visível antes de resetar para o próximo colaborador.",
+    default: "3",
+    tipo: "number",
+    label: "Tempo da msg de sucesso (s)",
+    grupo: "kiosk",
+  },
 };
 
 const PREFIX = "ponto.";
