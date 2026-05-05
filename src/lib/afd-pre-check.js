@@ -61,6 +61,7 @@ export async function verificarPendenciasCadastraisPeriodo({
     const cpfDigitos = limparCpf(c.cpf);
     if (!cpfDigitos) problemas.push("CPF ausente");
     else if (!isCpfValido(cpfDigitos)) problemas.push("CPF inválido");
+    if (!c.loja_id) problemas.push("Loja principal ausente");
     if (problemas.length > 0) {
       pendencias.push({
         colaborador_id: c.id,

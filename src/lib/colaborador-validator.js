@@ -54,6 +54,9 @@ export async function validarColaboradorParaSalvar(data, ignorarId = null) {
   if (!cpfDigitos || !isCpfValido(cpfDigitos)) {
     erros.cpf = MSG_CPF_INVALIDO;
   }
+  if (!data.loja_id) {
+    erros.loja_id = "Informe a loja principal.";
+  }
 
   // Se nome/CPF básicos passaram, verifica unicidade
   let sugestaoReativar = null;

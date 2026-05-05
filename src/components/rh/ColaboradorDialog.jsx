@@ -218,7 +218,10 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Loja"><LojaSingleSelect value={data.loja_id} onChange={(v) => set("loja_id", v)} /></Field>
+          <Field label="Loja" required>
+            <LojaSingleSelect value={data.loja_id} onChange={(v) => set("loja_id", v)} />
+            {erros.loja_id && <div className="text-[11px] text-destructive mt-1">{erros.loja_id}</div>}
+          </Field>
           <Field label="Departamento">
             <Select value={data.departamento_id || "__none__"} onValueChange={(v) => set("departamento_id", v === "__none__" ? "" : v)} disabled={isView}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
