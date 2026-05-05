@@ -5,7 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Eye, Pencil } from "lucide-react";
+import { Plus, Search, Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import PageShell from "@/components/rh/PageShell";
 import StatusColaboradorBadge from "@/components/rh/StatusColaboradorBadge";
 import ColaboradorDialog from "@/components/rh/ColaboradorDialog";
@@ -18,6 +23,23 @@ export default function Colaboradores() {
   const [statusF, setStatusF] = useState("todos");
   const [perfilF, setPerfilF] = useState("todos");
   const [dialog, setDialog] = useState({ open: false, mode: "create", record: null });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await base44.entities.Colaborador.delete(deleteTarget.id);
+      toast.success("Colaborador excluído.");
+      setDeleteTarget(null);
+      load();
+    } catch (e) {
+      toast.error(`Não foi possível excluir: ${e?.message || e}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const load = async () => {
     const [c, cg, l] = await Promise.all([
@@ -89,6 +111,7 @@ export default function Colaboradores() {
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDialog({ open: true, mode: "view", record: c })}><Eye className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDialog({ open: true, mode: "edit", record: c })}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(c)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -99,6 +122,27 @@ export default function Colaboradores() {
       </Card>
       <ColaboradorDialog open={dialog.open} mode={dialog.mode} record={dialog.record}
         onClose={() => setDialog((d) => ({ ...d, open: false }))} onSaved={load} />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir colaborador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.nome} — esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }

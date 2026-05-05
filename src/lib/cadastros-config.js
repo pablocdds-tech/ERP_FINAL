@@ -22,6 +22,7 @@ export const CADASTROS = {
     singular: "Loja",
     icon: Store,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "codigo", label: "Código" },
@@ -55,6 +56,7 @@ export const CADASTROS = {
     singular: "Perfil",
     icon: Shield,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "chave", label: "Chave" },
@@ -70,6 +72,7 @@ export const CADASTROS = {
     icon: Package,
     hasLoja: "multi",
     lojaField: "loja_ids",
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "codigo", label: "Código" },
@@ -87,6 +90,7 @@ export const CADASTROS = {
     icon: Wheat,
     hasLoja: "multi",
     lojaField: "loja_ids",
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "codigo", label: "Código" },
@@ -103,6 +107,7 @@ export const CADASTROS = {
     singular: "Fornecedor",
     icon: Truck,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "cnpj_cpf", label: "CNPJ/CPF" },
@@ -118,6 +123,7 @@ export const CADASTROS = {
     singular: "Unidade de Medida",
     icon: Ruler,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "sigla", label: "Sigla" },
       { key: "nome", label: "Nome" },
@@ -132,6 +138,7 @@ export const CADASTROS = {
     singular: "Categoria Financeira",
     icon: Tags,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "codigo", label: "Código" },
       { key: "nome", label: "Nome" },
@@ -151,6 +158,7 @@ export const CADASTROS = {
     icon: Building2,
     hasLoja: "single",
     lojaField: "loja_id",
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "codigo", label: "Código" },
@@ -165,6 +173,7 @@ export const CADASTROS = {
     icon: CreditCard,
     hasLoja: "multi",
     lojaField: "loja_ids",
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "tipo", label: "Tipo" },
@@ -181,6 +190,7 @@ export const CADASTROS = {
     icon: Megaphone,
     hasLoja: "multi",
     lojaField: "loja_ids",
+    canDelete: true,
     columns: [
       { key: "nome", label: "Nome" },
       { key: "tipo", label: "Tipo" },
@@ -195,6 +205,7 @@ export const CADASTROS = {
     singular: "Parâmetro",
     icon: Settings2,
     hasLoja: false,
+    canDelete: true,
     columns: [
       { key: "chave", label: "Chave" },
       { key: "valor", label: "Valor" },
