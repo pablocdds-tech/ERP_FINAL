@@ -113,7 +113,13 @@ export default function CameraCapture({ onCapture, onCancel, hint = "Enquadre o 
               style={{ transform: "scaleX(-1)" }}
             />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-56 h-72 sm:w-64 sm:h-80 rounded-[40%] border-2 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
+              <div
+                className="rounded-[42%] border-2 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+                style={{
+                  width: "clamp(220px, 42vmin, 480px)",
+                  height: "clamp(290px, 56vmin, 620px)",
+                }}
+              />
             </div>
             <div className="absolute bottom-28 inset-x-0 text-center text-white text-sm font-medium">
               {hint}

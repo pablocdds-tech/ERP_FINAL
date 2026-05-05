@@ -394,9 +394,12 @@ export default function KioskAutoFlow({ device, config }) {
   }
 
   return (
-    <div className="flex-1 flex items-stretch w-full">
-      {/* Coluna esquerda: preview da câmera */}
-      <div className="relative flex-1 bg-black overflow-hidden">
+    <div className="flex-1 flex flex-col landscape:flex-row items-stretch w-full min-h-0">
+      {/* Câmera — ocupa a maior parte: ~65vh em vertical, ~100% altura e ~60-70% largura em horizontal */}
+      <div
+        className="relative bg-black overflow-hidden landscape:flex-1 portrait:w-full"
+        style={{ minHeight: "min(65vh, 720px)" }}
+      >
         <video
           ref={videoRef}
           playsInline
@@ -405,18 +408,32 @@ export default function KioskAutoFlow({ device, config }) {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ transform: "scaleX(-1)" }}
         />
+        {/* Moldura oval grande e responsiva (clamp garante tamanho mínimo em tablet) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-80 sm:w-72 sm:h-96 rounded-[40%] border-2 border-white/40" />
+          <div
+            className="rounded-[42%] border-[3px] border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.25)]"
+            style={{
+              width: "clamp(280px, 45vmin, 520px)",
+              height: "clamp(360px, 60vmin, 680px)",
+            }}
+          />
         </div>
-        <div className="absolute top-4 left-4 inline-flex items-center gap-2 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur">
-          <span className={`w-2 h-2 rounded-full ${fase === "aguardando_rosto" || fase === "nao_reconhecido" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+        {/* Hint central abaixo da moldura */}
+        {(fase === "aguardando_rosto" || fase === "nao_reconhecido" || fase === "processando_reconhecimento") && (
+          <div className="absolute inset-x-0 bottom-6 text-center text-white text-base sm:text-lg font-medium drop-shadow-lg pointer-events-none">
+            Enquadre seu rosto aqui
+          </div>
+        )}
+        {/* Badge de status */}
+        <div className="absolute top-4 left-4 inline-flex items-center gap-2 bg-black/60 text-white text-sm px-3 py-1.5 rounded-full backdrop-blur">
+          <span className={`w-2.5 h-2.5 rounded-full ${fase === "aguardando_rosto" || fase === "nao_reconhecido" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
           {labelFase(fase)}
         </div>
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      {/* Coluna direita: instruções / confirmação / resultado */}
-      <div className="w-full max-w-md bg-slate-900 text-white p-8 flex flex-col">
+      {/* Painel — embaixo em vertical, à direita em horizontal */}
+      <div className="bg-slate-900 text-white p-6 sm:p-8 flex flex-col landscape:w-[clamp(360px,32vw,460px)] portrait:w-full portrait:flex-1">
         <PainelDireito
           fase={fase}
           statusMsg={statusMsg}

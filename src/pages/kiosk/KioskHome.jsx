@@ -97,21 +97,21 @@ export default function KioskHome() {
 
 function TopBar({ agora, loja, device, online }) {
   return (
-    <div className="px-6 py-3 border-b border-slate-800 flex items-center justify-between text-sm">
-      <div className="flex items-center gap-4 text-slate-300">
-        <div className="inline-flex items-center gap-2">
-          <Store className="w-4 h-4 text-slate-500" />
-          <span>{loja?.nome || "Loja"}</span>
+    <div className="px-6 py-2.5 border-b border-slate-800 flex items-center justify-between text-sm shrink-0">
+      <div className="flex items-center gap-4 text-slate-300 min-w-0">
+        <div className="inline-flex items-center gap-2 min-w-0">
+          <Store className="w-4 h-4 text-slate-500 shrink-0" />
+          <span className="font-medium truncate">{loja?.nome || "Loja"}</span>
         </div>
-        <div className="text-slate-600">·</div>
-        <div className="text-slate-500">{device?.nome_dispositivo || "Tablet"}</div>
+        <div className="text-slate-600 hidden sm:block">·</div>
+        <div className="text-slate-500 hidden sm:block truncate">{device?.nome_dispositivo || "Tablet"}</div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 shrink-0">
         <div className={`inline-flex items-center gap-1.5 text-xs ${online ? "text-emerald-400" : "text-amber-400"}`}>
           {online ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
           {online ? "Online" : "Offline"}
         </div>
-        <div className="font-mono tabular-nums text-slate-200 text-base">
+        <div className="font-mono tabular-nums text-slate-100 text-xl sm:text-2xl font-semibold">
           {format(agora, "HH:mm:ss")}
         </div>
       </div>
@@ -121,7 +121,7 @@ function TopBar({ agora, loja, device, online }) {
 
 function BottomBar({ onCadastrar, device }) {
   return (
-    <div className="px-6 py-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+    <div className="px-6 py-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
       <button
         onClick={onCadastrar}
         className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
@@ -129,7 +129,7 @@ function BottomBar({ onCadastrar, device }) {
         <UserPlus className="w-3.5 h-3.5" />
         Cadastrar minha facial
       </button>
-      <div className="font-mono">{device?.device_id}</div>
+      <div className="font-mono opacity-70">{device?.device_id}</div>
     </div>
   );
 }
