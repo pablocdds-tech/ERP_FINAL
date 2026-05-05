@@ -1,0 +1,43 @@
+{
+  "name": "Feriado",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "nome": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "nacional",
+        "estadual",
+        "municipal",
+        "empresa"
+      ],
+      "default": "nacional"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja afetada. Vazio = todas."
+    },
+    "trabalhado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a empresa opera neste feriado"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "data",
+    "nome"
+  ]
+}

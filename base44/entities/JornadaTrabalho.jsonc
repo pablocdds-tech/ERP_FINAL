@@ -1,0 +1,61 @@
+{
+  "name": "JornadaTrabalho",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da jornada (ex: 6x1, 12x36, Meio Per\u00edodo, Folguista, Gerente)"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "dias_semana": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Dias da semana em que a jornada se aplica. 0=Dom, 1=Seg, ..., 6=S\u00e1b."
+    },
+    "hora_entrada": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "hora_intervalo_saida": {
+      "type": "string",
+      "description": "HH:MM \u2014 sa\u00edda para intervalo"
+    },
+    "hora_intervalo_volta": {
+      "type": "string",
+      "description": "HH:MM \u2014 retorno do intervalo"
+    },
+    "hora_saida": {
+      "type": "string",
+      "description": "HH:MM \u2014 sa\u00edda final"
+    },
+    "carga_horaria_diaria_min": {
+      "type": "number",
+      "description": "Carga hor\u00e1ria di\u00e1ria em minutos"
+    },
+    "carga_horaria_semanal_min": {
+      "type": "number",
+      "description": "Carga hor\u00e1ria semanal em minutos"
+    },
+    "tolerancia_atraso_min": {
+      "type": "number",
+      "default": 10,
+      "description": "Toler\u00e2ncia de atraso na entrada (minutos)"
+    },
+    "tolerancia_saida_antecipada_min": {
+      "type": "number",
+      "default": 10,
+      "description": "Toler\u00e2ncia de sa\u00edda antecipada (minutos)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

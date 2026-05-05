@@ -4,6 +4,10 @@ import Colaboradores from "./Colaboradores";
 import Cargos from "./Cargos";
 import Departamentos from "./Departamentos";
 import Times from "./Times";
+import Jornadas from "./Jornadas";
+import Turnos from "./Turnos";
+import Feriados from "./Feriados";
+import TiposAbono from "./TiposAbono";
 import Escalas from "./Escalas";
 import EspelhoPonto from "./EspelhoPonto";
 import Solicitacoes from "./Solicitacoes";
@@ -20,6 +24,10 @@ const PAGES = {
   cargos: Cargos,
   departamentos: Departamentos,
   times: Times,
+  jornadas: Jornadas,
+  turnos: Turnos,
+  feriados: Feriados,
+  abonos: TiposAbono,
   escalas: Escalas,
   ponto: EspelhoPonto,
   "configuracao-ponto": ConfiguracaoPonto,

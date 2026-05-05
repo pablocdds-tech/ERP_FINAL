@@ -1,0 +1,68 @@
+{
+  "name": "TipoAbono",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do tipo de abono/justificativa"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "atestado_medico",
+        "falta_justificada_com_abono",
+        "falta_justificada_sem_abono",
+        "falta_injustificada",
+        "atraso_justificado_com_abono",
+        "atraso_justificado_sem_abono",
+        "saida_antecipada_autorizada",
+        "esquecimento_ponto",
+        "folga_compensatoria",
+        "suspensao",
+        "outro"
+      ],
+      "default": "outro"
+    },
+    "abona_falta": {
+      "type": "boolean",
+      "default": false,
+      "description": "Quando aplicado, abona a falta no espelho"
+    },
+    "gera_desconto": {
+      "type": "boolean",
+      "default": false,
+      "description": "Gera desconto em folha"
+    },
+    "gera_punicao": {
+      "type": "boolean",
+      "default": false,
+      "description": "Gera advert\u00eancia/puni\u00e7\u00e3o administrativa"
+    },
+    "impacta_dsr": {
+      "type": "boolean",
+      "default": false,
+      "description": "Impacta o DSR (Descanso Semanal Remunerado)"
+    },
+    "exige_anexo": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exige documento anexado (ex: atestado)"
+    },
+    "exige_aprovacao": {
+      "type": "boolean",
+      "default": true,
+      "description": "Precisa de aprova\u00e7\u00e3o do gestor"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome",
+    "categoria"
+  ]
+}

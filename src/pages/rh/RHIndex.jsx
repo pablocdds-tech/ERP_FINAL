@@ -28,12 +28,13 @@ export default function RHIndex() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {grupo.itens.map((item) => {
+                {grupo.itens.map((item, idx) => {
                   const Icon = item.icon;
+                  const key = `${grupo.id}-${item.tipo}-${idx}`;
                   if (!item.disponivel) {
                     return (
                       <Card
-                        key={`${grupo.id}-${item.tipo}`}
+                        key={key}
                         className="p-5 h-full opacity-60 cursor-not-allowed"
                         aria-disabled="true"
                       >
@@ -55,7 +56,7 @@ export default function RHIndex() {
                     );
                   }
                   return (
-                    <Link key={`${grupo.id}-${item.tipo}`} to={item.link || `/admin/pessoas/${item.tipo}`}>
+                    <Link key={key} to={item.link || `/admin/pessoas/${item.tipo}`}>
                       <Card className="p-5 h-full hover:border-foreground/30 transition-colors group">
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">

@@ -1,0 +1,38 @@
+{
+  "name": "Turno",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do turno (ex: Manh\u00e3, Tarde, Noite)"
+    },
+    "hora_inicio": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "hora_fim": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "loja_id": {
+      "type": "string",
+      "description": "Loja vinculada. Vazio = todas."
+    },
+    "time_id": {
+      "type": "string",
+      "description": "Time/Setor vinculado (opcional)"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome",
+    "hora_inicio",
+    "hora_fim"
+  ]
+}
