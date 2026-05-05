@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Field from "@/components/cadastros/Field";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
 import SecaoFacialColaborador from "@/components/ponto/SecaoFacialColaborador";
+import { formatarCpf, limparCpf } from "@/lib/cpf-validator";
+import { validarColaboradorParaSalvar } from "@/lib/colaborador-validator";
+import { registrarLog } from "@/lib/auditoria-service";
 
 const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
@@ -24,6 +27,8 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
   const [data, setData] = useState(empty());
   const [cargos, setCargos] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [erros, setErros] = useState({});
+  const [avisoReativar, setAvisoReativar] = useState(null);
   const [pinNovo, setPinNovo] = useState("");
   const [pinSalvando, setPinSalvando] = useState(false);
   const [pinMsg, setPinMsg] = useState(null);
@@ -31,25 +36,73 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
 
   useEffect(() => {
     if (open) {
-      setData(record ? { ...record } : empty());
+      // Mostra CPF formatado ao abrir; sempre salvamos limpo
+      const inicial = record ? { ...record, cpf: formatarCpf(record.cpf) } : empty();
+      setData(inicial);
+      setErros({});
+      setAvisoReativar(null);
       setPinNovo("");
       setPinMsg(null);
       base44.entities.Cargo.filter({ ativo: true }).then(setCargos);
     }
   }, [open, record]);
 
-  const set = (k, v) => setData({ ...data, [k]: v });
+  const set = (k, v) => {
+    setData((d) => ({ ...d, [k]: v }));
+    if (erros[k]) setErros((e) => ({ ...e, [k]: undefined }));
+  };
+
+  const onChangeCpf = (v) => {
+    set("cpf", formatarCpf(v));
+  };
 
   const salvar = async () => {
-    if (!data.nome) return;
     setSaving(true);
+    const validacao = await validarColaboradorParaSalvar(data, record?.id || null);
+    if (!validacao.ok) {
+      setErros(validacao.erros);
+      setAvisoReativar(null);
+      setSaving(false);
+      return;
+    }
+    setAvisoReativar(validacao.sugestaoReativar || null);
+
     // Nunca persistir pin_ponto em texto via update direto — PIN tem fluxo dedicado
     // eslint-disable-next-line no-unused-vars
     const { pin_ponto, pin_ponto_hash, pin_ponto_salt, pin_ponto_versao, ...safe } = data;
+    // Salva CPF apenas com dígitos
+    const payload = { ...safe, cpf: validacao.cpfDigitos };
+    const cpfAnterior = limparCpf(record?.cpf);
+    const cpfMudou = cpfAnterior !== validacao.cpfDigitos;
+
+    let salvo;
     if (record?.id) {
-      const { id, ...rest } = safe;
-      await base44.entities.Colaborador.update(id, rest);
-    } else await base44.entities.Colaborador.create(safe);
+      const { id, ...rest } = payload;
+      salvo = await base44.entities.Colaborador.update(id, rest);
+    } else {
+      salvo = await base44.entities.Colaborador.create(payload);
+    }
+
+    // Auditoria de CPF criado/alterado
+    if (cpfMudou) {
+      try {
+        await registrarLog({
+          modulo: "rh",
+          acao: record?.id ? "atualizar" : "criar",
+          entidade: "Colaborador",
+          entidade_id: salvo?.id || record?.id,
+          descricao: record?.id
+            ? `CPF alterado para ${data.nome}`
+            : `CPF cadastrado para ${data.nome}`,
+          origem: "humano",
+          valor_anterior: record?.id ? { cpf_final4: cpfAnterior.slice(-4) } : undefined,
+          valor_novo: { cpf_final4: validacao.cpfDigitos.slice(-4) },
+          loja_id: data.loja_id,
+          critico: false,
+        });
+      } catch { /* */ }
+    }
+
     setSaving(false);
     onSaved?.();
     onClose?.();
@@ -94,10 +147,32 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           <DialogTitle>{isView ? "Colaborador" : record ? "Editar colaborador" : "Novo colaborador"}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Nome" required className="col-span-2">
-            <Input value={data.nome} onChange={(e) => set("nome", e.target.value)} disabled={isView} />
+          <Field label="Nome completo" required className="col-span-2">
+            <Input
+              value={data.nome}
+              onChange={(e) => set("nome", e.target.value)}
+              disabled={isView}
+              className={erros.nome ? "border-destructive focus-visible:ring-destructive" : ""}
+            />
+            {erros.nome && <div className="text-[11px] text-destructive mt-1">{erros.nome}</div>}
           </Field>
-          <Field label="CPF"><Input value={data.cpf || ""} onChange={(e) => set("cpf", e.target.value)} disabled={isView} /></Field>
+          <Field label="CPF" required>
+            <Input
+              value={data.cpf || ""}
+              onChange={(e) => onChangeCpf(e.target.value)}
+              disabled={isView}
+              inputMode="numeric"
+              maxLength={14}
+              placeholder="000.000.000-00"
+              className={erros.cpf ? "border-destructive focus-visible:ring-destructive" : ""}
+            />
+            {erros.cpf && <div className="text-[11px] text-destructive mt-1">{erros.cpf}</div>}
+            {avisoReativar && !erros.cpf && (
+              <div className="text-[11px] text-amber-700 mt-1">
+                Existe colaborador desligado com este CPF ({avisoReativar.nome}). Considere reativar o cadastro antigo.
+              </div>
+            )}
+          </Field>
           <Field label="Telefone"><Input value={data.telefone || ""} onChange={(e) => set("telefone", e.target.value)} disabled={isView} /></Field>
 
           <Field label="Usa PWA pessoal?" required hint="Se 'Não', bate ponto só pelo Kiosk (sem precisar de login)">
@@ -265,7 +340,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{isView ? "Fechar" : "Cancelar"}</Button>
-          {!isView && <Button onClick={salvar} disabled={saving || !data.nome}>{saving ? "..." : "Salvar"}</Button>}
+          {!isView && <Button onClick={salvar} disabled={saving}>{saving ? "..." : "Salvar"}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

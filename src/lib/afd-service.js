@@ -11,6 +11,9 @@
  */
 
 import { base44 } from "@/api/base44Client";
+import { verificarPendenciasCadastraisPeriodo } from "./afd-pre-check";
+import { isCpfValido, limparCpf } from "./cpf-validator";
+import { registrarLog } from "./auditoria-service";
 
 const VERSAO_LAYOUT = "PRT-671-LIKE-V1";
 
@@ -95,8 +98,34 @@ function fmtDataHora(iso) {
  *  - filtro_loja: "batida" (default) → filtra pela loja onde o ponto foi batido
  *                 "principal"          → filtra pela loja principal do colaborador
  *  - se loja_id vazio, exporta TODAS as lojas (NSR global)
+ *
+ * Modo:
+ *  - modo="oficial" (default) → BLOQUEIA se houver colaborador sem nome/CPF válido.
+ *                                Retorna { bloqueado: true, pendencias }.
+ *  - modo="rascunho"           → permite gerar mesmo com pendências, marca header
+ *                                como RASCUNHO e substitui CPFs ausentes/inválidos
+ *                                por placeholder "00000000000" SOMENTE no rascunho
+ *                                (no oficial isso nunca acontece, pois é bloqueado).
  */
-export async function gerarAFD({ loja_id, dataInicio, dataFim, filtro_loja = "batida" }) {
+export async function gerarAFD({
+  loja_id, dataInicio, dataFim, filtro_loja = "batida", modo = "oficial",
+}) {
+  // 1) Pré-checagem cadastral (Nome + CPF)
+  const preCheck = await verificarPendenciasCadastraisPeriodo({
+    dataInicio, dataFim, loja_id, filtro_loja,
+  });
+  if (!preCheck.ok && modo === "oficial") {
+    try {
+      await registrarLog({
+        modulo: "rh", acao: "bloquear", entidade: "RegistroPonto",
+        descricao: `Exportação AFD oficial bloqueada: ${preCheck.pendencias.length} pendência(s) cadastral(is)`,
+        origem: "humano", loja_id: loja_id || undefined,
+        valor_novo: { dataInicio, dataFim, filtro_loja, pendencias: preCheck.pendencias.length },
+        critico: true,
+      });
+    } catch { /* */ }
+    return { bloqueado: true, pendencias: preCheck.pendencias };
+  }
   // Sempre buscamos todos e filtramos em memória — assim conseguimos suportar
   // tanto loja_batida_id quanto loja_colaborador_id sem múltiplas queries.
   const todos = await base44.entities.RegistroPonto.filter({}, "nsr", 50000);
@@ -130,14 +159,20 @@ export async function gerarAFD({ loja_id, dataInicio, dataFim, filtro_loja = "ba
   const linhas = [];
   const geracao = new Date();
   const { data: dGer, hora: hGer } = fmtDataHora(geracao.toISOString());
+  const tag = modo === "rascunho" ? "RASCUNHO" : "OFICIAL";
   linhas.push(
-    `HEADER|${VERSAO_LAYOUT}|${loja?.nome || "TODAS"}|${loja?.codigo || ""}|GERADO=${dGer} ${hGer}|TOTAL=${registros.length}`
+    `HEADER|${VERSAO_LAYOUT}|${tag}|${loja?.nome || "TODAS"}|${loja?.codigo || ""}|GERADO=${dGer} ${hGer}|TOTAL=${registros.length}`
   );
 
   for (const r of registros) {
     const c = colabMap[r.colaborador_id];
+    const cpfDigitos = limparCpf(c?.cpf);
+    const cpfValido = isCpfValido(cpfDigitos);
+    // OFICIAL: garantido pelo pre-check — sempre temos CPF válido aqui.
+    // RASCUNHO: pode ter CPF ausente/inválido → preenche com "00000000000"
+    //           apenas para diagnóstico interno (nunca enviar ao contador).
+    const cpf = cpfValido ? cpfDigitos : (modo === "rascunho" ? "00000000000" : pad(cpfDigitos, 11, "0", true));
     const { data, hora } = fmtDataHora(r.horario);
-    const cpf = pad((c?.cpf || "").replace(/\D/g, ""), 11, "0", true);
     linhas.push(
       [
         pad(r.nsr, 9, "0", true),
@@ -156,11 +191,14 @@ export async function gerarAFD({ loja_id, dataInicio, dataFim, filtro_loja = "ba
   const hashFinal = await sha256Hex(conteudo);
   linhas.push(`TRAILER|HASH_TOTAL=${hashFinal}`);
 
+  const sufixo = modo === "rascunho" ? "_RASCUNHO" : "";
   return {
     conteudo: linhas.join("\n"),
     total: registros.length,
     hash_total: hashFinal,
-    nome_arquivo: `AFD_${loja?.codigo || "TODAS"}_${dGer}.txt`,
+    modo,
+    pendencias: preCheck.pendencias,
+    nome_arquivo: `AFD_${loja?.codigo || "TODAS"}_${dGer}${sufixo}.txt`,
   };
 }
 
