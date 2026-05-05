@@ -38,7 +38,8 @@ export const CADASTROS = {
     icon: Users,
     hasLoja: "single",
     lojaField: "loja_id",
-    readOnly: true, // Usuários são gerenciados via convite. Aqui apenas listagem/edição de role e loja.
+    noCreate: true, // Novos usuários só por convite (User entity)
+    canDelete: true,
     columns: [
       { key: "full_name", label: "Nome" },
       { key: "email", label: "Email" },

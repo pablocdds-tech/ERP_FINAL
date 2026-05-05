@@ -10,8 +10,13 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, MoreVertical, Eye, Pencil, Power, ChevronLeft } from "lucide-react";
+import { Plus, Search, MoreVertical, Eye, Pencil, Power, Trash2, ChevronLeft } from "lucide-react";
+import { toast } from "sonner";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "./StatusBadge";
 import CadastroDialog from "./CadastroDialog";
@@ -33,6 +38,8 @@ export default function CadastroPage({ config }) {
   const [statusFilter, setStatusFilter] = useState("ativos");
   const [lojaFilter, setLojaFilter] = useState("todas");
   const [dialog, setDialog] = useState({ open: false, mode: "create", record: null });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +92,21 @@ export default function CadastroPage({ config }) {
     load();
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await Entity.delete(deleteTarget.id);
+      toast.success(`${config.singular} excluído.`);
+      setDeleteTarget(null);
+      load();
+    } catch (e) {
+      toast.error(`Não foi possível excluir: ${e?.message || e}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const openDialog = (mode, record = null) =>
     setDialog({ open: true, mode, record });
   const closeDialog = () => setDialog((d) => ({ ...d, open: false }));
@@ -114,7 +136,7 @@ export default function CadastroPage({ config }) {
         title={config.title}
         description={`Gerencie ${config.title.toLowerCase()} do sistema.`}
         actions={
-          !config.readOnly && (
+          !config.readOnly && !config.noCreate && (
             <Button onClick={() => openDialog("create")}>
               <Plus className="w-4 h-4 mr-1.5" />
               Novo
@@ -209,11 +231,11 @@ export default function CadastroPage({ config }) {
                           <DropdownMenuItem onClick={() => openDialog("view", it)}>
                             <Eye className="w-4 h-4 mr-2" /> Visualizar
                           </DropdownMenuItem>
-                          {!config.readOnly && (
+                          <DropdownMenuItem onClick={() => openDialog("edit", it)}>
+                            <Pencil className="w-4 h-4 mr-2" /> Editar
+                          </DropdownMenuItem>
+                          {!config.readOnly && !config.noCreate && (
                             <>
-                              <DropdownMenuItem onClick={() => openDialog("edit", it)}>
-                                <Pencil className="w-4 h-4 mr-2" /> Editar
-                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => toggleAtivo(it)}>
                                 <Power className="w-4 h-4 mr-2" />
@@ -221,10 +243,16 @@ export default function CadastroPage({ config }) {
                               </DropdownMenuItem>
                             </>
                           )}
-                          {config.readOnly && (
-                            <DropdownMenuItem onClick={() => openDialog("edit", it)}>
-                              <Pencil className="w-4 h-4 mr-2" /> Editar
-                            </DropdownMenuItem>
+                          {config.canDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setDeleteTarget(it)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                              </DropdownMenuItem>
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -249,6 +277,30 @@ export default function CadastroPage({ config }) {
         onClose={closeDialog}
         onSaved={load}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {config.singular.toLowerCase()}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.full_name || deleteTarget?.nome || deleteTarget?.email || ""}
+              {config.entity === "User" && (
+                <> — esta ação remove o acesso da pessoa ao sistema. Não é possível desfazer.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

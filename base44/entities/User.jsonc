@@ -13,6 +13,24 @@
       "default": "funcionario",
       "description": "Perfil de acesso no sistema"
     },
+    "perfil_id": {
+      "type": "string",
+      "description": "ID do Perfil cadastrado que define as permiss\u00f5es base"
+    },
+    "permissoes_extras": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "M\u00f3dulos extras liberados al\u00e9m do que o Perfil concede"
+    },
+    "permissoes_restritas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "M\u00f3dulos bloqueados mesmo que o Perfil os conceda"
+    },
     "loja_id": {
       "type": "string",
       "description": "Loja principal vinculada ao usu\u00e1rio"
