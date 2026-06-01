@@ -45,5 +45,13 @@
       "type": "boolean",
       "default": true
     }
-  }
+  },
+  "required": [
+    "perfil_id",
+    "permissoes_extras",
+    "permissoes_restritas",
+    "loja_id",
+    "cargo",
+    "telefone"
+  ]
 }

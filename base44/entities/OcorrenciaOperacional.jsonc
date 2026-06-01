@@ -1,0 +1,97 @@
+{
+  "name": "OcorrenciaOperacional",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "descricao": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "operacional",
+        "qualidade",
+        "seguranca",
+        "atendimento",
+        "manutencao",
+        "auditoria",
+        "outro"
+      ],
+      "default": "operacional"
+    },
+    "severidade": {
+      "type": "string",
+      "enum": [
+        "baixa",
+        "media",
+        "alta",
+        "critica"
+      ],
+      "default": "media"
+    },
+    "origem_tipo": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "checklist",
+        "chamado",
+        "auditoria"
+      ],
+      "default": "manual"
+    },
+    "origem_id": {
+      "type": "string",
+      "description": "ID da entidade que gerou (ex: ChecklistExecucao)"
+    },
+    "responsavel_id": {
+      "type": "string",
+      "description": "Colaborador atribu\u00eddo pelo gestor"
+    },
+    "abertura_colaborador_id": {
+      "type": "string"
+    },
+    "fotos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "aberta",
+        "em_analise",
+        "em_andamento",
+        "resolvida",
+        "cancelada"
+      ],
+      "default": "aberta"
+    },
+    "resolucao": {
+      "type": "string"
+    },
+    "resolvida_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolvida_por": {
+      "type": "string"
+    },
+    "tarefa_id": {
+      "type": "string",
+      "description": "Tarefa gerada a partir desta ocorr\u00eancia"
+    },
+    "ordem_servico_id": {
+      "type": "string",
+      "description": "OS gerada a partir desta ocorr\u00eancia"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Equipamento",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "codigo": {
+      "type": "string",
+      "description": "C\u00f3digo interno / patrim\u00f4nio"
+    },
+    "tipo": {
+      "type": "string",
+      "description": "Ex: Forno, Geladeira, Ar-condicionado, Computador"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "fabricante": {
+      "type": "string"
+    },
+    "modelo": {
+      "type": "string"
+    },
+    "numero_serie": {
+      "type": "string"
+    },
+    "data_aquisicao": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor_aquisicao": {
+      "type": "number"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "garantia_ate": {
+      "type": "string",
+      "format": "date"
+    },
+    "ultima_manutencao": {
+      "type": "string",
+      "format": "date"
+    },
+    "proxima_manutencao": {
+      "type": "string",
+      "format": "date"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "foto_url": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

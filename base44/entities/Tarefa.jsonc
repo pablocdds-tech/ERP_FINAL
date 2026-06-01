@@ -46,6 +46,20 @@
       "type": "string",
       "format": "date-time"
     },
+    "origem_tipo": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "chamado",
+        "ocorrencia",
+        "auditoria",
+        "checklist"
+      ],
+      "default": "manual"
+    },
+    "origem_id": {
+      "type": "string"
+    },
     "observacoes": {
       "type": "string"
     }

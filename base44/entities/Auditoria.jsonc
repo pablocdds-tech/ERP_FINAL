@@ -1,0 +1,64 @@
+{
+  "name": "Auditoria",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "auditor_email": {
+      "type": "string"
+    },
+    "data": {
+      "type": "string",
+      "format": "date"
+    },
+    "checklist_id": {
+      "type": "string",
+      "description": "Checklist usado como base"
+    },
+    "checklist_execucao_id": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number",
+      "description": "0 a 100"
+    },
+    "itens_total": {
+      "type": "number"
+    },
+    "itens_ok": {
+      "type": "number"
+    },
+    "itens_falha": {
+      "type": "number"
+    },
+    "ocorrencias_geradas": {
+      "type": "number",
+      "default": 0
+    },
+    "fotos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "em_andamento",
+        "concluida",
+        "revisao"
+      ],
+      "default": "em_andamento"
+    }
+  },
+  "required": [
+    "titulo"
+  ]
+}

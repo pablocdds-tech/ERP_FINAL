@@ -36,6 +36,10 @@
       ],
       "default": "media"
     },
+    "equipamento_id": {
+      "type": "string",
+      "description": "Equipamento relacionado, se aplic\u00e1vel"
+    },
     "fotos": {
       "type": "array",
       "items": {
@@ -61,6 +65,17 @@
     "resolvido_em": {
       "type": "string",
       "format": "date-time"
+    },
+    "tarefa_id": {
+      "type": "string",
+      "description": "Tarefa criada a partir deste chamado"
+    },
+    "ordem_servico_id": {
+      "type": "string",
+      "description": "OS criada a partir deste chamado"
+    },
+    "ocorrencia_id": {
+      "type": "string"
     }
   },
   "required": [

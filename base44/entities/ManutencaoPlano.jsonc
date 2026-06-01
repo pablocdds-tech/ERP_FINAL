@@ -1,0 +1,59 @@
+{
+  "name": "ManutencaoPlano",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "equipamento_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "frequencia": {
+      "type": "string",
+      "enum": [
+        "semanal",
+        "quinzenal",
+        "mensal",
+        "bimestral",
+        "trimestral",
+        "semestral",
+        "anual"
+      ],
+      "default": "mensal"
+    },
+    "intervalo_dias": {
+      "type": "number",
+      "description": "Sobrescreve frequ\u00eancia se preenchido"
+    },
+    "proxima_execucao": {
+      "type": "string",
+      "format": "date"
+    },
+    "ultima_execucao": {
+      "type": "string",
+      "format": "date"
+    },
+    "responsavel_id": {
+      "type": "string"
+    },
+    "fornecedor_id": {
+      "type": "string"
+    },
+    "custo_estimado": {
+      "type": "number"
+    },
+    "instrucoes": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

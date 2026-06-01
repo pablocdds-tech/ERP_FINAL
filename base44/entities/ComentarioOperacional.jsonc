@@ -1,0 +1,50 @@
+{
+  "name": "ComentarioOperacional",
+  "type": "object",
+  "properties": {
+    "entidade": {
+      "type": "string",
+      "enum": [
+        "Tarefa",
+        "Chamado",
+        "OcorrenciaOperacional",
+        "OrdemServico",
+        "ChecklistExecucao"
+      ],
+      "description": "Tipo da entidade alvo"
+    },
+    "entidade_id": {
+      "type": "string"
+    },
+    "autor_email": {
+      "type": "string"
+    },
+    "autor_nome": {
+      "type": "string"
+    },
+    "texto": {
+      "type": "string"
+    },
+    "fotos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "comentario",
+        "status",
+        "atribuicao",
+        "sistema"
+      ],
+      "default": "comentario"
+    }
+  },
+  "required": [
+    "entidade",
+    "entidade_id",
+    "texto"
+  ]
+}
