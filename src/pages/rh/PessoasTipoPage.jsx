@@ -22,6 +22,14 @@ import FechamentoMensal from "./FechamentoMensal";
 import PontoDoDia from "./PontoDoDia";
 import PontosPendentes from "./PontosPendentes";
 import TratamentoPonto from "./TratamentoPonto";
+import PainelIndicadores from "./PainelIndicadores";
+import Justificativas from "./Justificativas";
+import CalendarioFolgas from "./CalendarioFolgas";
+import BancoHorasGestao from "./BancoHorasGestao";
+import RelCartaoPonto from "./RelCartaoPonto";
+import RelFaltasAtrasos from "./RelFaltasAtrasos";
+import RelHorasExtras from "./RelHorasExtras";
+import RelTotalizadoresFolha from "./RelTotalizadoresFolha";
 
 const PAGES = {
   colaboradores: Colaboradores,
@@ -46,6 +54,14 @@ const PAGES = {
   tarefas: Tarefas,
   checklists: Checklists,
   chamados: Chamados,
+  indicadores: PainelIndicadores,
+  justificativas: Justificativas,
+  folgas: CalendarioFolgas,
+  "banco-horas-gestao": BancoHorasGestao,
+  "rel-cartao-ponto": RelCartaoPonto,
+  "rel-faltas-atrasos": RelFaltasAtrasos,
+  "rel-horas-extras": RelHorasExtras,
+  "rel-totalizadores-folha": RelTotalizadoresFolha,
 };
 
 export default function PessoasTipoPage() {
