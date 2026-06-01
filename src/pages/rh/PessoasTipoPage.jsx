@@ -1,71 +1,97 @@
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
+
+// Cadastros básicos
 import Colaboradores from "./Colaboradores";
-import Cargos from "./Cargos";
-import Departamentos from "./Departamentos";
-import Times from "./Times";
-import Jornadas from "./Jornadas";
-import Turnos from "./Turnos";
-import Feriados from "./Feriados";
-import TiposAbono from "./TiposAbono";
-import Escalas from "./Escalas";
-import EspelhoPonto from "./EspelhoPonto";
 import Solicitacoes from "./Solicitacoes";
 import Documentos from "./Documentos";
 import Treinamentos from "./Treinamentos";
 import Tarefas from "./Tarefas";
 import Checklists from "./Checklists";
 import Chamados from "./Chamados";
-import ConfiguracaoPonto from "./ConfiguracaoPonto";
 import KioskDispositivos from "./KioskDispositivos";
-import FechamentoMensal from "./FechamentoMensal";
-import PontoDoDia from "./PontoDoDia";
-import PontosPendentes from "./PontosPendentes";
-import TratamentoPonto from "./TratamentoPonto";
-import PainelIndicadores from "./PainelIndicadores";
-import Justificativas from "./Justificativas";
-import CalendarioFolgas from "./CalendarioFolgas";
-import BancoHorasGestao from "./BancoHorasGestao";
-import RelCartaoPonto from "./RelCartaoPonto";
-import RelFaltasAtrasos from "./RelFaltasAtrasos";
-import RelHorasExtras from "./RelHorasExtras";
-import RelTotalizadoresFolha from "./RelTotalizadoresFolha";
 
+// Hubs (telas com abas)
+import HubPainel from "./HubPainel";
+import HubTratamento from "./HubTratamento";
+import HubEspelho from "./HubEspelho";
+import HubCalendario from "./HubCalendario";
+import HubJornadas from "./HubJornadas";
+import HubEstrutura from "./HubEstrutura";
+import HubRelatorios from "./HubRelatorios";
+import HubConfiguracoes from "./HubConfiguracoes";
+
+// Fechamento (não agrupado por enquanto)
+import FechamentoMensal from "./FechamentoMensal";
+
+/**
+ * Mapa enxuto: hubs + cadastros que ficam soltos.
+ * Telas antigas continuam acessíveis via ALIASES (redirect com aba pré-selecionada).
+ */
 const PAGES = {
-  colaboradores: Colaboradores,
-  cargos: Cargos,
-  departamentos: Departamentos,
-  times: Times,
-  jornadas: Jornadas,
-  turnos: Turnos,
-  feriados: Feriados,
-  abonos: TiposAbono,
-  escalas: Escalas,
-  ponto: EspelhoPonto,
-  "configuracao-ponto": ConfiguracaoPonto,
-  "kiosk-dispositivos": KioskDispositivos,
-  fechamento: FechamentoMensal,
-  "ponto-do-dia": PontoDoDia,
-  pendentes: PontosPendentes,
-  tratamento: TratamentoPonto,
+  // Operação diária
+  painel: HubPainel,
+  tratamento: HubTratamento,
+  espelho: HubEspelho,
   solicitacoes: Solicitacoes,
+
+  // Pessoas e Estrutura
+  colaboradores: Colaboradores,
+  estrutura: HubEstrutura,
+
+  // Programação do Ponto
+  calendario: HubCalendario,
+  "jornadas-turnos": HubJornadas,
+  configuracoes: HubConfiguracoes,
+
+  // Fechamento e Relatórios
+  fechamento: FechamentoMensal,
+  relatorios: HubRelatorios,
+
+  // RH Geral
   documentos: Documentos,
   treinamentos: Treinamentos,
+  chamados: Chamados,
   tarefas: Tarefas,
   checklists: Checklists,
-  chamados: Chamados,
-  indicadores: PainelIndicadores,
-  justificativas: Justificativas,
-  folgas: CalendarioFolgas,
-  "banco-horas-gestao": BancoHorasGestao,
-  "rel-cartao-ponto": RelCartaoPonto,
-  "rel-faltas-atrasos": RelFaltasAtrasos,
-  "rel-horas-extras": RelHorasExtras,
-  "rel-totalizadores-folha": RelTotalizadoresFolha,
+  "kiosk-dispositivos": KioskDispositivos,
+};
+
+/** Tipo antigo → novo destino (rota + aba). */
+const ALIASES = {
+  // Painel
+  indicadores: "/admin/pessoas/painel?tab=indicadores",
+  "ponto-do-dia": "/admin/pessoas/painel?tab=hoje",
+  // Tratamento
+  pendentes: "/admin/pessoas/tratamento?tab=pendentes",
+  justificativas: "/admin/pessoas/tratamento?tab=justificativas",
+  // Espelho
+  ponto: "/admin/pessoas/espelho?tab=espelho",
+  "banco-horas-gestao": "/admin/pessoas/espelho?tab=banco-horas",
+  // Calendário
+  escalas: "/admin/pessoas/calendario?tab=escalas",
+  folgas: "/admin/pessoas/calendario?tab=folgas",
+  feriados: "/admin/pessoas/calendario?tab=feriados",
+  // Jornadas
+  jornadas: "/admin/pessoas/jornadas-turnos?tab=jornadas",
+  turnos: "/admin/pessoas/jornadas-turnos?tab=turnos",
+  // Estrutura
+  departamentos: "/admin/pessoas/estrutura?tab=departamentos",
+  times: "/admin/pessoas/estrutura?tab=times",
+  cargos: "/admin/pessoas/estrutura?tab=cargos",
+  // Configurações
+  "configuracao-ponto": "/admin/pessoas/configuracoes?tab=regras",
+  abonos: "/admin/pessoas/configuracoes?tab=abonos",
+  // Relatórios
+  "rel-cartao-ponto": "/admin/pessoas/relatorios?tab=cartao",
+  "rel-faltas-atrasos": "/admin/pessoas/relatorios?tab=faltas",
+  "rel-horas-extras": "/admin/pessoas/relatorios?tab=he",
+  "rel-totalizadores-folha": "/admin/pessoas/relatorios?tab=folha",
 };
 
 export default function PessoasTipoPage() {
   const { tipo } = useParams();
+  if (ALIASES[tipo]) return <Navigate to={ALIASES[tipo]} replace />;
   const Comp = PAGES[tipo];
   if (!Comp) return <PageNotFound />;
   return <Comp />;
