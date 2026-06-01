@@ -63,9 +63,9 @@ export const RH_GRUPOS = [
     descricao: "Operação diária do gestor — apenas exceções.",
     icon: ClipboardList,
     itens: [
-      item({ tipo: "ponto-do-dia", nome: "Ponto do Dia", descricao: "Quem está presente, ausente, atrasado.", icon: Clock, disponivel: false }),
-      item({ tipo: "tratamento", nome: "Tratamento de Ponto", descricao: "Ajustes, abonos e marcações pendentes.", icon: ListChecks, disponivel: false }),
-      item({ tipo: "pendentes", nome: "Pontos Pendentes de Revisão", descricao: "Exceções: PIN, baixa confiança, offline.", icon: AlertTriangle, disponivel: false }),
+      item({ tipo: "ponto-do-dia", nome: "Ponto do Dia", descricao: "Quem está presente, ausente, atrasado.", icon: Clock }),
+      item({ tipo: "tratamento", nome: "Tratamento de Ponto", descricao: "Abonos e justificativas para faltas e atrasos.", icon: ListChecks }),
+      item({ tipo: "pendentes", nome: "Pontos Pendentes de Revisão", descricao: "Exceções: PIN, baixa confiança, offline.", icon: AlertTriangle }),
       item({ tipo: "solicitacoes", nome: "Solicitações de Ajuste", descricao: "Folgas, trocas, ajustes e justificativas.", icon: FileSignature }),
       item({ tipo: "justificativas", nome: "Justificativas e Atestados", descricao: "Atestados, abonos e documentos.", icon: FilePlus2, disponivel: false }),
       item({ tipo: "folgas", nome: "Calendário de Folgas", descricao: "Folgas, férias e ausências.", icon: CalendarDays, disponivel: false }),

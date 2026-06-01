@@ -19,6 +19,9 @@ import Chamados from "./Chamados";
 import ConfiguracaoPonto from "./ConfiguracaoPonto";
 import KioskDispositivos from "./KioskDispositivos";
 import FechamentoMensal from "./FechamentoMensal";
+import PontoDoDia from "./PontoDoDia";
+import PontosPendentes from "./PontosPendentes";
+import TratamentoPonto from "./TratamentoPonto";
 
 const PAGES = {
   colaboradores: Colaboradores,
@@ -34,6 +37,9 @@ const PAGES = {
   "configuracao-ponto": ConfiguracaoPonto,
   "kiosk-dispositivos": KioskDispositivos,
   fechamento: FechamentoMensal,
+  "ponto-do-dia": PontoDoDia,
+  pendentes: PontosPendentes,
+  tratamento: TratamentoPonto,
   solicitacoes: Solicitacoes,
   documentos: Documentos,
   treinamentos: Treinamentos,
