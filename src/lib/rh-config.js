@@ -74,7 +74,7 @@ export const RH_GRUPOS = [
       item({ tipo: "ajustes-massa", nome: "Ajustes em Massa", descricao: "Correções amplas com auditoria.", icon: CheckSquare, disponivel: false }),
       item({ tipo: "banco-horas-gestao", nome: "Saldo de Banco de Horas", descricao: "Saldos, compensações e validades por colaborador.", icon: Timer, disponivel: false }),
       item({ tipo: "pausas", nome: "Pausas e Intervalos", descricao: "Conformidade de intervalo realizado.", icon: Coffee, disponivel: false }),
-      item({ tipo: "fechamento", nome: "Fechamento Mensal", descricao: "Validar período e enviar ao contador.", icon: BookOpenCheck, disponivel: false }),
+      item({ tipo: "fechamento", nome: "Fechamento Mensal", descricao: "Travar período e gerar totalizadores oficiais por colaborador.", icon: BookOpenCheck }),
     ],
   },
   {

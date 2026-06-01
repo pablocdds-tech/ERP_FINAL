@@ -18,6 +18,7 @@ import Checklists from "./Checklists";
 import Chamados from "./Chamados";
 import ConfiguracaoPonto from "./ConfiguracaoPonto";
 import KioskDispositivos from "./KioskDispositivos";
+import FechamentoMensal from "./FechamentoMensal";
 
 const PAGES = {
   colaboradores: Colaboradores,
@@ -32,6 +33,7 @@ const PAGES = {
   ponto: EspelhoPonto,
   "configuracao-ponto": ConfiguracaoPonto,
   "kiosk-dispositivos": KioskDispositivos,
+  fechamento: FechamentoMensal,
   solicitacoes: Solicitacoes,
   documentos: Documentos,
   treinamentos: Treinamentos,
