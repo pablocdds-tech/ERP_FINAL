@@ -16,6 +16,7 @@ const empty = () => ({
   nome: "", cpf: "", email: "", telefone: "",
   cargo_id: "", loja_id: "",
   departamento_id: "", time_id: "", centro_custo_id: "",
+  jornada_id: "",
   data_admissao: "",
   perfil_pwa: "funcionario", usa_pwa: false,
   pode_bater_ponto_pelo_pwa: false,
@@ -31,6 +32,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
   const [departamentos, setDepartamentos] = useState([]);
   const [times, setTimes] = useState([]);
   const [centrosCusto, setCentrosCusto] = useState([]);
+  const [jornadas, setJornadas] = useState([]);
   const [saving, setSaving] = useState(false);
   const [erros, setErros] = useState({});
   const [avisoReativar, setAvisoReativar] = useState(null);
@@ -52,6 +54,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
       base44.entities.Departamento.filter({ ativo: true }).then(setDepartamentos).catch(() => setDepartamentos([]));
       base44.entities.Time.filter({ ativo: true }).then(setTimes).catch(() => setTimes([]));
       base44.entities.CentroCusto.filter({ ativo: true }).then(setCentrosCusto).catch(() => setCentrosCusto([]));
+      base44.entities.JornadaTrabalho.filter({ ativo: true }).then(setJornadas).catch(() => setJornadas([]));
     }
   }, [open, record]);
 
@@ -251,6 +254,15 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
                 {centrosCusto
                   .filter((cc) => !data.loja_id || !cc.loja_id || cc.loja_id === data.loja_id)
                   .map((cc) => <SelectItem key={cc.id} value={cc.id}>{cc.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Jornada de trabalho" hint="Define carga diária, tolerâncias e horários esperados no espelho de ponto.">
+            <Select value={data.jornada_id || "__none__"} onValueChange={(v) => set("jornada_id", v === "__none__" ? "" : v)} disabled={isView}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Nenhuma —</SelectItem>
+                {jornadas.map((j) => <SelectItem key={j.id} value={j.id}>{j.nome}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>

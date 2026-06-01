@@ -80,10 +80,14 @@ export default function EspelhoPonto() {
   // Motor de cálculo do CP4: gera resumo por dia + totalizador do período.
   // Lê jornada/feriado/config das configurações atuais (não cria nada).
   const jornadaPadrao = useMemo(() => {
-    // Por enquanto usa a primeira jornada ativa como padrão da empresa.
-    // Quando houver vínculo Colaborador↔Jornada, basta trocar aqui.
+    // 1) Usa a jornada vinculada ao colaborador, se houver
+    // 2) Senão, cai na primeira jornada ativa como fallback da empresa
+    if (colaboradorAtual?.jornada_id) {
+      const j = jornadas.find((x) => x.id === colaboradorAtual.jornada_id);
+      if (j) return j;
+    }
     return jornadas[0] || null;
-  }, [jornadas]);
+  }, [jornadas, colaboradorAtual]);
 
   const feriadoPorData = useMemo(() => {
     const map = {};
