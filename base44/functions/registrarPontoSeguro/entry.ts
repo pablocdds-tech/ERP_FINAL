@@ -26,6 +26,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const ALG = 'sha256-v1';
 const BLOQUEIO_REBATIDA_DEFAULT_SEG = 60;
+const TZ_EMPRESA = 'America/Sao_Paulo';
+
+// Extrai a data (AAAA-MM-DD) no fuso da empresa a partir de um instante ISO/UTC.
+// Necessário porque uma batida às 22h (BRT) é "amanhã" em UTC — sem isso a
+// batida cairia no dia errado e sumiria da tela "Ponto do Dia".
+function dataLocalEmpresa(isoString) {
+  const d = new Date(isoString);
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ_EMPRESA, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(d); // en-CA → "AAAA-MM-DD"
+  return partes;
+}
 
 async function sha256Hex(str) {
   const buf = new TextEncoder().encode(str);
@@ -287,7 +299,7 @@ Deno.serve(async (req) => {
 
   // 10) NSR (global) + hash
   const horario = offline_ts || new Date().toISOString();
-  const data = horario.slice(0, 10);
+  const data = dataLocalEmpresa(horario);
   const { nsr, hash_anterior } = await proximoNsrEHash(sr);
 
   // Multi-loja: snapshot da loja principal do colaborador e da loja do dispositivo.
