@@ -10,8 +10,8 @@ const AGENT_CHAVE = "executor_erp";
 const AGENT_NOME = "Executor ERP";
 
 // Cria um ComandoExecutor a partir do comando livre, já com o plano interpretado.
-export async function criarComando({ comando, modelo, usuario }) {
-  const plano = await interpretarComando({ comando, modelo });
+export async function criarComando({ comando, modelo, usuario, files }) {
+  const plano = await interpretarComando({ comando, modelo, files });
   const cls = classificar(plano);
 
   let status;
@@ -40,6 +40,7 @@ export async function criarComando({ comando, modelo, usuario }) {
 
   const registro = await base44.entities.ComandoExecutor.create({
     comando_original: comando,
+    anexos_urls: Array.isArray(files) ? files : undefined,
     usuario_email: usuario?.email,
     usuario_nome: usuario?.full_name,
     perfil_usuario: getPerfilChave(usuario),

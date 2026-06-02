@@ -6,6 +6,13 @@
       "type": "string",
       "description": "Texto exato digitado pelo usu\u00e1rio"
     },
+    "anexos_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs de imagens/documentos anexados ao comando (cupons fiscais, notas, comprovantes)"
+    },
     "usuario_email": {
       "type": "string"
     },

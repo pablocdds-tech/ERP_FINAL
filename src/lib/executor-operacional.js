@@ -371,7 +371,7 @@ function normalizarIntencao(raw, dados) {
   return k;
 }
 
-export async function interpretarComando({ comando, modelo }) {
+export async function interpretarComando({ comando, modelo, files }) {
   const [lojas, fornecedores, categorias, centrosCusto, unidades] = await Promise.all([
     base44.entities.Loja.list("-created_date", 200).catch(() => []),
     base44.entities.Fornecedor.list("-created_date", 200).catch(() => []),
@@ -381,11 +381,16 @@ export async function interpretarComando({ comando, modelo }) {
   ]);
 
   const systemContext = buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades });
+  const temAnexos = Array.isArray(files) && files.length > 0;
+  const promptComando = temAnexos
+    ? `${comando ? `Comando: "${comando}"\n\n` : ""}Foram anexadas ${files.length} imagem(ns) de documento(s) (cupom fiscal / nota / comprovante de compra). Leia o documento, extraia fornecedor, valor total, data e itens, e monte o plano (ex.: criar_conta_pagar ou criar_compra_com_itens).`
+    : `Comando: "${comando}"`;
   const result = await askAI({
-    prompt: `Comando: "${comando}"`,
+    prompt: promptComando,
     model: modelo,
     schema: SCHEMA_PLANO,
     systemContext,
+    files: temAnexos ? files : undefined,
   });
   const data = result.data || {};
   const intencaoNormalizada = normalizarIntencao(data.intencao, data.dados);
