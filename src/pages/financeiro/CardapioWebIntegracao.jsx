@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Copy, RefreshCw, Plug, Save, ShieldCheck, ExternalLink } from "lucide-react";
 
-const vazio = { name: "Cardápio Web", store_id: "", external_store_code: "", base_url: "https://api.cardapioweb.com", active: true, api_token_mascarado: "", token_configurado: false };
+const vazio = { name: "Cardápio Web", store_id: "", external_store_code: "", base_url: "https://integracao.cardapioweb.com", active: true, api_token_mascarado: "", token_configurado: false };
 
 export default function CardapioWebIntegracao() {
   const [integracao, setIntegracao] = useState(vazio);
@@ -100,7 +100,7 @@ export default function CardapioWebIntegracao() {
           <label className="space-y-1 block"><span className="text-sm font-medium">Nome</span><Input value={integracao.name || ""} onChange={(e) => setIntegracao({ ...integracao, name: e.target.value })} /></label>
           <label className="space-y-1 block"><span className="text-sm font-medium">Loja/unidade do ERP</span><LojaSingleSelect value={integracao.store_id} onChange={(v) => setIntegracao({ ...integracao, store_id: v })} emptyLabel="Selecione" /></label>
           <label className="space-y-1 block"><span className="text-sm font-medium">Código da loja no Cardápio Web</span><Input value={integracao.external_store_code || ""} onChange={(e) => setIntegracao({ ...integracao, external_store_code: e.target.value })} /></label>
-          <label className="space-y-1 block"><span className="text-sm font-medium">Base URL da API</span><Input value={integracao.base_url || ""} onChange={(e) => setIntegracao({ ...integracao, base_url: e.target.value })} placeholder="https://api.cardapioweb.com" /></label>
+          <label className="space-y-1 block"><span className="text-sm font-medium">Base URL da API</span><Input value={integracao.base_url || ""} onChange={(e) => setIntegracao({ ...integracao, base_url: e.target.value })} placeholder="https://integracao.cardapioweb.com" /><span className="text-xs text-muted-foreground">Produção: https://integracao.cardapioweb.com • Sandbox: https://integracao.sandbox.cardapioweb.com</span></label>
           <label className="space-y-1 block">
             <span className="text-sm font-medium">Token da API</span>
             <Input type="password" autoComplete="off" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} placeholder={integracao.token_configurado ? (integracao.api_token_mascarado || "Token configurado") : "Cole o token da API"} />
@@ -118,8 +118,9 @@ export default function CardapioWebIntegracao() {
         </Card>
 
         <Card className="p-5 space-y-3">
-          <h3 className="text-sm font-semibold">Webhook</h3>
-          <p className="text-sm text-muted-foreground">Copie a URL abaixo e cadastre no painel do Cardápio Web em <strong>API de integração → Webhooks</strong>.</p>
+          <h3 className="text-sm font-semibold">Webhook <Badge variant="secondary" className="ml-1">Recomendado</Badge></h3>
+          <p className="text-sm text-muted-foreground">Método principal de recebimento de pedidos — em tempo real e sem limite de requisições. Copie a URL abaixo e cadastre no painel do Cardápio Web (<strong>Configurações → Integrações → API/Webhooks</strong>).</p>
+          <p className="text-xs text-muted-foreground">No ambiente <strong>Sandbox</strong>, a ativação do webhook deve ser solicitada por e-mail: <strong>integracao@cardapioweb.com</strong>.</p>
           <div className="flex gap-2">
             <Input readOnly value={webhookUrl || (integracao.id ? "Gerando..." : "Salve a integração para gerar a URL")} className="font-mono text-xs" />
             <Button variant="outline" onClick={copiar} disabled={!webhookUrl}><Copy className="w-4 h-4" /> Copiar</Button>
