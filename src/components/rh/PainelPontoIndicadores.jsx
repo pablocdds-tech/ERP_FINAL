@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { CheckCircle2, AlertTriangle, KeyRound, Eye, UserX, Clock, LogOut } from "lucide-react";
 import { diagnosticoDia } from "@/lib/rh-service";
+import { hojeLocal } from "@/lib/utils";
 
 /**
  * Painel de indicadores de Ponto Eletrônico (gestor).
@@ -27,7 +28,7 @@ import { diagnosticoDia } from "@/lib/rh-service";
  *   compact (bool) — versão reduzida para PWA
  */
 export default function PainelPontoIndicadores({ data, loja_id, compact = false }) {
-  const dataAlvo = data || new Date().toISOString().slice(0, 10);
+  const dataAlvo = data || hojeLocal();
   const [registros, setRegistros] = useState([]);
   const [escalas, setEscalas] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -55,12 +56,16 @@ export default function PainelPontoIndicadores({ data, loja_id, compact = false 
     const pin = ativos.filter((r) => r.fallback_pin).length;
     const baixaConf = ativos.filter((r) => r.ia_resultado === "baixa_confianca").length;
 
-    // Atrasados / sem saída / ausentes — usam escalas + registros
+    // Atrasados / sem saída / ausentes — usam escalas + registros.
+    // Deduplica por colaborador para não contar a mesma pessoa em escalas duplicadas.
     let atrasados = 0;
     let semSaida = 0;
     let ausentes = 0;
+    const vistos = new Set();
     for (const e of escalas) {
       if (e.tipo !== "normal") continue;
+      if (vistos.has(e.colaborador_id)) continue;
+      vistos.add(e.colaborador_id);
       const regsCol = ativos.filter((r) => r.colaborador_id === e.colaborador_id);
       const diag = diagnosticoDia(e, regsCol);
       if (diag.status === "atraso") atrasados++;

@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PageShell from "@/components/rh/PageShell";
 import PainelPontoIndicadores from "@/components/rh/PainelPontoIndicadores";
 import PontoDoDiaTabela from "@/components/rh/PontoDoDiaTabela";
+import { hojeLocal } from "@/lib/utils";
 
 export default function PontoDoDia() {
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeLocal();
   const [data, setData] = useState(hoje);
   const [lojaId, setLojaId] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("todos");
