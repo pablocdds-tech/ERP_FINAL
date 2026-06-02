@@ -13,10 +13,10 @@ function normalizeBaseUrl(url) {
   return String(url || '').replace(/\/+$/, '');
 }
 
-// Monta headers conforme a API exigir. Fácil de ajustar caso a doc difira.
+// Headers conforme a documentação do Cardápio Web: token no header X-API-KEY.
 function buildHeaders(token) {
   return {
-    'Authorization': `Bearer ${token}`,
+    'X-API-KEY': token,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -131,11 +131,12 @@ async function fetchOrdersFromApi(integration, token, since) {
   const url = `${base}/orders?store=${code}${sinceQs}`;
   const resp = await fetch(url, { headers: buildHeaders(token) });
   const text = await resp.text();
-  if (resp.status === 401 || resp.status === 403) throw new Error('Token inválido ou sem permissão.');
-  if (resp.status === 404) throw new Error('Endpoint não encontrado. Verifique a Base URL.');
-  if (!resp.ok) throw new Error(`Falha na conexão (HTTP ${resp.status}).`);
+  if (resp.status === 401) throw new Error('Token inválido ou não informado (HTTP 401).');
+  if (resp.status === 404) throw new Error(`Endpoint não encontrado (HTTP 404). URL chamada: ${url}`);
+  if (resp.status === 429) throw new Error('Limite de requisições atingido (HTTP 429). Tente novamente em instantes.');
+  if (!resp.ok) throw new Error(`Falha na conexão (HTTP ${resp.status}). Resposta: ${text.slice(0, 300)}`);
   let data;
-  try { data = JSON.parse(text); } catch { throw new Error('Resposta da API não é um JSON válido.'); }
+  try { data = JSON.parse(text); } catch { throw new Error(`Resposta da API não é um JSON válido (HTTP ${resp.status}). Conteúdo recebido: ${text.slice(0, 300)}`); }
   const orders = data.orders || data.pedidos || data.data || (Array.isArray(data) ? data : []);
   return { orders: Array.isArray(orders) ? orders : [], raw: text.slice(0, 20000) };
 }
