@@ -12,10 +12,11 @@ import Falhas from "./Falhas";
 import Aprovacoes from "./Aprovacoes";
 import Chat from "./Chat";
 import Comandos from "./Comandos";
+import ExecutorChat from "./ExecutorChat";
 
 const PAGES = {
   chat: Chat,
-  executor: Comandos,
+  executor: ExecutorChat,
   comandos: Comandos,
   agents: Agents,
   logs: Logs,

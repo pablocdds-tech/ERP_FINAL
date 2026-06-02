@@ -12,9 +12,11 @@ const TONE = {
 };
 
 export default function AgentPicker({ value, onChange }) {
+  // O Executor ERP tem tela própria (chat operacional). Aqui ficam só os agentes consultivos.
+  const agentes = AGENTS_CATALOG.filter((a) => !a.modoExecutor);
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-      {AGENTS_CATALOG.map((a) => {
+      {agentes.map((a) => {
         const Icon = a.icon;
         const selected = value === a.chave;
         return (

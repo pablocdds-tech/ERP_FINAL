@@ -177,6 +177,23 @@ const SCHEMA_PLANO = {
     modulo_afetado: { type: "string", enum: ["cadastros", "financeiro", "operacoes", "estoque", "compras", "ia", "outro"] },
     rascunho: { type: "boolean", description: "Sugerir criar como rascunho por faltar informação não crítica" },
     motivo_rascunho: { type: "string" },
+    // Leitura de documentos (cupom/nota/comprovante)
+    tipo_documento: {
+      type: "string",
+      enum: ["cupom_fiscal", "nota_fiscal", "recibo", "boleto", "comprovante_pagamento", "orcamento", "nao_identificado"],
+      description: "Quando houver imagem/documento anexado, classifique o tipo. Caso contrário deixe vazio.",
+    },
+    imagem_ilegivel: { type: "boolean", description: "true se a imagem anexada estiver ilegível/cortada/escura e não der para extrair com segurança." },
+    campos_incertos: {
+      type: "array",
+      items: { type: "string" },
+      description: "Lista de rótulos de campos que foram lidos com baixa confiança ou que precisam de confirmação humana (ex: 'Valor total', 'Fornecedor', 'Forma de pagamento').",
+    },
+    campos_ausentes: {
+      type: "array",
+      items: { type: "string" },
+      description: "Campos importantes que não foi possível identificar no documento/comando.",
+    },
     dados: {
       type: "object",
       properties: {
@@ -228,6 +245,10 @@ const SCHEMA_PLANO = {
         // Estoque
         movimentacao_quantidade: { type: "number" },
         movimentacao_tipo: { type: "string", enum: ["entrada", "saldo_inicial"] },
+
+        // Forma de pagamento (financeiro / documentos)
+        forma_pagamento: { type: "string", description: "Ex: dinheiro, pix, cartao_credito, cartao_debito, boleto, transferencia. Vazio se não identificado." },
+        data_documento_iso: { type: "string", description: "Data do documento (YYYY-MM-DD)" },
 
         // Compra
         compra_data_iso: { type: "string" },
@@ -316,7 +337,16 @@ REGRAS DE INTERPRETAÇÃO FINANCEIRA:
 REGRAS GERAIS:
 - plano_resumo: frase única começando com "Vou ...".
 - precisa_esclarecimento=true só quando faltar informação CRÍTICA não inferível (ex: "Cadastre uma conta de R$ 500" sem qualquer outra info).
-- Resolva loja_id, fornecedor_id, categoria_id, centro_custo_id usando os IDs exatos das listas acima sempre que possível.`;
+- Resolva loja_id, fornecedor_id, categoria_id, centro_custo_id usando os IDs exatos das listas acima sempre que possível.
+
+LEITURA DE DOCUMENTOS (cupom fiscal, nota, recibo, boleto, comprovante) — quando houver imagem/documento anexado:
+- Classifique tipo_documento (cupom_fiscal, nota_fiscal, recibo, boleto, comprovante_pagamento, orcamento ou nao_identificado).
+- Extraia: fornecedor_nome, valor (total), data_documento_iso, vencimento_iso (se houver), forma_pagamento, itens.
+- Para cupom/nota de compra de fornecedor, prefira intencao=criar_conta_pagar (lançamento em rascunho). Se houver itens detalhados de insumos/produtos, pode usar criar_compra_com_itens.
+- NUNCA invente dados. Se não conseguir ler um valor com segurança, NÃO preencha — em vez disso, adicione o rótulo do campo em campos_incertos ou campos_ausentes.
+- Use linguagem de sugestão: categoria/loja/fornecedor são SUGESTÕES quando vierem de leitura de imagem.
+- Se a imagem estiver ilegível, cortada ou muito escura para ler com segurança: imagem_ilegivel=true, precisa_esclarecimento=true e NÃO monte plano de execução.
+- Sempre marque rascunho=true para lançamentos vindos de documentos, salvo se o usuário pedir explicitamente para lançar direto.`;
 }
 
 // Normaliza intenções entregues pela IA para a chave canônica usada pelo executor.
@@ -404,7 +434,58 @@ export async function interpretarComando({ comando, modelo, files }) {
     rascunho: !!data.rascunho,
     motivo_rascunho: data.motivo_rascunho || "",
     dados_incompletos: !!data.dados_incompletos,
+    tipo_documento: data.tipo_documento || "",
+    imagem_ilegivel: !!data.imagem_ilegivel,
+    campos_incertos: Array.isArray(data.campos_incertos) ? data.campos_incertos : [],
+    campos_ausentes: Array.isArray(data.campos_ausentes) ? data.campos_ausentes : [],
     dados: data.dados || {},
+    modelo_usado: result.model,
+    raw: data,
+  };
+}
+
+// Aplica uma correção em linguagem natural a um plano já interpretado.
+// Recebe o plano atual (intenção + dados) e a frase de correção do usuário
+// (ex: "mudar loja para Praça", "vencimento amanhã", "forma de pagamento foi pix")
+// e devolve o plano atualizado, sem executar nada.
+export async function corrigirComando({ planoAtual, correcao, modelo }) {
+  const [lojas, fornecedores, categorias, centrosCusto, unidades] = await Promise.all([
+    base44.entities.Loja.list("-created_date", 200).catch(() => []),
+    base44.entities.Fornecedor.list("-created_date", 200).catch(() => []),
+    base44.entities.CategoriaFinanceira.list("-created_date", 300).catch(() => []),
+    base44.entities.CentroCusto.list("-created_date", 100).catch(() => []),
+    base44.entities.UnidadeMedida.list("-created_date", 50).catch(() => []),
+  ]);
+
+  const systemContext = `${buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades })}
+
+MODO CORREÇÃO: o usuário já recebeu um plano e está pedindo um AJUSTE. Aplique apenas as mudanças solicitadas, mantendo todo o resto do plano. Devolva o plano COMPLETO e atualizado no mesmo schema.`;
+
+  const prompt = `PLANO ATUAL (JSON):
+${JSON.stringify({ intencao: planoAtual.intencao, plano_resumo: planoAtual.plano_resumo, dados: planoAtual.dados }, null, 2)}
+
+CORREÇÃO PEDIDA PELO USUÁRIO: "${correcao}"
+
+Aplique a correção e devolva o plano completo atualizado.`;
+
+  const result = await askAI({ prompt, model: modelo, schema: SCHEMA_PLANO, systemContext });
+  const data = result.data || {};
+  const intencaoNormalizada = normalizarIntencao(data.intencao || planoAtual.intencao, data.dados);
+  return {
+    intencao: intencaoNormalizada || planoAtual.intencao,
+    plano_resumo: data.plano_resumo || planoAtual.plano_resumo,
+    confianca: data.confianca ?? 0.6,
+    precisa_esclarecimento: !!data.precisa_esclarecimento,
+    pergunta_esclarecimento: data.pergunta_esclarecimento || "",
+    modulo_afetado: data.modulo_afetado || planoAtual.modulo_afetado || "cadastros",
+    rascunho: !!data.rascunho,
+    motivo_rascunho: data.motivo_rascunho || "",
+    dados_incompletos: !!data.dados_incompletos,
+    tipo_documento: data.tipo_documento || planoAtual.tipo_documento || "",
+    imagem_ilegivel: !!data.imagem_ilegivel,
+    campos_incertos: Array.isArray(data.campos_incertos) ? data.campos_incertos : [],
+    campos_ausentes: Array.isArray(data.campos_ausentes) ? data.campos_ausentes : [],
+    dados: { ...(planoAtual.dados || {}), ...(data.dados || {}) },
     modelo_usado: result.model,
     raw: data,
   };

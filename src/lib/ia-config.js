@@ -29,7 +29,8 @@ export const AGENTS = [
 
 export const IA_LIST = [
   { tipo: "chat", nome: "Chat com Agentes", descricao: "Converse com os agentes (Orquestrador, Financeiro, Operações...).", icon: MessagesSquare },
-  { tipo: "executor", nome: "Executor ERP", descricao: "Comandos em linguagem natural para cadastros, lançamentos financeiros, estoque e compras. Histórico, plano e confirmações.", icon: Wand2 },
+  { tipo: "executor", nome: "Executor ERP (Chat)", descricao: "Chat operacional com IA: envie comandos, cupons, comprovantes e documentos. O agente analisa, mostra a prévia e executa após confirmação.", icon: Wand2 },
+  { tipo: "comandos", nome: "Histórico do Executor", descricao: "Todos os comandos enviados ao Executor ERP, com status, plano e registros criados.", icon: FileText },
   { tipo: "agents", nome: "Agents", descricao: "Catálogo dos agents internos da plataforma.", icon: Bot },
   { tipo: "logs", nome: "Logs de Agents", descricao: "Histórico de ações sugeridas e executadas.", icon: FileText },
   { tipo: "eventos", nome: "Eventos de Automação", descricao: "Eventos enviados/recebidos do sistema.", icon: Activity },
