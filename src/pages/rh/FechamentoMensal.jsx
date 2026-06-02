@@ -9,6 +9,7 @@ import { Lock, LockOpen, RefreshCw, Calculator } from "lucide-react";
 import PageShell from "@/components/rh/PageShell";
 import FechamentoLinha from "@/components/rh/FechamentoLinha";
 import FechamentoStatusBadge from "@/components/rh/FechamentoStatusBadge";
+import PainelPendenciasFechamento from "@/components/rh/PainelPendenciasFechamento";
 import { formatMinutos } from "@/lib/rh-service";
 import {
   previaFechamento,
@@ -17,6 +18,7 @@ import {
   getPeriodo,
   listarPeriodos,
 } from "@/lib/fechamento-ponto-service";
+import { detectarPendencias } from "@/lib/fechamento-pendencias-service";
 
 function competenciaAtual() {
   const d = new Date();
@@ -30,6 +32,7 @@ export default function FechamentoMensal() {
   const [historico, setHistorico] = useState([]);
   const [periodo, setPeriodo] = useState(null);
   const [previa, setPrevia] = useState(null);
+  const [pendencias, setPendencias] = useState(null);
   const [loading, setLoading] = useState(false);
   const [acao, setAcao] = useState(null); // "fechar" | "reabrir"
   const [motivoReabrir, setMotivoReabrir] = useState("");
@@ -56,6 +59,7 @@ export default function FechamentoMensal() {
       ]);
       setPeriodo(p);
       setPrevia(prev);
+      setPendencias(await detectarPendencias(prev));
     } catch (e) {
       setErro(e?.message || "Falha ao calcular o período.");
     } finally {
@@ -65,6 +69,10 @@ export default function FechamentoMensal() {
 
   const onFechar = async () => {
     if (!previa) return;
+    if (pendencias && pendencias.bloqueios.length > 0) {
+      setErro("Existem pendências impeditivas. Resolva-as antes de fechar o período.");
+      return;
+    }
     if (!confirm(`Confirmar fechamento da competência ${competencia}? Após fechado, os registros do período ficam travados para ajustes.`)) return;
     setAcao("fechar");
     setErro(null);
@@ -95,6 +103,7 @@ export default function FechamentoMensal() {
   };
 
   const fechado = periodo?.status === "fechado";
+  const temBloqueio = !!(pendencias && pendencias.bloqueios.length > 0);
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])), [lojas]);
 
   return (
@@ -131,6 +140,10 @@ export default function FechamentoMensal() {
         {erro && <div className="text-xs text-destructive mt-2">{erro}</div>}
       </Card>
 
+      {previa && !fechado && (
+        <PainelPendenciasFechamento pendencias={pendencias} loading={loading} />
+      )}
+
       {previa && (
         <>
           <Card className="p-4 mb-4">
@@ -149,9 +162,9 @@ export default function FechamentoMensal() {
               </div>
               <div className="sm:ml-auto flex gap-2">
                 {!fechado && (
-                  <Button onClick={onFechar} disabled={!!acao || previa.linhas.length === 0} className="gap-2">
+                  <Button onClick={onFechar} disabled={!!acao || previa.linhas.length === 0 || temBloqueio} className="gap-2">
                     <Lock className="w-4 h-4" />
-                    {acao === "fechar" ? "Fechando..." : "Fechar período"}
+                    {temBloqueio ? "Resolva as pendências" : acao === "fechar" ? "Fechando..." : "Fechar período"}
                   </Button>
                 )}
                 {fechado && (

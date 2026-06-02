@@ -53,41 +53,62 @@ export default function BancoHorasGestao() {
   }), { esperado: 0, trabalhado: 0, saldo: 0, he50: 0, he100: 0 });
 
   return (
-    <PageShell title="Saldo de Banco de Horas" description="Saldo individual de horas no período selecionado.">
+    <PageShell title="Saldo de Banco de Horas" description="Saldo individual de horas no período. Clique numa linha para ver a origem do saldo.">
       <FiltroPeriodoLoja {...filtros} lojas={universo?.lojas || []} onChange={(p) => setFiltros((f) => ({ ...f, ...p }))} />
       <Card className="overflow-hidden">
         <Table>
           <TableHeader><TableRow className="bg-muted/40">
+            <TableHead className="w-8"></TableHead>
             <TableHead>Colaborador</TableHead>
             <TableHead>Esperado</TableHead>
             <TableHead>Trabalhado</TableHead>
             <TableHead>Saldo</TableHead>
             <TableHead>HE 50%</TableHead>
             <TableHead>HE 100%</TableHead>
+            <TableHead className="text-center">Faltas</TableHead>
+            <TableHead className="text-center">Atrasos</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-10 text-sm text-muted-foreground">Calculando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-10 text-sm text-muted-foreground">Calculando...</TableCell></TableRow>
             ) : linhas.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-10 text-sm text-muted-foreground">Sem dados no período.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-10 text-sm text-muted-foreground">Sem dados no período.</TableCell></TableRow>
             ) : <>
-              {linhas.map((l) => (
-                <TableRow key={l.nome} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{l.nome}</TableCell>
-                  <TableCell className="font-mono">{formatMinutos(l.esperado)}</TableCell>
-                  <TableCell className="font-mono">{formatMinutos(l.trabalhado)}</TableCell>
-                  <TableCell className={`font-mono ${l.saldo >= 0 ? "text-emerald-700" : "text-destructive"}`}>{l.saldo >= 0 ? "+" : "−"}{formatMinutos(Math.abs(l.saldo))}</TableCell>
-                  <TableCell className="font-mono">{formatMinutos(l.he50)}</TableCell>
-                  <TableCell className="font-mono">{formatMinutos(l.he100)}</TableCell>
-                </TableRow>
-              ))}
+              {linhas.map((l) => {
+                const expandido = aberto === l.id;
+                return (
+                  <>
+                    <TableRow key={l.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setAberto(expandido ? null : l.id)}>
+                      <TableCell className="text-muted-foreground">{expandido ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</TableCell>
+                      <TableCell className="font-medium">{l.nome}</TableCell>
+                      <TableCell className="font-mono">{formatMinutos(l.esperado)}</TableCell>
+                      <TableCell className="font-mono">{formatMinutos(l.trabalhado)}</TableCell>
+                      <TableCell className={`font-mono ${l.saldo >= 0 ? "text-emerald-700" : "text-destructive"}`}>{l.saldo >= 0 ? "+" : "−"}{formatMinutos(Math.abs(l.saldo))}</TableCell>
+                      <TableCell className="font-mono">{formatMinutos(l.he50)}</TableCell>
+                      <TableCell className="font-mono">{formatMinutos(l.he100)}</TableCell>
+                      <TableCell className="text-center">{l.faltas || 0}</TableCell>
+                      <TableCell className="text-center">{l.atrasos || 0}</TableCell>
+                    </TableRow>
+                    {expandido && (
+                      <TableRow key={`${l.id}-det`}>
+                        <TableCell colSpan={9} className="p-0">
+                          <BancoHorasDetalhe resumos={l.resumos} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
               <TableRow className="bg-muted/60 font-semibold">
+                <TableCell></TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell className="font-mono">{formatMinutos(totais.esperado)}</TableCell>
                 <TableCell className="font-mono">{formatMinutos(totais.trabalhado)}</TableCell>
                 <TableCell className={`font-mono ${totais.saldo >= 0 ? "text-emerald-700" : "text-destructive"}`}>{totais.saldo >= 0 ? "+" : "−"}{formatMinutos(Math.abs(totais.saldo))}</TableCell>
                 <TableCell className="font-mono">{formatMinutos(totais.he50)}</TableCell>
                 <TableCell className="font-mono">{formatMinutos(totais.he100)}</TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
               </TableRow>
             </>}
           </TableBody>
