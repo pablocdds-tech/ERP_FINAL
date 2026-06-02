@@ -11,6 +11,7 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
+import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
 import Agentes from '@/pages/Agentes';
@@ -67,6 +68,11 @@ const ErpCompatRedirect = () => {
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+
+  // Rota pública de autocadastro facial — acessível sem login (link enviado ao colaborador)
+  if (window.location.pathname === "/cadastro-facial") {
+    return <AutoCadastroFacial />;
+  }
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (

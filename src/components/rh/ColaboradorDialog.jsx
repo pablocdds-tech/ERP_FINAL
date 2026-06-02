@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Field from "@/components/cadastros/Field";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
 import SecaoFacialColaborador from "@/components/ponto/SecaoFacialColaborador";
+import LinkCadastroFacial from "@/components/rh/LinkCadastroFacial";
 import { formatarCpf, limparCpf } from "@/lib/cpf-validator";
 import { validarColaboradorParaSalvar } from "@/lib/colaborador-validator";
 import { registrarLog } from "@/lib/auditoria-service";
@@ -388,7 +389,8 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           </Field>
 
           {data.id && (
-            <div className="col-span-2 pt-3 mt-1 border-t border-border">
+            <div className="col-span-2 pt-3 mt-1 border-t border-border space-y-3">
+              <LinkCadastroFacial colaboradorId={data.id} />
               <SecaoFacialColaborador colaborador={data} onUpdated={recarregar} disabled={isView} />
             </div>
           )}
