@@ -11,6 +11,7 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
+import PdvPainel from '@/pages/pdv/PdvPainel';
 import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
@@ -130,6 +131,7 @@ const AuthenticatedApp = () => {
       <Route element={<AdminGuard />}>
         <Route element={<ErpLayout />}>
           <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/pdv" element={<PdvPainel />} />
           <Route path="/admin/agentes" element={<Agentes />} />
           <Route path="/admin/cadastros" element={<CadastrosIndex />} />
           <Route path="/admin/cadastros/:tipo" element={<CadastroTipoPage />} />

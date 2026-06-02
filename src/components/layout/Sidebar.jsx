@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Smartphone, ShieldCheck, FileSearch } from "lucide-react";
+import { LayoutDashboard, Smartphone, ShieldCheck, FileSearch, MonitorSmartphone } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { MODULES } from "@/lib/modules";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,14 @@ export default function Sidebar({ onNavigate }) {
           icon={LayoutDashboard}
           label="Dashboard"
           active={location.pathname === "/admin"}
+          onClick={onNavigate}
+        />
+
+        <NavItem
+          to="/admin/pdv"
+          icon={MonitorSmartphone}
+          label="PDV — Pedidos ao Vivo"
+          active={isActive("/admin/pdv")}
           onClick={onNavigate}
         />
 
