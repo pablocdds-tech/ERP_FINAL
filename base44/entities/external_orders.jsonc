@@ -1,0 +1,78 @@
+{
+  "name": "external_orders",
+  "type": "object",
+  "properties": {
+    "store_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "cardapio_web"
+    },
+    "external_store_code": {
+      "type": "string"
+    },
+    "external_order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_document": {
+      "type": "string"
+    },
+    "delivery_address": {
+      "type": "string"
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "subtotal": {
+      "type": "number",
+      "default": 0
+    },
+    "delivery_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "discount": {
+      "type": "number",
+      "default": 0
+    },
+    "total_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "sales_channel": {
+      "type": "string"
+    },
+    "ordered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "raw_payload": {
+      "type": "string",
+      "description": "JSON serializado do pedido bruto"
+    },
+    "dedupe_key": {
+      "type": "string",
+      "description": "provider + external_store_code + external_order_id (chave \u00fanica l\u00f3gica)"
+    }
+  },
+  "required": [
+    "provider",
+    "external_order_id"
+  ]
+}

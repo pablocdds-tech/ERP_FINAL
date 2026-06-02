@@ -1,0 +1,43 @@
+{
+  "name": "external_customers",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "default": "cardapio_web"
+    },
+    "external_customer_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "document": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "last_order_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_orders": {
+      "type": "number",
+      "default": 0
+    },
+    "total_spent": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "provider"
+  ]
+}

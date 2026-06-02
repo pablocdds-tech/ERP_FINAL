@@ -1,0 +1,57 @@
+{
+  "name": "integrations",
+  "type": "object",
+  "properties": {
+    "store_id": {
+      "type": "string",
+      "description": "ID da Loja do ERP vinculada"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "cardapio_web"
+      ],
+      "default": "cardapio_web"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nome amig\u00e1vel da integra\u00e7\u00e3o"
+    },
+    "external_store_code": {
+      "type": "string",
+      "description": "C\u00f3digo da loja no Card\u00e1pio Web"
+    },
+    "base_url": {
+      "type": "string",
+      "description": "Base URL da API do Card\u00e1pio Web"
+    },
+    "api_token_mascarado": {
+      "type": "string",
+      "description": "Apenas os \u00faltimos d\u00edgitos do token (apresenta\u00e7\u00e3o). O token completo fica em secret seguro no backend."
+    },
+    "api_token_secret_name": {
+      "type": "string",
+      "description": "Nome do secret onde o token completo est\u00e1 salvo no backend"
+    },
+    "token_configurado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica se o token completo j\u00e1 foi salvo de forma segura"
+    },
+    "webhook_secret": {
+      "type": "string",
+      "description": "Segredo usado para validar webhooks recebidos"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_sync_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "provider"
+  ]
+}

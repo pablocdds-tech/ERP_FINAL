@@ -1,0 +1,52 @@
+{
+  "name": "integration_sync_logs",
+  "type": "object",
+  "properties": {
+    "integration_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "cardapio_web"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "iniciado",
+        "sucesso",
+        "erro",
+        "vazio"
+      ],
+      "default": "iniciado"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "records_received": {
+      "type": "number",
+      "default": 0
+    },
+    "records_created": {
+      "type": "number",
+      "default": 0
+    },
+    "records_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "error_message": {
+      "type": "string"
+    },
+    "raw_response": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "integration_id"
+  ]
+}

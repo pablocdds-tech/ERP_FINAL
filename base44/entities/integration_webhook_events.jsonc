@@ -1,0 +1,43 @@
+{
+  "name": "integration_webhook_events",
+  "type": "object",
+  "properties": {
+    "integration_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string",
+      "default": "cardapio_web"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "raw_payload": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recebido",
+        "processado",
+        "erro",
+        "ignorado"
+      ],
+      "default": "recebido"
+    },
+    "processed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "error_message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "provider",
+    "status"
+  ]
+}

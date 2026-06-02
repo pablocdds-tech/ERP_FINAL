@@ -1,0 +1,40 @@
+{
+  "name": "external_order_items",
+  "type": "object",
+  "properties": {
+    "external_order_id": {
+      "type": "string",
+      "description": "ID do registro external_orders (interno)"
+    },
+    "external_product_id": {
+      "type": "string"
+    },
+    "product_name": {
+      "type": "string"
+    },
+    "category_name": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 0
+    },
+    "unit_price": {
+      "type": "number",
+      "default": 0
+    },
+    "total_price": {
+      "type": "number",
+      "default": 0
+    },
+    "notes": {
+      "type": "string"
+    },
+    "raw_payload": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "external_order_id"
+  ]
+}
