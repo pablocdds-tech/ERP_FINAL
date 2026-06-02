@@ -18,6 +18,10 @@ function empacotarPlanoDados(plano) {
       campos_ausentes: plano.campos_ausentes || [],
       rascunho: !!plano.rascunho,
       confianca: plano.confianca,
+      raciocinio: plano.raciocinio || "",
+      alertas: Array.isArray(plano.alertas) ? plano.alertas : [],
+      duplicidade_suspeita: !!plano.duplicidade_suspeita,
+      duplicidade_detalhe: plano.duplicidade_detalhe || "",
     },
   });
 }

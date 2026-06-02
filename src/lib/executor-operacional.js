@@ -171,6 +171,21 @@ const SCHEMA_PLANO = {
       description: "OBRIGATÓRIO escolher exatamente um valor desta lista. Se houver lista de itens para cadastrar, use criar_itens_lote.",
     },
     plano_resumo: { type: "string", description: "Frase curta executiva: 'Vou criar uma conta a pagar...'" },
+    // Raciocínio explícito do agente (passos 1, 4, 7, 9 do fluxo mental).
+    raciocinio: {
+      type: "string",
+      description: "2 a 4 frases curtas, em 1ª pessoa, explicando como você interpretou o pedido/documento, o que extraiu, o que comparou no ERP e por que propôs essa ação. Tom de assistente operacional experiente, NUNCA robótico.",
+    },
+    alertas: {
+      type: "array",
+      items: { type: "string" },
+      description: "Inconsistências, riscos ou pontos de atenção identificados (ex: 'Valor do documento difere do informado', 'Fornecedor sem CNPJ', 'Vencimento já passou').",
+    },
+    duplicidade_suspeita: {
+      type: "boolean",
+      description: "true se este lançamento parece já existir no ERP (mesmo fornecedor + valor + vencimento próximos nas contas listadas no contexto).",
+    },
+    duplicidade_detalhe: { type: "string", description: "Qual lançamento existente parece duplicado e por quê." },
     confianca: { type: "number" },
     precisa_esclarecimento: { type: "boolean" },
     pergunta_esclarecimento: { type: "string" },
@@ -262,18 +277,45 @@ const SCHEMA_PLANO = {
   required: ["intencao", "plano_resumo"],
 };
 
-function buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades }) {
+function buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades, contasPagar = [], contasReceber = [] }) {
   const hoje = new Date().toISOString();
   const lojasTxt = lojas.map((l) => `- ${l.id}: ${l.nome}${l.codigo ? ` (${l.codigo})` : ""}`).join("\n");
   const fornTxt = fornecedores.slice(0, 80).map((f) => `- ${f.id}: ${f.nome}${f.cnpj_cpf ? ` (${f.cnpj_cpf})` : ""}`).join("\n");
   const catTxt = categorias.slice(0, 120).map((c) => `- ${c.id}: ${c.nome} [${c.tipo}/${c.grupo || "?"}]`).join("\n");
   const ccTxt = centrosCusto.slice(0, 60).map((c) => `- ${c.id}: ${c.nome}`).join("\n");
   const uniTxt = unidades.slice(0, 30).map((u) => `- ${u.sigla}: ${u.nome}`).join("\n");
+  const cpTxt = contasPagar.slice(0, 40)
+    .map((c) => `- ${c.descricao || "?"} | R$ ${c.valor ?? "?"} | venc ${c.data_vencimento || "?"} | forn ${c.fornecedor_id || "?"} | ${c.status || "?"}`)
+    .join("\n");
+  const crTxt = contasReceber.slice(0, 30)
+    .map((c) => `- ${c.descricao || "?"} | R$ ${c.valor ?? "?"} | venc ${c.data_vencimento || "?"} | cli ${c.cliente || "?"} | ${c.status || "?"}`)
+    .join("\n");
 
-  return `Você é o interpretador de comandos do Agent Executor ERP.
-Receba o comando do usuário e devolva APENAS JSON conforme o schema, com intenção, plano resumido e dados extraídos.
+  return `Você é o Agent Executor ERP — um assistente operacional EXPERIENTE de um restaurante/pizzaria, não um chatbot genérico.
+Você RACIOCINA antes de agir e devolve APENAS JSON conforme o schema.
+
+FLUXO MENTAL OBRIGATÓRIO (execute na sua cabeça, antes de montar o JSON):
+1. Entender a intenção real do usuário.
+2. Identificar se há texto, imagem, documento ou dados anexados.
+3. Extrair as informações relevantes (sem inventar).
+4. Verificar o que está completo, ausente ou incerto → preencha campos_ausentes / campos_incertos.
+5. Consultar os dados do ERP fornecidos abaixo (lojas, fornecedores, categorias, contas existentes).
+6. Comparar com cadastros existentes e resolver IDs (loja_id, fornecedor_id, categoria_id, centro_custo_id).
+7. Identificar problemas, divergências ou DUPLICIDADES → preencha alertas / duplicidade_suspeita / duplicidade_detalhe.
+8. Propor UMA ação estruturada (intencao + dados).
+9. Explicar seu raciocínio de forma resumida e humana no campo "raciocinio".
+10. (a confirmação é pedida pela interface — você só PROPÕE, nunca executa.)
+11. Apenas ações suportadas e auditáveis.
+
+PERSONA: fale como um analista de retaguarda atencioso. Ex.: "Li o cupom da Atacadão, identifiquei R$ 240 em embalagens. Como há uma conta parecida vencendo dia 10, vale conferir se não é duplicada."
 
 Hora atual: ${hoje} (America/Sao_Paulo)
+
+CONTAS A PAGAR RECENTES (para detectar duplicidade — compare fornecedor + valor + vencimento):
+${cpTxt || "(nenhuma)"}
+
+CONTAS A RECEBER RECENTES:
+${crTxt || "(nenhuma)"}
 
 LOJAS (use o id exato em loja_id quando reconhecer):
 ${lojasTxt || "(nenhuma)"}
@@ -336,6 +378,9 @@ REGRAS DE INTERPRETAÇÃO FINANCEIRA:
 
 REGRAS GERAIS:
 - plano_resumo: frase única começando com "Vou ...".
+- raciocinio: SEMPRE preencha com 2 a 4 frases explicando o que entendeu, o que comparou e por que propôs isso.
+- alertas: liste qualquer divergência (valor do documento ≠ valor informado, fornecedor sem CNPJ, vencimento no passado, categoria duvidosa).
+- DUPLICIDADE: ao criar conta a pagar/receber, compare com as contas recentes listadas acima. Se houver uma com fornecedor/valor/vencimento semelhantes, marque duplicidade_suspeita=true e explique em duplicidade_detalhe (não bloqueie — apenas alerte).
 - precisa_esclarecimento=true só quando faltar informação CRÍTICA não inferível (ex: "Cadastre uma conta de R$ 500" sem qualquer outra info).
 - Resolva loja_id, fornecedor_id, categoria_id, centro_custo_id usando os IDs exatos das listas acima sempre que possível.
 
@@ -402,15 +447,17 @@ function normalizarIntencao(raw, dados) {
 }
 
 export async function interpretarComando({ comando, modelo, files }) {
-  const [lojas, fornecedores, categorias, centrosCusto, unidades] = await Promise.all([
+  const [lojas, fornecedores, categorias, centrosCusto, unidades, contasPagar, contasReceber] = await Promise.all([
     base44.entities.Loja.list("-created_date", 200).catch(() => []),
     base44.entities.Fornecedor.list("-created_date", 200).catch(() => []),
     base44.entities.CategoriaFinanceira.list("-created_date", 300).catch(() => []),
     base44.entities.CentroCusto.list("-created_date", 100).catch(() => []),
     base44.entities.UnidadeMedida.list("-created_date", 50).catch(() => []),
+    base44.entities.ContaPagar.list("-created_date", 40).catch(() => []),
+    base44.entities.ContaReceber.list("-created_date", 30).catch(() => []),
   ]);
 
-  const systemContext = buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades });
+  const systemContext = buildContextoSistema({ lojas, fornecedores, categorias, centrosCusto, unidades, contasPagar, contasReceber });
   const temAnexos = Array.isArray(files) && files.length > 0;
   const promptComando = temAnexos
     ? `${comando ? `Comando: "${comando}"\n\n` : ""}Foram anexadas ${files.length} imagem(ns) de documento(s) (cupom fiscal / nota / comprovante de compra). Leia o documento, extraia fornecedor, valor total, data e itens, e monte o plano (ex.: criar_conta_pagar ou criar_compra_com_itens).`
@@ -427,6 +474,10 @@ export async function interpretarComando({ comando, modelo, files }) {
   return {
     intencao: intencaoNormalizada || "desconhecida",
     plano_resumo: data.plano_resumo || "Não consegui montar um plano para esse comando.",
+    raciocinio: data.raciocinio || "",
+    alertas: Array.isArray(data.alertas) ? data.alertas : [],
+    duplicidade_suspeita: !!data.duplicidade_suspeita,
+    duplicidade_detalhe: data.duplicidade_detalhe || "",
     confianca: data.confianca ?? 0.5,
     precisa_esclarecimento: !!data.precisa_esclarecimento,
     pergunta_esclarecimento: data.pergunta_esclarecimento || "",
@@ -474,6 +525,10 @@ Aplique a correção e devolva o plano completo atualizado.`;
   return {
     intencao: intencaoNormalizada || planoAtual.intencao,
     plano_resumo: data.plano_resumo || planoAtual.plano_resumo,
+    raciocinio: data.raciocinio || "",
+    alertas: Array.isArray(data.alertas) ? data.alertas : [],
+    duplicidade_suspeita: !!data.duplicidade_suspeita,
+    duplicidade_detalhe: data.duplicidade_detalhe || "",
     confianca: data.confianca ?? 0.6,
     precisa_esclarecimento: !!data.precisa_esclarecimento,
     pergunta_esclarecimento: data.pergunta_esclarecimento || "",

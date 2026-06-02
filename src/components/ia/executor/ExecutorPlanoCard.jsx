@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2, X, Loader2, ShieldAlert, Ban, AlertTriangle, Sparkles, FileText, Pencil, ShieldCheck,
+  CheckCircle2, X, Loader2, ShieldAlert, Ban, AlertTriangle, Sparkles, FileText, Pencil, ShieldCheck, Brain, Copy,
 } from "lucide-react";
 
 const STATUS_CFG = {
@@ -70,6 +70,32 @@ export default function ExecutorPlanoCard({ comando, loading, onConfirmar, onEdi
       {meta.tipo_documento && (
         <div className="text-[11px] text-muted-foreground mb-2">
           Documento: <span className="font-medium text-foreground">{TIPO_DOC_LABEL[meta.tipo_documento] || meta.tipo_documento}</span>
+        </div>
+      )}
+
+      {/* Raciocínio do agente */}
+      {meta.raciocinio && (
+        <div className="text-[11px] text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-2 mb-2 flex items-start gap-1.5">
+          <Brain className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-500" />
+          <span className="leading-relaxed">{meta.raciocinio}</span>
+        </div>
+      )}
+
+      {/* Duplicidade suspeita */}
+      {meta.duplicidade_suspeita && (
+        <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2 mb-2 flex items-start gap-1.5">
+          <Copy className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span><span className="font-semibold">Possível duplicidade.</span> {meta.duplicidade_detalhe || "Já existe um lançamento parecido no ERP — confira antes de confirmar."}</span>
+        </div>
+      )}
+
+      {/* Alertas / inconsistências */}
+      {Array.isArray(meta.alertas) && meta.alertas.length > 0 && (
+        <div className="text-[11px] mb-2">
+          <div className="font-medium text-rose-700 mb-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Pontos de atenção:</div>
+          <ul className="space-y-0.5 list-disc pl-4 text-rose-700">
+            {meta.alertas.map((a, i) => <li key={i}>{a}</li>)}
+          </ul>
         </div>
       )}
 
