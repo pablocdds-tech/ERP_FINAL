@@ -49,6 +49,7 @@ export const RH_GRUPOS = [
       item({ tipo: "calendario", nome: "Calendário e Programação", descricao: "Escalas diárias, folgas e feriados.", icon: CalendarDays }),
       item({ tipo: "jornadas-turnos", nome: "Jornadas e Turnos", descricao: "Templates de jornada e turnos por loja.", icon: CalendarRange }),
       item({ tipo: "configuracoes", nome: "Configurações do Ponto", descricao: "Regras de cálculo e tipos de abono.", icon: SlidersHorizontal }),
+      item({ tipo: "kiosk-dispositivos", nome: "Kiosks / Tablets", descricao: "Coletores de ponto: aprovar e gerenciar tablets do Kiosk.", icon: Tablet }),
     ],
   },
   {
@@ -73,7 +74,6 @@ export const RH_GRUPOS = [
       item({ tipo: "chamados", nome: "Chamados", descricao: "Chamados internos da equipe.", icon: AlertTriangle }),
       item({ tipo: "tarefas", nome: "Tarefas", descricao: "Tarefas atribuídas à equipe.", icon: ClipboardList }),
       item({ tipo: "checklists", nome: "Checklists", descricao: "Checklists operacionais da equipe.", icon: ListChecks }),
-      item({ tipo: "kiosk-dispositivos", nome: "Kiosks / Tablets", descricao: "Aprovar e gerenciar tablets do Kiosk.", icon: Tablet }),
     ],
   },
 ];
