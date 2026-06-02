@@ -6,11 +6,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 //
 // Ações:
 //  - { action: "lookup", cpf }            -> { ok, encontrado, status, nome, colaborador_id }
+//  - { action: "upload", data_url }       -> { ok, file_url }   (faz upload server-side)
 //  - { action: "salvar", colaborador_id,  -> { ok }
 //      cpf, frontal_url, esquerda_url, direita_url,
 //      biometria_template, biometria_hash, biometria_versao }
 
 function soDigitos(s) { return String(s || "").replace(/\D/g, ""); }
+
+function dataUrlToFile(dataUrl, name) {
+  const [meta, b64] = String(dataUrl).split(",");
+  const mime = (meta.match(/data:(.*?);base64/) || [])[1] || "image/jpeg";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new File([bytes], name, { type: mime });
+}
 
 Deno.serve(async (req) => {
   try {
@@ -36,6 +46,15 @@ Deno.serve(async (req) => {
         status: c.facial_status || "nao_cadastrada",
         ja_cadastrado: c.facial_status === "cadastrada",
       });
+    }
+
+    if (action === "upload") {
+      if (!body.data_url) {
+        return Response.json({ ok: false, motivo: "Imagem ausente." }, { status: 400 });
+      }
+      const file = dataUrlToFile(body.data_url, body.name || "facial.jpg");
+      const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      return Response.json({ ok: true, file_url });
     }
 
     if (action === "salvar") {

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, CheckCircle2, AlertCircle, Loader2, IdCard } from "lucide-react";
 import CameraCapture from "@/components/ponto/CameraCapture";
 import { descritorDeUrl, mediaDescritores, hashTemplate, MODEL_VERSION } from "@/lib/biometria";
+import { invokePublicFunction } from "@/lib/public-fn";
 
 const POSES = [
   { key: "frontal", label: "Frontal", hint: "Olhe direto para a câmera" },
@@ -18,12 +18,6 @@ function formatCpf(v) {
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-
-async function uploadFotoBlob(blob, name) {
-  const file = new File([blob], name, { type: blob.type || "image/jpeg" });
-  const { file_url } = await base44.integrations.Core.UploadFile({ file });
-  return file_url;
 }
 
 export default function AutoCadastroFacial() {
@@ -42,7 +36,7 @@ export default function AutoCadastroFacial() {
     setErro(null);
     setVerificando(true);
     try {
-      const res = await base44.functions.invoke("autoCadastroFacial", { action: "lookup", cpf });
+      const res = await invokePublicFunction("autoCadastroFacial", { action: "lookup", cpf });
       const d = res?.data || {};
       if (!d.ok) { setErro(d.motivo || "Não foi possível verificar."); return; }
       if (!d.encontrado) { setErro("CPF não encontrado. Confira ou fale com seu gestor."); return; }
@@ -56,14 +50,20 @@ export default function AutoCadastroFacial() {
     }
   };
 
-  const handleCapture = async (blob) => {
+  const handleCapture = async (blob, dataUrl) => {
     const pose = posing;
     setPosing(null);
     setSalvandoFoto(true);
     setErro(null);
     try {
-      const url = await uploadFotoBlob(blob, `facial-${pose}.jpg`);
-      setFotos((f) => ({ ...f, [pose]: url }));
+      const res = await invokePublicFunction("autoCadastroFacial", {
+        action: "upload", data_url: dataUrl, name: `facial-${pose}.jpg`,
+      });
+      if (!res?.data?.ok || !res.data.file_url) {
+        setErro(res?.data?.motivo || "Falha ao enviar a foto. Tente novamente.");
+        return;
+      }
+      setFotos((f) => ({ ...f, [pose]: res.data.file_url }));
     } catch {
       setErro("Falha ao enviar a foto. Verifique a conexão e tente de novo.");
     } finally {
@@ -90,7 +90,7 @@ export default function AutoCadastroFacial() {
       const media = mediaDescritores(descritores);
       const hash = await hashTemplate(media);
 
-      const res = await base44.functions.invoke("autoCadastroFacial", {
+      const res = await invokePublicFunction("autoCadastroFacial", {
         action: "salvar",
         colaborador_id: colaborador.id,
         cpf,
