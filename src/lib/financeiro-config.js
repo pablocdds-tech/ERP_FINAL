@@ -1,7 +1,7 @@
 import {
   ArrowDownCircle, ArrowUpCircle, Building2, Banknote, Repeat,
   TrendingUp, FileUp, ShieldCheck, Network, Receipt, History, Users,
-  MessageCircle, Inbox,
+  MessageCircle, Inbox, Utensils, ShoppingBag, ListChecks,
 } from "lucide-react";
 
 export const FINANCEIRO_REAL_LIST = [
@@ -15,6 +15,9 @@ export const FINANCEIRO_REAL_LIST = [
   { slug: "funcionarios-whatsapp", title: "Funcionários WhatsApp", icon: MessageCircle, descricao: "Telefones autorizados a enviar pré-lançamentos pelo WhatsApp." },
   { slug: "inbox-whatsapp", title: "Inbox Financeiro WhatsApp", icon: Inbox, descricao: "Pré-lançamentos recebidos via WhatsApp para conferência." },
   { slug: "pf-pj", title: "Transição PF x PJ", icon: Users, descricao: "Painel de mistura sócio x empresa, alertas e saldo PF/PJ." },
+  { slug: "cardapio-web", title: "Integração Cardápio Web", icon: Utensils, descricao: "Conecte o Cardápio Web e configure o webhook." },
+  { slug: "pedidos-importados", title: "Pedidos Importados", icon: ShoppingBag, descricao: "Pedidos recebidos do Cardápio Web." },
+  { slug: "resumo-cardapio-web", title: "Resumo Cardápio Web", icon: ListChecks, descricao: "Resumo por loja, data e forma de pagamento." },
 ];
 
 export const FINANCEIRO_VIRTUAL_LIST = [

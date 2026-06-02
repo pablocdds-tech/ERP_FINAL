@@ -20,6 +20,10 @@ import PfPjDashboard from "./PfPjDashboard";
 import PfPjLancamento from "./PfPjLancamento";
 import PfPjResumo from "./PfPjResumo";
 
+import CardapioWebIntegracao from "./CardapioWebIntegracao";
+import PedidosImportados from "./PedidosImportados";
+import ResumoCardapioWeb from "./ResumoCardapioWeb";
+
 const PAGES = {
   "real/contas-pagar": ContasPagar,
   "real/contas-receber": ContasReceber,
@@ -33,6 +37,10 @@ const PAGES = {
   "real/pf-pj": PfPjDashboard,
   "real/pf-pj-lancamento": PfPjLancamento,
   "real/pf-pj-resumo": PfPjResumo,
+
+  "real/cardapio-web": CardapioWebIntegracao,
+  "real/pedidos-importados": PedidosImportados,
+  "real/resumo-cardapio-web": ResumoCardapioWeb,
 
   "virtual/interno-saldos": InternoSaldos,
   "virtual/interno-lancamentos": InternoLancamentos,
