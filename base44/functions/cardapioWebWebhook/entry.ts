@@ -1,12 +1,30 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // Endpoint público de webhook do Cardápio Web.
 // Identifica a integração por webhook_secret (query/header/body) ou external_store_code,
 // salva o evento bruto e processa o pedido (upsert) com prevenção de duplicidade.
+// Se o payload for básico (só ID), busca o detalhe completo via API oficial.
 
 const PROVIDER = 'cardapio_web';
 
 function num(v) { const n = Number(v); return isNaN(n) ? 0 : n; }
+
+function getApiToken() {
+  const env = Deno.env.toObject();
+  return env['CARDAPIO_WEB_API_KEY'] || env['CARDAPIO_WEB_API_TOKEN'] || '';
+}
+
+function normalizeBaseUrl(url) { return String(url || '').replace(/\/+$/, ''); }
+
+// Extrai o ID do pedido em vários formatos possíveis (raiz, order.*, data.*).
+function extractOrderId(body) {
+  const o = body.order || {};
+  const d = body.data || {};
+  return String(
+    body.order_id || body.id || body.pedido_id || body.codigo ||
+    o.id || o.order_id || d.id || d.order_id || ''
+  );
+}
 
 function normalizeOrderPayload(raw, integration) {
   const customer = raw.customer || raw.cliente || {};
@@ -15,24 +33,24 @@ function normalizeOrderPayload(raw, integration) {
   return {
     store_id: integration.store_id || '',
     provider: PROVIDER,
-    external_store_code: integration.external_store_code || '',
+    external_store_code: integration.external_store_code || String(raw.merchant_id || ''),
     external_order_id: externalOrderId,
-    order_number: String(raw.order_number || raw.numero || raw.number || externalOrderId),
-    status: String(raw.status || raw.situacao || 'recebido'),
+    order_number: String(raw.display_id || raw.order_number || raw.numero || raw.number || externalOrderId),
+    status: String(raw.status || raw.situacao || 'waiting_confirmation'),
     customer_name: customer.name || customer.nome || raw.customer_name || '',
     customer_phone: String(customer.phone || customer.telefone || raw.customer_phone || ''),
-    customer_document: customer.document || customer.documento || customer.cpf || '',
-    delivery_address: typeof address === 'string' ? address : (address.full || address.logradouro || address.street || ''),
+    customer_document: customer.document || customer.documento || customer.cpf || (raw.fiscal_document || ''),
+    delivery_address: typeof address === 'string' ? address : (address.full || address.formatted_address || address.logradouro || address.street || ''),
     neighborhood: (typeof address === 'object' ? (address.neighborhood || address.bairro) : '') || '',
     subtotal: num(raw.subtotal ?? raw.sub_total),
     delivery_fee: num(raw.delivery_fee ?? raw.taxa_entrega ?? raw.frete),
-    discount: num(raw.discount ?? raw.desconto),
+    discount: num(raw.discount ?? raw.desconto ?? (Array.isArray(raw.discounts) ? raw.discounts.reduce((s, d) => s + num(d.value ?? d.amount), 0) : 0)),
     total_amount: num(raw.total ?? raw.total_amount ?? raw.valor_total),
-    payment_method: raw.payment_method || raw.forma_pagamento || raw.pagamento || '',
+    payment_method: raw.payment_method || raw.forma_pagamento || raw.pagamento || (Array.isArray(raw.payments) && raw.payments[0] ? (raw.payments[0].method || raw.payments[0].name || raw.payments[0].type) : '') || '',
     sales_channel: raw.sales_channel || raw.canal || 'cardapio_web',
     ordered_at: raw.created_at || raw.data_pedido || raw.ordered_at || new Date().toISOString(),
     raw_payload: JSON.stringify(raw).slice(0, 30000),
-    dedupe_key: `${PROVIDER}|${integration.external_store_code || ''}|${externalOrderId}`,
+    dedupe_key: `${PROVIDER}|${integration.external_store_code || raw.merchant_id || ''}|${externalOrderId}`,
   };
 }
 
@@ -43,9 +61,9 @@ function normalizeItems(raw) {
     product_name: it.name || it.nome || it.product_name || it.descricao || '',
     category_name: it.category || it.categoria || it.category_name || '',
     quantity: num(it.quantity ?? it.quantidade ?? it.qtd ?? 1),
-    unit_price: num(it.unit_price ?? it.valor_unitario ?? it.preco),
+    unit_price: num(it.unit_price ?? it.valor_unitario ?? it.preco ?? it.price),
     total_price: num(it.total_price ?? it.valor_total ?? it.total),
-    notes: it.notes || it.observacao || it.obs || '',
+    notes: it.notes || it.observacao || it.obs || it.observation || '',
     raw_payload: JSON.stringify(it).slice(0, 8000),
   }));
 }
@@ -61,7 +79,6 @@ async function upsertCustomer(sr, order, isNew) {
       address: order.delivery_address || existing.address,
       neighborhood: order.neighborhood || existing.neighborhood,
       last_order_at: order.ordered_at,
-      // Só acumula contadores quando o pedido é novo (evita inflar em re-envios/updates)
       total_orders: num(existing.total_orders) + (isNew ? 1 : 0),
       total_spent: num(existing.total_spent) + (isNew ? num(order.total_amount) : 0),
     });
@@ -74,18 +91,32 @@ async function upsertCustomer(sr, order, isNew) {
   }
 }
 
-// Mapeia o status do Cardápio Web para o fluxo do PDV/KDS.
+// Mapeia status oficial do Cardápio Web → fluxo do PDV/KDS.
 function mapStatusPdv(statusExterno) {
   const s = String(statusExterno || '').toLowerCase();
+  const mapa = {
+    waiting_confirmation: 'novo',
+    pending_payment: 'aguardando_pagamento',
+    pending_online_payment: 'aguardando_pagamento',
+    scheduled_confirmed: 'agendado',
+    confirmed: 'em_preparo',
+    ready: 'pronto',
+    released: 'saiu_para_entrega',
+    waiting_to_catch: 'aguardando_retirada',
+    delivered: 'entregue',
+    closed: 'finalizado',
+    canceling: 'cancelando',
+    canceled: 'cancelado',
+  };
+  if (mapa[s]) return mapa[s];
   if (/cancel/.test(s)) return 'cancelado';
   if (/(conclu|entreg|finaliz|complet|deliver)/.test(s)) return 'concluido';
-  if (/(rota|saiu|transit|despach)/.test(s)) return 'em_entrega';
+  if (/(rota|saiu|transit|despach|released)/.test(s)) return 'em_entrega';
   if (/(pronto|ready)/.test(s)) return 'pronto';
   if (/(prepar|produ|cozinha|aceito|confirm)/.test(s)) return 'em_preparo';
   return 'novo';
 }
 
-// Cria/atualiza o pedido no PDV a partir do pedido normalizado + itens.
 async function upsertPdvPedido(sr, normalized, items) {
   const dedupeKey = `pdv|${normalized.dedupe_key}`;
   const existing = (await sr.entities.pdv_pedido.filter({ dedupe_key: dedupeKey }, '-created_date', 1))[0];
@@ -116,17 +147,48 @@ async function upsertPdvPedido(sr, normalized, items) {
     forma_pagamento: normalized.payment_method,
     recebido_em: normalized.ordered_at || new Date().toISOString(),
   };
-  if (existing) {
-    await sr.entities.pdv_pedido.update(existing.id, dados);
-  } else {
-    await sr.entities.pdv_pedido.create(dados);
-  }
+  if (existing) await sr.entities.pdv_pedido.update(existing.id, dados);
+  else await sr.entities.pdv_pedido.create(dados);
 }
 
-async function processOrder(sr, raw, integration) {
-  const normalized = normalizeOrderPayload(raw, integration);
+// Busca o detalhe completo do pedido na API oficial (quando o webhook só envia o ID).
+async function fetchOrderDetail(integration, orderId) {
+  const token = getApiToken();
+  const base = normalizeBaseUrl(integration.base_url);
+  if (!token || !base) return null;
+  const url = `${base}/api/partner/v1/orders/${encodeURIComponent(orderId)}`;
+  const resp = await fetch(url, { headers: { 'X-API-KEY': token, 'Accept': 'application/json' } });
+  if (!resp.ok) return null;
+  const text = await resp.text();
+  try { const data = JSON.parse(text); return data.order || data.data || data; } catch { return null; }
+}
+
+// Considera o payload "básico" se não tiver itens nem totais (provável webhook só com ID/status).
+function isBasicPayload(raw) {
+  const hasItems = Array.isArray(raw.items || raw.itens || raw.produtos) && (raw.items || raw.itens || raw.produtos).length > 0;
+  const hasTotal = num(raw.total ?? raw.total_amount ?? raw.valor_total) > 0;
+  return !hasItems && !hasTotal;
+}
+
+async function processOrder(sr, body, integration) {
+  // Pega o objeto do pedido onde estiver
+  let orderRaw = body.order || body.pedido || body.data || body;
+  const orderId = extractOrderId(body);
+
+  // Se o payload é básico mas temos um ID, busca o detalhe completo via API.
+  if (orderId && isBasicPayload(orderRaw)) {
+    const detail = await fetchOrderDetail(integration, orderId);
+    if (detail) orderRaw = detail;
+  }
+
+  const normalized = normalizeOrderPayload(orderRaw, integration);
+  if (!normalized.external_order_id && orderId) normalized.external_order_id = orderId;
   if (!normalized.external_order_id) throw new Error('Pedido sem identificador.');
-  const items = normalizeItems(raw);
+  if (!normalized.dedupe_key.endsWith(`|${normalized.external_order_id}`)) {
+    normalized.dedupe_key = `${PROVIDER}|${integration.external_store_code || ''}|${normalized.external_order_id}`;
+  }
+
+  const items = normalizeItems(orderRaw);
   const existing = (await sr.entities.external_orders.filter({ dedupe_key: normalized.dedupe_key }, '-created_date', 1))[0];
   let orderRecord;
   const isNew = !existing;
@@ -140,9 +202,8 @@ async function processOrder(sr, raw, integration) {
   }
   for (const it of items) await sr.entities.external_order_items.create({ ...it, external_order_id: orderRecord.id });
   await upsertCustomer(sr, normalized, isNew);
-  // Reflete o pedido no módulo PDV/KDS
   await upsertPdvPedido(sr, normalized, items);
-  return orderRecord;
+  return { orderRecord, externalId: normalized.external_order_id };
 }
 
 Deno.serve(async (req) => {
@@ -158,43 +219,45 @@ Deno.serve(async (req) => {
   let body = {};
   try { body = await req.json(); } catch { body = {}; }
 
-  // Identificação da integração: secret (query/header/body) ou código da loja
+  // Secret: query string > header X-Webhook-Secret > body (fallback)
   const urlObj = new URL(req.url);
   const secret = urlObj.searchParams.get('secret') || req.headers.get('x-webhook-secret') || body.webhook_secret || '';
-  const storeCode = urlObj.searchParams.get('store') || body.store_code || body.external_store_code || body.store || '';
+  const storeCode = urlObj.searchParams.get('store') || body.store_code || body.external_store_code || body.store || body.merchant_id || '';
 
   let integration = null;
   if (secret) integration = (await sr.entities.integrations.filter({ webhook_secret: secret }))[0];
   if (!integration && storeCode) integration = (await sr.entities.integrations.filter({ external_store_code: String(storeCode) }))[0];
 
-  // Registra o evento bruto SEMPRE (auditoria), mesmo se a integração não for identificada
   const eventBase = {
     integration_id: integration?.id || '',
     provider: PROVIDER,
     event_type: body.event || body.type || body.evento || 'order',
-    external_id: String(body.id || body.order_id || body.pedido_id || ''),
+    external_id: extractOrderId(body),
     raw_payload: JSON.stringify(body).slice(0, 30000),
     status: 'recebido',
   };
 
+  // Sem secret válido → registra erro (se possível) e retorna 401.
   if (!integration) {
-    await sr.entities.integration_webhook_events.create({ ...eventBase, status: 'erro', error_message: 'Integração não identificada (secret/loja inválidos).' });
-    return Response.json({ error: 'Integração não identificada.' }, { status: 401 });
+    await sr.entities.integration_webhook_events.create({ ...eventBase, status: 'erro', error_message: 'Secret inválido — integração não identificada (secret/loja).' });
+    return Response.json({ error: 'Secret inválido ou integração não identificada.' }, { status: 401 });
   }
   if (integration.active === false) {
     await sr.entities.integration_webhook_events.create({ ...eventBase, status: 'ignorado', error_message: 'Integração inativa.' });
     return Response.json({ ok: true, ignored: true });
   }
 
+  // Salva sempre o evento bruto (auditoria) antes de processar.
   const evt = await sr.entities.integration_webhook_events.create(eventBase);
 
-  // Processa o pedido. Responde rápido — payload já está salvo.
   try {
-    const orderRaw = body.order || body.pedido || body.data || body;
-    await processOrder(sr, orderRaw, integration);
-    await sr.entities.integration_webhook_events.update(evt.id, { status: 'processado', processed_at: new Date().toISOString() });
+    const { externalId } = await processOrder(sr, body, integration);
+    await sr.entities.integration_webhook_events.update(evt.id, {
+      status: 'processado', external_id: externalId || eventBase.external_id, processed_at: new Date().toISOString(),
+    });
     return Response.json({ ok: true, message: 'Webhook recebido e processado.' });
   } catch (err) {
+    // Payload já está salvo → retorna 200 com warning e registra o erro no evento.
     await sr.entities.integration_webhook_events.update(evt.id, { status: 'erro', error_message: err.message, processed_at: new Date().toISOString() });
     return Response.json({ ok: true, message: 'Webhook recebido; processamento pendente.', warning: err.message });
   }

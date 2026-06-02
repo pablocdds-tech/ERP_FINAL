@@ -19,7 +19,7 @@
     },
     "external_store_code": {
       "type": "string",
-      "description": "C\u00f3digo da loja no Card\u00e1pio Web"
+      "description": "C\u00f3digo da loja no Card\u00e1pio Web (merchant_id)"
     },
     "base_url": {
       "type": "string",
@@ -45,6 +45,11 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    "auto_polling": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o polling autom\u00e1tico (fallback agendado) est\u00e1 ativo"
     },
     "last_sync_at": {
       "type": "string",

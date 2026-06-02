@@ -40,6 +40,15 @@ export const cardapioWebService = {
   syncOrders: (integration_id, since) =>
     base44.functions.invoke("cardapioWebIntegration", { action: "syncOrders", integration_id, since }).then((r) => r.data),
 
+  getOrderDetail: (integration_id, order_id) =>
+    base44.functions.invoke("cardapioWebIntegration", { action: "getOrderDetail", integration_id, order_id }).then((r) => r.data),
+
+  reprocessEvent: (integration_id, event_id) =>
+    base44.functions.invoke("cardapioWebSetup", { action: "reprocessEvent", integration_id, event_id }).then((r) => r.data),
+
+  testWebhook: (integration_id) =>
+    base44.functions.invoke("cardapioWebSetup", { action: "testWebhook", integration_id }).then((r) => r.data),
+
   listSyncLogs: (integration_id) =>
     base44.entities.integration_sync_logs.filter({ integration_id }, "-created_date", 50),
 
