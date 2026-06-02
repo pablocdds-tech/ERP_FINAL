@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, MonitorSmartphone, Plus } from "lucide-react";
+import { RefreshCw, MonitorSmartphone, Plus, ChefHat } from "lucide-react";
 import { toast } from "sonner";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
 import PdvColuna from "@/components/pdv/PdvColuna";
@@ -61,6 +61,7 @@ export default function PdvPainel() {
         </div>
         <div className="flex items-center gap-2">
           <div className="w-52"><LojaSingleSelect value={lojaId} onChange={setLojaId} emptyLabel="Todas as lojas" /></div>
+          <Button asChild variant="outline"><Link to="/admin/kds"><ChefHat className="w-4 h-4" /> Tela KDS</Link></Button>
           <Button asChild variant="outline"><Link to="/admin/pdv/novo"><Plus className="w-4 h-4" /> Novo pedido</Link></Button>
           <Button variant="outline" onClick={carregar} disabled={loading}>
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Atualizar

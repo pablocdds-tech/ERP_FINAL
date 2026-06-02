@@ -12,6 +12,7 @@ import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
 import PdvPainel from '@/pages/pdv/PdvPainel';
+import KdsTela from '@/pages/pdv/KdsTela';
 import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
@@ -125,6 +126,11 @@ const AuthenticatedApp = () => {
           <Route path="/app/dashboard" element={<PwaDashboard />} />
           <Route path="/app/equipe" element={<PwaEquipe />} />
         </Route>
+      </Route>
+
+      {/* KDS Cozinha — fullscreen, fora do ErpLayout */}
+      <Route element={<AdminGuard />}>
+        <Route path="/admin/kds" element={<KdsTela />} />
       </Route>
 
       {/* ERP Administrativo (/admin) — admin / gestor / operador */}
