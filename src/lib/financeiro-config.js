@@ -1,6 +1,7 @@
 import {
   ArrowDownCircle, ArrowUpCircle, Building2, Banknote, Repeat,
   TrendingUp, FileUp, ShieldCheck, Network, Receipt, History, Users,
+  MessageCircle, Inbox,
 } from "lucide-react";
 
 export const FINANCEIRO_REAL_LIST = [
@@ -11,6 +12,8 @@ export const FINANCEIRO_REAL_LIST = [
   { slug: "fluxo-caixa", title: "Fluxo de Caixa", icon: TrendingUp, descricao: "Realizado e previsto, por loja." },
   { slug: "importar-ofx", title: "Importação OFX", icon: FileUp, descricao: "Importe extratos bancários." },
   { slug: "conciliacao", title: "Conciliação Bancária", icon: ShieldCheck, descricao: "Marque movimentações como conferidas." },
+  { slug: "funcionarios-whatsapp", title: "Funcionários WhatsApp", icon: MessageCircle, descricao: "Telefones autorizados a enviar pré-lançamentos pelo WhatsApp." },
+  { slug: "inbox-whatsapp", title: "Inbox Financeiro WhatsApp", icon: Inbox, descricao: "Pré-lançamentos recebidos via WhatsApp para conferência." },
   { slug: "pf-pj", title: "Transição PF x PJ", icon: Users, descricao: "Painel de mistura sócio x empresa, alertas e saldo PF/PJ." },
 ];
 

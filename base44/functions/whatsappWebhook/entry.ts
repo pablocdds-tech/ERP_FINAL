@@ -27,11 +27,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const base44 = createClientFromRequest(req);
+
+    // Novo fluxo do Inbox Financeiro WhatsApp: valida telefone autorizado e cria pré-lançamento.
+    // Use fluxo="financeiro_inbox" (ou financeiro_inbox=true) no payload do n8n/WhatsApp.
+    if (body.fluxo === "financeiro_inbox" || body.financeiro_inbox === true) {
+      const out = await base44.asServiceRole.functions.invoke("whatsappFinanceiroInbox", body);
+      return Response.json(out?.data || out);
+    }
+
     if (!body.message_id) {
       return Response.json({ error: "message_id obrigatório" }, { status: 400 });
     }
-
-    const base44 = createClientFromRequest(req);
 
     // Idempotência
     const existentes = await base44.asServiceRole.entities.MensagemWhatsapp.filter({ message_id: body.message_id });

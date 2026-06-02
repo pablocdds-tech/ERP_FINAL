@@ -1,0 +1,51 @@
+{
+  "name": "funcionarios_whatsapp",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone em formato internacional, somente n\u00fameros. Ex: 5584996031591"
+    },
+    "loja_padrao": {
+      "type": "string",
+      "description": "ID da loja padr\u00e3o usada quando a mensagem n\u00e3o informar loja"
+    },
+    "lojas_permitidas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs das lojas permitidas. Vazio = somente loja padr\u00e3o"
+    },
+    "pode_enviar_lancamento": {
+      "type": "boolean",
+      "default": true
+    },
+    "pode_confirmar_lancamento": {
+      "type": "boolean",
+      "default": false
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "criado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "atualizado_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "nome",
+    "telefone"
+  ]
+}

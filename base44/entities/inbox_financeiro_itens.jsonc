@@ -1,0 +1,46 @@
+{
+  "name": "inbox_financeiro_itens",
+  "type": "object",
+  "properties": {
+    "inbox_financeiro_id": {
+      "type": "string"
+    },
+    "descricao_original": {
+      "type": "string"
+    },
+    "quantidade": {
+      "type": "number"
+    },
+    "unidade": {
+      "type": "string"
+    },
+    "valor_unitario": {
+      "type": "number"
+    },
+    "valor_total": {
+      "type": "number"
+    },
+    "produto_sugerido": {
+      "type": "string"
+    },
+    "produto_id_confirmado": {
+      "type": "string"
+    },
+    "categoria_sugerida": {
+      "type": "string"
+    },
+    "categoria_id_confirmada": {
+      "type": "string"
+    },
+    "entra_estoque": {
+      "type": "boolean",
+      "default": false
+    },
+    "confianca_ia": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "inbox_financeiro_id"
+  ]
+}

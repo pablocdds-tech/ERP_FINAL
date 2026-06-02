@@ -8,6 +8,8 @@ import MovimentacoesBancarias from "./MovimentacoesBancarias";
 import FluxoCaixa from "./FluxoCaixa";
 import ImportarOFX from "./ImportarOFX";
 import Conciliacao from "./Conciliacao";
+import FuncionariosWhatsapp from "./FuncionariosWhatsapp";
+import InboxFinanceiroWhatsapp from "./InboxFinanceiroWhatsapp";
 
 import InternoSaldos from "./InternoSaldos";
 import InternoLancamentos from "./InternoLancamentos";
@@ -26,6 +28,8 @@ const PAGES = {
   "real/fluxo-caixa": FluxoCaixa,
   "real/importar-ofx": ImportarOFX,
   "real/conciliacao": Conciliacao,
+  "real/funcionarios-whatsapp": FuncionariosWhatsapp,
+  "real/inbox-whatsapp": InboxFinanceiroWhatsapp,
   "real/pf-pj": PfPjDashboard,
   "real/pf-pj-lancamento": PfPjLancamento,
   "real/pf-pj-resumo": PfPjResumo,

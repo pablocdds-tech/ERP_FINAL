@@ -1,0 +1,164 @@
+{
+  "name": "inbox_financeiro_whatsapp",
+  "type": "object",
+  "properties": {
+    "telefone_remetente": {
+      "type": "string"
+    },
+    "funcionario_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "mensagem_original": {
+      "type": "string"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "whatsapp"
+      ],
+      "default": "whatsapp"
+    },
+    "tipo_entrada": {
+      "type": "string",
+      "enum": [
+        "cupom_fiscal",
+        "nota_fiscal",
+        "recibo",
+        "boleto",
+        "comprovante_pix",
+        "comprovante_cartao",
+        "comprovante_transferencia",
+        "despesa_manual_texto",
+        "despesa_por_audio",
+        "compra_estoque",
+        "compra_embalagem",
+        "manutencao",
+        "material_limpeza",
+        "pagamento_funcionario",
+        "motoboy_extra",
+        "sangria_caixa",
+        "reembolso",
+        "orcamento",
+        "outros"
+      ]
+    },
+    "tipo_documento": {
+      "type": "string"
+    },
+    "arquivo_url": {
+      "type": "string"
+    },
+    "tipo_arquivo": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recebido",
+        "processando",
+        "classificado",
+        "precisa_revisao",
+        "aguardando_confirmacao",
+        "lancado",
+        "duplicado",
+        "cancelado",
+        "erro"
+      ],
+      "default": "recebido"
+    },
+    "fornecedor_nome": {
+      "type": "string"
+    },
+    "fornecedor_cnpj": {
+      "type": "string"
+    },
+    "numero_documento": {
+      "type": "string"
+    },
+    "chave_acesso": {
+      "type": "string"
+    },
+    "data_documento": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date"
+    },
+    "valor_total": {
+      "type": "number"
+    },
+    "forma_pagamento": {
+      "type": "string"
+    },
+    "conta_origem": {
+      "type": "string"
+    },
+    "categoria_financeira_sugerida": {
+      "type": "string"
+    },
+    "categoria_financeira_id_confirmada": {
+      "type": "string"
+    },
+    "centro_custo_sugerido": {
+      "type": "string"
+    },
+    "centro_custo_id_confirmado": {
+      "type": "string"
+    },
+    "eh_compra_estoque": {
+      "type": "boolean",
+      "default": false
+    },
+    "eh_conta_pagar": {
+      "type": "boolean",
+      "default": false
+    },
+    "eh_despesa_paga": {
+      "type": "boolean",
+      "default": false
+    },
+    "eh_comprovante_pagamento": {
+      "type": "boolean",
+      "default": false
+    },
+    "eh_orcamento": {
+      "type": "boolean",
+      "default": false
+    },
+    "json_extraido": {
+      "type": "string"
+    },
+    "observacao_ia": {
+      "type": "string"
+    },
+    "erro": {
+      "type": "string"
+    },
+    "criado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "processado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "confirmado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lancado_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "telefone_remetente",
+    "origem",
+    "status"
+  ]
+}
