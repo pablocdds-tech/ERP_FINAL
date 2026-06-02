@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wand2, Loader2, ImagePlus, X } from "lucide-react";
+import { Wand2, Loader2, ImagePlus, X, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { criarComando } from "@/lib/executor-comando-service";
@@ -66,9 +66,21 @@ export default function ComandoRapidoOperacional() {
 
   return (
     <Card className="p-4 mb-6 border-violet-200 bg-violet-50/30">
-      <div className="flex items-center gap-2 mb-2">
-        <Wand2 className="w-4 h-4 text-violet-600" />
-        <h2 className="text-sm font-semibold">Executor ERP — comando rápido</h2>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <Wand2 className="w-4 h-4 text-violet-600" />
+          <h2 className="text-sm font-semibold">Executor ERP — comando rápido</h2>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 text-violet-700 hover:bg-violet-100"
+          onClick={() => navigate("/admin/ia/executor")}
+        >
+          <MessageSquare className="w-4 h-4 mr-1" /> Abrir chat
+          <ArrowRight className="w-3.5 h-3.5 ml-1" />
+        </Button>
       </div>
       <div className="flex gap-2">
         <Input
