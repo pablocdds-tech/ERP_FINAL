@@ -25,6 +25,7 @@ export default function Solicitacoes() {
   const [colaboradores, setColaboradores] = useState([]);
   const [statusF, setStatusF] = useState("pendente");
   const [acao, setAcao] = useState({ open: false, sol: null, decisao: null, resposta: "" });
+  const [erro, setErro] = useState("");
 
   const load = async () => {
     const [s, c] = await Promise.all([
@@ -39,10 +40,16 @@ export default function Solicitacoes() {
   const filtered = useMemo(() => items.filter((s) => statusF === "todos" || s.status === statusF), [items, statusF]);
 
   const decidir = async () => {
-    await decidirSolicitacao(acao.sol, acao.decisao, acao.resposta);
+    if (acao.decisao === "rejeitada" && !acao.resposta.trim()) {
+      setErro("Informe o motivo da rejeição para continuar.");
+      return;
+    }
+    setErro("");
+    await decidirSolicitacao(acao.sol, acao.decisao, acao.resposta.trim());
     setAcao({ open: false, sol: null, decisao: null, resposta: "" });
     load();
   };
+  const fecharAcao = () => { setErro(""); setAcao({ open: false, sol: null, decisao: null, resposta: "" }); };
 
   return (
     <PageShell title="Solicitações" description="Folgas, trocas, ajustes de ponto e justificativas.">
@@ -94,13 +101,19 @@ export default function Solicitacoes() {
         </Table>
       </Card>
 
-      <Dialog open={acao.open} onOpenChange={(o) => !o && setAcao({ open: false, sol: null, decisao: null, resposta: "" })}>
+      <Dialog open={acao.open} onOpenChange={(o) => !o && fecharAcao()}>
         <DialogContent>
           <DialogHeader><DialogTitle>{acao.decisao === "aprovada" ? "Aprovar" : "Rejeitar"} solicitação</DialogTitle></DialogHeader>
-          <Textarea rows={3} placeholder="Resposta ao colaborador (opcional)" value={acao.resposta} onChange={(e) => setAcao({ ...acao, resposta: e.target.value })} />
+          <Textarea
+            rows={3}
+            placeholder={acao.decisao === "rejeitada" ? "Motivo da rejeição (obrigatório)" : "Resposta ao colaborador (opcional)"}
+            value={acao.resposta}
+            onChange={(e) => { setAcao({ ...acao, resposta: e.target.value }); if (erro) setErro(""); }}
+          />
+          {erro && <div className="text-xs text-destructive">{erro}</div>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAcao({ open: false, sol: null, decisao: null, resposta: "" })}>Cancelar</Button>
-            <Button onClick={decidir}>Confirmar</Button>
+            <Button variant="outline" onClick={fecharAcao}>Cancelar</Button>
+            <Button onClick={decidir} disabled={acao.decisao === "rejeitada" && !acao.resposta.trim()}>Confirmar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

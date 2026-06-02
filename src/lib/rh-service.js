@@ -64,20 +64,103 @@ export function formatMinutos(min) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Compara escala vs registros para detectar atraso e falta. */
+/**
+ * Compara escala vs registros e classifica a situação do dia.
+ * Status possíveis:
+ *  sem_jornada | falta | atraso | em_intervalo | sem_saida |
+ *  incompleto | saida_antecipada | sequencia_quebrada | encerrado | ok
+ * `exececao` = true para qualquer caso que mereça destaque/tratamento.
+ */
 export function diagnosticoDia(escalaDia, registros) {
-  if (!escalaDia || escalaDia.tipo !== "normal") return { status: "sem_jornada", atraso_min: 0 };
+  if (!escalaDia || escalaDia.tipo !== "normal") {
+    // Sem jornada: só é exceção se houver alguma batida solta.
+    return { status: "sem_jornada", atraso_min: 0, saida_antecipada_min: 0, exececao: registros.length > 0 };
+  }
+
   const entrada = registros.find((r) => r.tipo === "entrada");
-  if (!entrada) return { status: "falta", atraso_min: 0 };
-  const [hh, mm] = (escalaDia.hora_entrada || "00:00").split(":").map(Number);
+  const intSaida = registros.find((r) => r.tipo === "intervalo_saida");
+  const intVolta = registros.find((r) => r.tipo === "intervalo_volta");
+  const saida = registros.find((r) => r.tipo === "saida");
+
+  if (!entrada) {
+    // Sequência quebrada: tem batida posterior sem ter entrada.
+    if (intSaida || intVolta || saida) {
+      return { status: "sequencia_quebrada", atraso_min: 0, saida_antecipada_min: 0, exececao: true };
+    }
+    return { status: "falta", atraso_min: 0, saida_antecipada_min: 0, exececao: true };
+  }
+
+  // Sequência quebrada: volta de intervalo sem ter saído para intervalo.
+  if (intVolta && !intSaida) {
+    return { status: "sequencia_quebrada", atraso_min: 0, saida_antecipada_min: 0, exececao: true };
+  }
+
+  // Atraso na entrada.
   const dataBase = new Date(escalaDia.data + "T00:00:00");
-  const horaEsperada = new Date(dataBase);
-  horaEsperada.setHours(hh, mm, 0, 0);
-  const diffMin = Math.round((new Date(entrada.horario) - horaEsperada) / 60000);
-  return {
-    status: diffMin > 5 ? "atraso" : "ok",
-    atraso_min: diffMin > 0 ? diffMin : 0,
-  };
+  const [hh, mm] = (escalaDia.hora_entrada || "00:00").split(":").map(Number);
+  const horaEsperada = new Date(dataBase); horaEsperada.setHours(hh, mm, 0, 0);
+  const atrasoMin = Math.round((new Date(entrada.horario) - horaEsperada) / 60000);
+  const atraso_min = atrasoMin > 0 ? atrasoMin : 0;
+
+  // Em intervalo: saiu para intervalo mas ainda não voltou.
+  if (intSaida && !intVolta && !saida) {
+    return { status: "em_intervalo", atraso_min, saida_antecipada_min: 0, exececao: false };
+  }
+
+  // Ainda sem saída final (dia em andamento ou esqueceu de bater).
+  if (!saida) {
+    // incompleto: saiu pro intervalo, voltou, mas nunca registrou saída final.
+    const status = (intSaida && intVolta) ? "incompleto" : "sem_saida";
+    return { status, atraso_min, saida_antecipada_min: 0, exececao: true };
+  }
+
+  // Saída registrada — verifica saída antecipada vs escala.
+  let saida_antecipada_min = 0;
+  if (escalaDia.hora_saida) {
+    const [sh, sm] = escalaDia.hora_saida.split(":").map(Number);
+    const horaSaidaEsperada = new Date(dataBase); horaSaidaEsperada.setHours(sh, sm, 0, 0);
+    const diffSaida = Math.round((horaSaidaEsperada - new Date(saida.horario)) / 60000);
+    if (diffSaida > 5) saida_antecipada_min = diffSaida;
+  }
+  if (saida_antecipada_min > 0) {
+    return { status: "saida_antecipada", atraso_min, saida_antecipada_min, exececao: true };
+  }
+
+  return { status: atraso_min > 5 ? "atraso" : "encerrado", atraso_min, saida_antecipada_min: 0, exececao: atraso_min > 5 };
+}
+
+/** Rótulo legível para cada status de diagnóstico. */
+export const LABEL_STATUS_DIA = {
+  ok: "OK",
+  encerrado: "Encerrado",
+  presente: "Presente",
+  em_intervalo: "Em intervalo",
+  sem_saida: "Sem saída",
+  incompleto: "Ponto incompleto",
+  atraso: "Atrasado",
+  falta: "Ausente",
+  saida_antecipada: "Saída antecipada",
+  sequencia_quebrada: "Sequência quebrada",
+  sem_jornada: "Sem jornada",
+};
+
+/**
+ * Reduz o diagnóstico a uma "categoria de filtro" usada no Ponto do Dia.
+ * presente = dia em andamento ou encerrado sem exceção grave.
+ */
+export function categoriaPonto(diag) {
+  switch (diag.status) {
+    case "falta": return "ausente";
+    case "atraso": return "atrasado";
+    case "em_intervalo": return "em_intervalo";
+    case "sem_saida":
+    case "incompleto": return "sem_saida";
+    case "encerrado": return "encerrado";
+    case "sem_jornada": return "sem_jornada";
+    case "saida_antecipada":
+    case "sequencia_quebrada": return "presente";
+    default: return "presente";
+  }
 }
 
 /** Auditoria de aprovação. */

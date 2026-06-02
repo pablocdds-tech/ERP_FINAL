@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink, Plus } from "lucide-react";
 import PageShell from "@/components/rh/PageShell";
+import NovaJustificativaDialog from "@/components/rh/NovaJustificativaDialog";
 import { format } from "date-fns";
 
 const STATUS_CLS = {
@@ -22,15 +23,17 @@ export default function Justificativas() {
   const [tiposAbono, setTiposAbono] = useState([]);
   const [filtroStatus, setFiltroStatus] = useState("todas");
   const [busca, setBusca] = useState("");
+  const [novaOpen, setNovaOpen] = useState(false);
 
-  useEffect(() => { (async () => {
+  const carregar = async () => {
     const [s, c, t] = await Promise.all([
       base44.entities.SolicitacaoRH.list("-created_date", 2000),
       base44.entities.Colaborador.list("", 5000),
       base44.entities.TipoAbono.list().catch(() => []),
     ]);
     setSolicitacoes(s || []); setColaboradores(c || []); setTiposAbono(t || []);
-  })(); }, []);
+  };
+  useEffect(() => { carregar(); }, []);
 
   const colMap = useMemo(() => Object.fromEntries(colaboradores.map((c) => [c.id, c])), [colaboradores]);
   const tipoMap = useMemo(() => Object.fromEntries(tiposAbono.map((t) => [t.id, t])), [tiposAbono]);
@@ -44,7 +47,11 @@ export default function Justificativas() {
     });
 
   return (
-    <PageShell title="Justificativas e Atestados" description="Histórico de abonos, justificativas e atestados dos colaboradores.">
+    <PageShell
+      title="Justificativas e Atestados"
+      description="Histórico de abonos, justificativas e atestados dos colaboradores."
+      actions={<Button onClick={() => setNovaOpen(true)} className="gap-2"><Plus className="w-4 h-4" />Nova justificativa</Button>}
+    >
       <Card className="p-4 mb-4">
         <div className="flex flex-col md:flex-row gap-3">
           <Input placeholder="Buscar por colaborador..." value={busca} onChange={(e) => setBusca(e.target.value)} className="md:w-[280px]" />
@@ -60,6 +67,14 @@ export default function Justificativas() {
           <div className="md:ml-auto self-center text-sm text-muted-foreground">{lista.length} registros</div>
         </div>
       </Card>
+
+      <NovaJustificativaDialog
+        open={novaOpen}
+        onOpenChange={setNovaOpen}
+        colaboradores={colaboradores}
+        tiposAbono={tiposAbono}
+        onSaved={carregar}
+      />
 
       <Card className="overflow-hidden">
         <Table>

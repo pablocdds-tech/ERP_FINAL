@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import PageShell from "@/components/rh/PageShell";
 import FiltroPeriodoLoja from "@/components/rh/FiltroPeriodoLoja";
+import BancoHorasDetalhe from "@/components/rh/BancoHorasDetalhe";
 import { formatMinutos } from "@/lib/rh-service";
 import { carregarUniversoPonto } from "@/lib/relatorios-ponto-service";
 
@@ -19,6 +21,7 @@ export default function BancoHorasGestao() {
   const [filtros, setFiltros] = useState({ ...ini, loja_id: "" });
   const [universo, setUniverso] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [aberto, setAberto] = useState(null); // id do colaborador expandido
 
   useEffect(() => { (async () => {
     setLoading(true);
@@ -30,12 +33,16 @@ export default function BancoHorasGestao() {
     if (!universo) return [];
     return universo.linhas
       .map((l) => ({
+        id: l.colaborador.id,
         nome: l.colaborador.nome,
         esperado: l.totais.esperado_min,
         trabalhado: l.totais.trabalhado_min,
         saldo: l.totais.saldo_min,
         he50: l.totais.he50_min,
         he100: l.totais.he100_min,
+        faltas: l.totais.faltas,
+        atrasos: l.totais.atrasos,
+        resumos: l.resumos,
       }))
       .sort((a, b) => b.saldo - a.saldo);
   }, [universo]);

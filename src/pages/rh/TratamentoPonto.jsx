@@ -8,9 +8,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Field from "@/components/cadastros/Field";
-import { CheckCircle2, AlertTriangle, FileSignature, UserX } from "lucide-react";
+import { CheckCircle2, FileSignature } from "lucide-react";
 import PageShell from "@/components/rh/PageShell";
-import { diagnosticoDia } from "@/lib/rh-service";
+import { diagnosticoDia, LABEL_STATUS_DIA } from "@/lib/rh-service";
+
+// Status que o gestor trata aqui e o tipo de SolicitacaoRH gerado.
+const TRATAVEIS = {
+  falta: "abono_falta",
+  atraso: "abono_atraso",
+  incompleto: "abono_incompleto",
+  sem_saida: "abono_incompleto",
+  saida_antecipada: "abono_saida_antecipada",
+  sequencia_quebrada: "abono_sequencia_quebrada",
+};
 
 /**
  * Tratamento de Ponto — gestor aplica abono/justificativa em FALTA ou ATRASO
@@ -54,7 +64,7 @@ export default function TratamentoPonto() {
       const escala = escalas.find((e) => e.colaborador_id === c.id) || null;
       const diag = diagnosticoDia(escala, regs);
       return { c, regs, escala, diag };
-    }).filter((x) => x.diag.status === "falta" || x.diag.status === "atraso");
+    }).filter((x) => !!TRATAVEIS[x.diag.status]);
   }, [colaboradores, registros, escalas, lojaId]);
 
   const abrirDialog = (linha, situacao) => {
@@ -63,7 +73,7 @@ export default function TratamentoPonto() {
   };
 
   const aplicar = async () => {
-    if (!dialog || !tipoAbonoId) return;
+    if (!dialog || !tipoAbonoId || !observacao.trim()) return;
     setSalvando(true);
     let usuario_email = null;
     try { usuario_email = (await base44.auth.me())?.email; } catch { /* */ }
@@ -71,11 +81,11 @@ export default function TratamentoPonto() {
     await base44.entities.SolicitacaoRH.create({
       colaborador_id: dialog.c.id,
       loja_id: dialog.c.loja_id || lojaId || "",
-      tipo: dialog.situacao === "falta" ? "abono_falta" : "abono_atraso",
+      tipo: TRATAVEIS[dialog.situacao] || "justificativa",
       categoria: tipo?.categoria || "outro",
       tipo_abono_id: tipoAbonoId,
       data_referencia: data,
-      descricao: observacao || tipo?.nome || "",
+      descricao: observacao.trim(),
       status: "aprovada",
       aprovado_por: usuario_email,
       aprovado_em: new Date().toISOString(),
@@ -122,11 +132,11 @@ export default function TratamentoPonto() {
               <TableRow key={c.id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">{c.nome}</TableCell>
                 <TableCell className="text-xs">
-                  {diag.status === "falta" ? (
-                    <span className="inline-flex items-center gap-1 text-destructive font-medium"><UserX className="w-3 h-3" />Falta</span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-amber-700 font-medium"><AlertTriangle className="w-3 h-3" />Atraso {diag.atraso_min}min</span>
-                  )}
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                    {LABEL_STATUS_DIA[diag.status] || diag.status}
+                    {diag.status === "atraso" && diag.atraso_min > 0 && ` (+${diag.atraso_min}min)`}
+                    {diag.status === "saida_antecipada" && diag.saida_antecipada_min > 0 && ` (−${diag.saida_antecipada_min}min)`}
+                  </span>
                 </TableCell>
                 <TableCell className="text-xs">
                   {escala?.tipo === "normal" ? `${escala.hora_entrada}–${escala.hora_saida}` : escala?.tipo || "—"}
@@ -146,7 +156,7 @@ export default function TratamentoPonto() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Tratar {dialog?.situacao === "falta" ? "falta" : "atraso"} — {dialog?.c?.nome}
+              Tratar {(LABEL_STATUS_DIA[dialog?.situacao] || dialog?.situacao || "").toLowerCase()} — {dialog?.c?.nome}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -159,8 +169,8 @@ export default function TratamentoPonto() {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Observação">
-              <Textarea rows={3} value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Ex: atestado médico anexado, atraso por chuva, etc." />
+            <Field label="Motivo / justificativa" required>
+              <Textarea rows={3} value={observacao} onChange={(e) => setObservacao(e.target.value)} placeholder="Ex: atestado médico anexado, atraso por chuva, esqueceu de bater a saída, etc." />
             </Field>
             <div className="text-[11px] text-muted-foreground">
               A batida original NÃO é alterada. O abono fica registrado como SolicitaçãoRH aprovada,
@@ -169,7 +179,7 @@ export default function TratamentoPonto() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialog(null)}>Cancelar</Button>
-            <Button onClick={aplicar} disabled={!tipoAbonoId || salvando}>{salvando ? "..." : "Aplicar abono"}</Button>
+            <Button onClick={aplicar} disabled={!tipoAbonoId || !observacao.trim() || salvando}>{salvando ? "..." : "Aplicar abono"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -11,6 +11,7 @@ export default function PontoDoDia() {
   const hoje = new Date().toISOString().slice(0, 10);
   const [data, setData] = useState(hoje);
   const [lojaId, setLojaId] = useState("");
+  const [statusFiltro, setStatusFiltro] = useState("todos");
   const [lojas, setLojas] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [registros, setRegistros] = useState([]);
@@ -46,6 +47,19 @@ export default function PontoDoDia() {
               {lojas.map((l) => <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+            <SelectTrigger className="md:w-[200px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              <SelectItem value="presente">Presente</SelectItem>
+              <SelectItem value="ausente">Ausente</SelectItem>
+              <SelectItem value="atrasado">Atrasado</SelectItem>
+              <SelectItem value="em_intervalo">Em intervalo</SelectItem>
+              <SelectItem value="sem_saida">Sem saída</SelectItem>
+              <SelectItem value="encerrado">Encerrado</SelectItem>
+              <SelectItem value="sem_jornada">Sem jornada</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 
@@ -60,6 +74,7 @@ export default function PontoDoDia() {
           registros={registros}
           escalas={escalas}
           lojas={lojas}
+          statusFiltro={statusFiltro}
         />
       </Card>
     </PageShell>

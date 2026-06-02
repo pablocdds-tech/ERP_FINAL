@@ -17,8 +17,26 @@
         "justificativa_falta",
         "atestado",
         "ajuste_ponto",
+        "abono_falta",
+        "abono_atraso",
+        "abono_incompleto",
+        "abono_saida_antecipada",
+        "abono_sequencia_quebrada",
+        "justificativa",
         "outro"
       ]
+    },
+    "categoria": {
+      "type": "string",
+      "description": "Categoria do TipoAbono aplicado (snapshot)"
+    },
+    "tipo_abono_id": {
+      "type": "string",
+      "description": "V\u00ednculo com o TipoAbono usado no tratamento/justificativa"
+    },
+    "origem": {
+      "type": "string",
+      "description": "Origem do registro (ex: gestor_tratamento, gestor_justificativa, pwa)"
     },
     "data_solicitacao": {
       "type": "string",
