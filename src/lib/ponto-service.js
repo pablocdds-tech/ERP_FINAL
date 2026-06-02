@@ -4,6 +4,17 @@ import { registrarLog } from "./auditoria-service";
 import { enfileirarBatida } from "./ponto-offline-queue";
 import { podeRegistrarPonto } from "./ponto-permissoes";
 
+const TZ_EMPRESA = "America/Sao_Paulo";
+
+function dataLocalEmpresa(date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ_EMPRESA,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 /**
  * Faz upload de um Blob como arquivo (jpg).
  */
@@ -106,7 +117,7 @@ export async function registrarBatida({
  * Próximo evento (entrada/intervalo/saída) para o colaborador hoje.
  */
 export async function obterProximoEvento(colaborador_id) {
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = dataLocalEmpresa();
   const list = await base44.entities.RegistroPonto.filter(
     { colaborador_id, data: hoje },
     "horario"

@@ -506,9 +506,15 @@ export default function KioskAutoFlow({ device, config }) {
       }
       const selfie_url = await uploadFotoBlob(selfieBlob, `kiosk-pin-${colaborador.id}.jpg`);
       const { proximo } = await obterProximoEvento(colaborador.id);
+      if (!proximo) {
+        setErroMsg(`${colaborador.nome.split(" ")[0]}, todos os pontos do dia já foram registrados.`);
+        setFase("erro");
+        agendarReset();
+        return;
+      }
       const out = await registrarBatida({
         colaborador,
-        tipo: proximo || "entrada",
+        tipo: proximo,
         selfie_url,
         origem: "kiosk",
         dispositivo: deviceIdRef.current,
@@ -519,7 +525,7 @@ export default function KioskAutoFlow({ device, config }) {
       tentativasFalhaRef.current = 0;
       setResultado({
         colaborador,
-        tipo: proximo || "entrada",
+        tipo: proximo,
         status: out?.registro?.status || "pendente_revisao",
         offline: out?.offline,
       });

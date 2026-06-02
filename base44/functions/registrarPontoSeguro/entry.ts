@@ -39,6 +39,13 @@ function dataLocalEmpresa(isoString) {
   return partes;
 }
 
+const SEQUENCIA_PONTO = ['entrada', 'intervalo_saida', 'intervalo_volta', 'saida'];
+
+function proximoTipoPermitido(registrosDoDia) {
+  const tipos = new Set(registrosDoDia.map((r) => r.tipo));
+  return SEQUENCIA_PONTO.find((tipo) => !tipos.has(tipo)) || null;
+}
+
 async function sha256Hex(str) {
   const buf = new TextEncoder().encode(str);
   const h = await crypto.subtle.digest('SHA-256', buf);
@@ -297,9 +304,28 @@ Deno.serve(async (req) => {
   else if (ia_resultado === 'baixa_confianca' || ia_resultado === 'precisa_revisao') status = 'pendente_revisao';
   else if (ia_resultado === 'aprovado') status = 'registrado';
 
-  // 10) NSR (global) + hash
+  // 10) Data local + sequência do dia: só permite 4 eventos, sem repetição e na ordem correta.
   const horario = offline_ts || new Date().toISOString();
   const data = dataLocalEmpresa(horario);
+  const registrosDoDia = await sr.entities.RegistroPonto.filter(
+    { colaborador_id, data },
+    'horario',
+    20
+  );
+  const registrosValidos = registrosDoDia.filter((r) => r.status !== 'rejeitado');
+  const proximoPermitido = proximoTipoPermitido(registrosValidos);
+
+  if (!proximoPermitido) {
+    return fail('dia_completo', 'Todos os 4 eventos de ponto deste dia já foram registrados.', 409);
+  }
+  if (registrosValidos.some((r) => r.tipo === tipo)) {
+    return fail('evento_repetido', 'Este evento de ponto já foi registrado hoje.', 409);
+  }
+  if (tipo !== proximoPermitido) {
+    return fail('sequencia_invalida', `Próximo evento permitido: ${proximoPermitido}.`, 409);
+  }
+
+  // 11) NSR (global) + hash
   const { nsr, hash_anterior } = await proximoNsrEHash(sr);
 
   // Multi-loja: snapshot da loja principal do colaborador e da loja do dispositivo.

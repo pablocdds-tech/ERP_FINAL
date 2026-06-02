@@ -80,7 +80,13 @@ export default function KioskBatidaFlow({ device, onClose }) {
     try {
       const selfie_url = await uploadFotoBlob(selfieBlob, `kiosk-${colaborador.id}.jpg`);
       const { proximo } = await obterProximoEvento(colaborador.id);
-      const tipo = proximo || "entrada";
+      if (!proximo) {
+        setFase("falha");
+        setMensagem(`${colaborador.nome.split(" ")[0]}, todos os pontos do dia já foram registrados.`);
+        fecharComDelay();
+        return;
+      }
+      const tipo = proximo;
       const out = await registrarBatida({
         colaborador,
         tipo,
