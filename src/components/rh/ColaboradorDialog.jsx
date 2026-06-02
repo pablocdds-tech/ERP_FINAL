@@ -390,7 +390,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
 
           {data.id && (
             <div className="col-span-2 pt-3 mt-1 border-t border-border space-y-3">
-              <LinkCadastroFacial colaboradorId={data.id} />
+              <LinkCadastroFacial />
               <SecaoFacialColaborador colaborador={data} onUpdated={recarregar} disabled={isView} />
             </div>
           )}

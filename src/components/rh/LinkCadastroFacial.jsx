@@ -4,14 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Link2, Copy, Check } from "lucide-react";
 
 /**
- * Gera e copia um link público de autocadastro facial para o colaborador.
- * O colaborador abre o link no celular e tira as 3 fotos sozinho.
+ * Link público único de autocadastro facial.
+ * O colaborador abre no celular, digita o CPF e tira as 3 fotos sozinho.
  */
-export default function LinkCadastroFacial({ colaboradorId }) {
+export default function LinkCadastroFacial() {
   const [copiado, setCopiado] = useState(false);
-  if (!colaboradorId) return null;
 
-  const url = `${window.location.origin}/cadastro-facial?c=${colaboradorId}`;
+  const url = `${window.location.origin}/cadastro-facial`;
 
   const copiar = async () => {
     try {
@@ -28,7 +27,7 @@ export default function LinkCadastroFacial({ colaboradorId }) {
         <span className="text-xs font-medium">Link de autocadastro facial</span>
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Envie este link ao colaborador. Ele tira as próprias fotos pelo celular e o cadastro fica pronto.
+        Envie este link aos colaboradores. Cada um digita o próprio CPF e tira as fotos pelo celular.
       </p>
       <div className="flex gap-2">
         <Input readOnly value={url} className="text-xs h-8" onFocus={(e) => e.target.select()} />
