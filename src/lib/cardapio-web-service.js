@@ -46,6 +46,9 @@ export const cardapioWebService = {
   listWebhookEvents: (integration_id) =>
     base44.entities.integration_webhook_events.filter({ integration_id }, "-created_date", 50),
 
+  baixarAuditoriaPdf: () =>
+    base44.functions.invoke("auditoriaCardapioWebPdf", {}, { responseType: "blob" }).then((r) => r.data),
+
   listPedidos: () => base44.entities.external_orders.list("-ordered_at", 500),
   listItens: (external_order_id) => base44.entities.external_order_items.filter({ external_order_id }, "created_date", 200),
 };

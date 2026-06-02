@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Copy, RefreshCw, Plug, Save, ShieldCheck, ExternalLink } from "lucide-react";
+import { Copy, RefreshCw, Plug, Save, ShieldCheck, ExternalLink, FileText } from "lucide-react";
 
 const vazio = { name: "Cardápio Web", store_id: "", external_store_code: "", base_url: "https://integracao.cardapioweb.com", active: true, api_token_mascarado: "", token_configurado: false };
 
@@ -88,11 +88,32 @@ export default function CardapioWebIntegracao() {
 
   const copiar = () => { navigator.clipboard.writeText(webhookUrl); toast.success("URL do webhook copiada."); };
 
+  const baixarAuditoria = async () => {
+    setBusy(true);
+    try {
+      const blob = await cardapioWebService.baixarAuditoriaPdf();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "auditoria-cardapio-web.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Não foi possível gerar o PDF.");
+    }
+    setBusy(false);
+  };
+
   return (
     <PageShell
       title="Integração Cardápio Web"
       description="Receba e importe pedidos do Cardápio Web. O token da API fica salvo de forma segura no servidor."
-      actions={<Button variant="outline" onClick={load}><RefreshCw className="w-4 h-4" /> Atualizar</Button>}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={baixarAuditoria} disabled={busy}><FileText className="w-4 h-4" /> Baixar auditoria (PDF)</Button>
+          <Button variant="outline" onClick={load}><RefreshCw className="w-4 h-4" /> Atualizar</Button>
+        </div>
+      }
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5 space-y-4">
