@@ -86,3 +86,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Leaflet usa z-index muito alto (até 1000) que sobrepõe dialogs/popovers.
+   Mantemos o mapa abaixo das camadas de overlay do Radix. */
+.leaflet-container,
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: 0 !important;
+}
