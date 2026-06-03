@@ -1,9 +1,10 @@
 import {
   Megaphone, Ticket, Users, BarChart3, Repeat, Trophy,
-  UserX, Send, TrendingUp,
+  UserX, Send, TrendingUp, Heart,
 } from "lucide-react";
 
 export const MARKETING_LIST = [
+  { tipo: "crm", nome: "CRM de Clientes", descricao: "Jornada do cliente: sabores, dias preferidos, LTV e listas para ofertas.", icon: Heart },
   { tipo: "campanhas", nome: "Campanhas", descricao: "Crie e acompanhe campanhas com vigência e meta.", icon: Megaphone },
   { tipo: "cupons", nome: "Cupons", descricao: "Cupons de desconto com regras por canal e loja.", icon: Ticket },
   { tipo: "clientes", nome: "Clientes", descricao: "Base de clientes com tags e histórico.", icon: Users },

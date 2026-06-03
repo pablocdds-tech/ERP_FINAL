@@ -9,8 +9,10 @@ import Recorrencia from "./Recorrencia";
 import Inativos from "./Inativos";
 import Disparos from "./Disparos";
 import Indicadores from "./Indicadores";
+import CrmClientes from "./CrmClientes";
 
 const PAGES = {
+  crm: CrmClientes,
   campanhas: Campanhas,
   cupons: Cupons,
   clientes: Clientes,

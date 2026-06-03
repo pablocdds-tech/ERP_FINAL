@@ -6,7 +6,6 @@ import {
 export const PDV_LIST = [
   { slug: "painel", title: "Painel de Pedidos", icon: MonitorSmartphone, descricao: "Pedidos ao vivo de todos os canais.", to: "/admin/pdv/painel" },
   { slug: "kds", title: "Cozinha — KDS", icon: ChefHat, descricao: "Tela de produção da cozinha.", to: "/admin/kds" },
-  { slug: "crm", title: "CRM de Clientes", icon: Users, descricao: "Jornada do cliente: sabores, dias preferidos, LTV e listas para ofertas." },
   { slug: "cardapio-web", title: "Integração Cardápio Web", icon: Utensils, descricao: "Conecte o Cardápio Web e configure o webhook." },
   { slug: "pedidos-importados", title: "Pedidos Importados", icon: ShoppingBag, descricao: "Pedidos recebidos do Cardápio Web." },
   { slug: "resumo-cardapio-web", title: "Resumo Cardápio Web", icon: ListChecks, descricao: "Resumo por loja, data e forma de pagamento." },
