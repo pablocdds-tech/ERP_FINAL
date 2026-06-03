@@ -12,6 +12,7 @@ import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
 import PdvPainel from '@/pages/pdv/PdvPainel';
+import Roteirizacao from '@/pages/delivery/Roteirizacao';
 import PdvIndex from '@/pages/pdv/PdvIndex';
 import PdvTipoPage from '@/pages/pdv/PdvTipoPage';
 import KdsTela from '@/pages/pdv/KdsTela';
@@ -142,6 +143,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/pdv" element={<PdvIndex />} />
           <Route path="/admin/pdv/painel" element={<PdvPainel />} />
           <Route path="/admin/pdv/:tipo" element={<PdvTipoPage />} />
+          <Route path="/admin/roteirizacao" element={<Roteirizacao />} />
           <Route path="/admin/agentes" element={<Agentes />} />
           <Route path="/admin/cadastros" element={<CadastrosIndex />} />
           <Route path="/admin/cadastros/:tipo" element={<CadastroTipoPage />} />
