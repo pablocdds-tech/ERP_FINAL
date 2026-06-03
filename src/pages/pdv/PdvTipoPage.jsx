@@ -2,12 +2,14 @@ import { useParams } from "react-router-dom";
 import PageNotFound from "@/lib/PageNotFound";
 
 import PdvPainel from "./PdvPainel";
+import CrmClientes from "./CrmClientes";
 import CardapioWebIntegracao from "@/pages/financeiro/CardapioWebIntegracao";
 import PedidosImportados from "@/pages/financeiro/PedidosImportados";
 import ResumoCardapioWeb from "@/pages/financeiro/ResumoCardapioWeb";
 
 const PAGES = {
   "painel": PdvPainel,
+  "crm": CrmClientes,
   "cardapio-web": CardapioWebIntegracao,
   "pedidos-importados": PedidosImportados,
   "resumo-cardapio-web": ResumoCardapioWeb,
