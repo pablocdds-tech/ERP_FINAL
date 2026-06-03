@@ -35,10 +35,18 @@ export default function PedidoImportadoDialog({ pedido, isAdmin, open, onOpenCha
           <div className="text-sm font-medium mb-2">Itens</div>
           <div className="rounded-lg border overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead>Produto</TableHead><TableHead>Categoria</TableHead><TableHead>Qtd</TableHead><TableHead>Unit.</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Produto / Sabores</TableHead><TableHead>Qtd</TableHead><TableHead>Unit.</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
               <TableBody>
-                {itens.length === 0 ? <TableRow><TableCell colSpan={5} className="text-muted-foreground">Sem itens.</TableCell></TableRow> : itens.map((i) => (
-                  <TableRow key={i.id}><TableCell>{i.product_name}</TableCell><TableCell>{i.category_name || "—"}</TableCell><TableCell>{i.quantity}</TableCell><TableCell>{fmtMoeda(i.unit_price)}</TableCell><TableCell>{fmtMoeda(i.total_price)}</TableCell></TableRow>
+                {itens.length === 0 ? <TableRow><TableCell colSpan={4} className="text-muted-foreground">Sem itens.</TableCell></TableRow> : itens.map((i) => (
+                  <TableRow key={i.id}>
+                    <TableCell>
+                      <div className="font-medium">{i.product_name}</div>
+                      {i.notes && <div className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{i.notes}</div>}
+                    </TableCell>
+                    <TableCell>{i.quantity}</TableCell>
+                    <TableCell>{fmtMoeda(i.unit_price)}</TableCell>
+                    <TableCell>{fmtMoeda(i.total_price)}</TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>

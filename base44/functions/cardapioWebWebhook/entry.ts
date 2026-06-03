@@ -54,18 +54,56 @@ function normalizeOrderPayload(raw, integration) {
   };
 }
 
+// Extrai os complementos/sabores/bordas (options) de um item, agrupando por grupo.
+function extractOptions(it) {
+  const opts = it.options || it.complementos || it.adicionais || it.modifiers || [];
+  if (!Array.isArray(opts) || opts.length === 0) return [];
+  return opts.map((op) => ({
+    grupo: op.option_group_name || op.group_name || op.grupo || '',
+    nome: op.name || op.nome || '',
+    quantidade: num(op.quantity ?? op.quantidade ?? 1),
+    preco: num(op.unit_price ?? op.price ?? op.valor),
+  })).filter((o) => o.nome);
+}
+
+// Monta um texto legível com sabores/complementos + observação do cliente.
+function buildItemNotes(it, options) {
+  const partes = [];
+  const obs = it.notes || it.observacao || it.obs || it.observation || '';
+  if (Array.isArray(options) && options.length > 0) {
+    // Agrupa por nome de grupo (ex: "Escolha seu sabor: CALABRESA, OVOMALTINE")
+    const porGrupo = {};
+    for (const o of options) {
+      const g = o.grupo || 'Complementos';
+      (porGrupo[g] = porGrupo[g] || []).push(o.quantidade > 1 ? `${o.quantidade}x ${o.nome}` : o.nome);
+    }
+    for (const [g, lista] of Object.entries(porGrupo)) {
+      partes.push(`${g}: ${lista.join(', ')}`);
+    }
+  }
+  if (obs) partes.push(`Obs: ${obs}`);
+  return partes.join(' | ');
+}
+
 function normalizeItems(raw) {
   const items = raw.items || raw.itens || raw.produtos || [];
-  return (Array.isArray(items) ? items : []).map((it) => ({
-    external_product_id: String(it.product_id || it.id || it.produto_id || ''),
-    product_name: it.name || it.nome || it.product_name || it.descricao || '',
-    category_name: it.category || it.categoria || it.category_name || '',
-    quantity: num(it.quantity ?? it.quantidade ?? it.qtd ?? 1),
-    unit_price: num(it.unit_price ?? it.valor_unitario ?? it.preco ?? it.price),
-    total_price: num(it.total_price ?? it.valor_total ?? it.total),
-    notes: it.notes || it.observacao || it.obs || it.observation || '',
-    raw_payload: JSON.stringify(it).slice(0, 8000),
-  }));
+  return (Array.isArray(items) ? items : []).map((it) => {
+    const options = extractOptions(it);
+    const optionsTotal = options.reduce((s, o) => s + o.preco * (o.quantidade || 1), 0);
+    const baseTotal = num(it.total_price ?? it.valor_total ?? it.total);
+    return {
+      external_product_id: String(it.product_id || it.id || it.produto_id || ''),
+      product_name: it.name || it.nome || it.product_name || it.descricao || '',
+      category_name: it.category || it.categoria || it.category_name || '',
+      quantity: num(it.quantity ?? it.quantidade ?? it.qtd ?? 1),
+      unit_price: num(it.unit_price ?? it.valor_unitario ?? it.preco ?? it.price),
+      // Quando o item base vem com preço 0 (pizza só com sabores), usa a soma dos options.
+      total_price: baseTotal > 0 ? baseTotal : optionsTotal,
+      notes: buildItemNotes(it, options),
+      options,
+      raw_payload: JSON.stringify(it).slice(0, 8000),
+    };
+  });
 }
 
 async function upsertCustomer(sr, order, isNew) {
@@ -200,7 +238,10 @@ async function processOrder(sr, body, integration) {
   } else {
     orderRecord = await sr.entities.external_orders.create(normalized);
   }
-  for (const it of items) await sr.entities.external_order_items.create({ ...it, external_order_id: orderRecord.id });
+  for (const it of items) {
+    const { options: _opts, ...itemData } = it;
+    await sr.entities.external_order_items.create({ ...itemData, external_order_id: orderRecord.id });
+  }
   await upsertCustomer(sr, normalized, isNew);
   await upsertPdvPedido(sr, normalized, items);
   return { orderRecord, externalId: normalized.external_order_id };
