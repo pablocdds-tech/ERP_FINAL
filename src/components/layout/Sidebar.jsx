@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Smartphone, ShieldCheck, FileSearch, MonitorSmartphone, ChefHat } from "lucide-react";
+import { LayoutDashboard, Smartphone, ShieldCheck, FileSearch, MonitorSmartphone } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { MODULES } from "@/lib/modules";
 import { cn } from "@/lib/utils";
@@ -54,16 +54,8 @@ export default function Sidebar({ onNavigate }) {
         <NavItem
           to="/admin/pdv"
           icon={MonitorSmartphone}
-          label="PDV — Pedidos ao Vivo"
-          active={location.pathname === "/admin/pdv"}
-          onClick={onNavigate}
-        />
-
-        <NavItem
-          to="/admin/kds"
-          icon={ChefHat}
-          label="Cozinha — KDS"
-          active={isActive("/admin/kds")}
+          label="PDV"
+          active={isActive("/admin/pdv") || isActive("/admin/kds")}
           onClick={onNavigate}
         />
 
