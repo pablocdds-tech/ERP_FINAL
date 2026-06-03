@@ -1,0 +1,51 @@
+{
+  "name": "delivery_settings",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string",
+      "description": "Configura\u00e7\u00e3o por loja (\u00fanica por loja)"
+    },
+    "base_address": {
+      "type": "string"
+    },
+    "base_latitude": {
+      "type": "number"
+    },
+    "base_longitude": {
+      "type": "number"
+    },
+    "avg_minutes_per_delivery": {
+      "type": "number",
+      "default": 12
+    },
+    "max_radius_km": {
+      "type": "number",
+      "default": 8
+    },
+    "max_orders_per_route": {
+      "type": "number",
+      "default": 8
+    },
+    "auto_group_by_neighborhood": {
+      "type": "boolean",
+      "default": true
+    },
+    "auto_geocode": {
+      "type": "boolean",
+      "default": true
+    },
+    "map_provider": {
+      "type": "string",
+      "enum": [
+        "osm",
+        "openrouteservice",
+        "google",
+        "mapbox",
+        "osrm"
+      ],
+      "default": "osm"
+    }
+  },
+  "required": []
+}

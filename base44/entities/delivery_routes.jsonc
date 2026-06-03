@@ -1,0 +1,98 @@
+{
+  "name": "delivery_routes",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string"
+    },
+    "route_number": {
+      "type": "string",
+      "description": "C\u00f3digo amig\u00e1vel da rota (ex: R-0001)"
+    },
+    "motoboy_id": {
+      "type": "string"
+    },
+    "motoboy_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "criada",
+        "aguardando_saida",
+        "despachada",
+        "em_andamento",
+        "concluida",
+        "cancelada"
+      ],
+      "default": "criada"
+    },
+    "origin_latitude": {
+      "type": "number"
+    },
+    "origin_longitude": {
+      "type": "number"
+    },
+    "origin_address": {
+      "type": "string"
+    },
+    "estimated_distance_km": {
+      "type": "number",
+      "default": 0
+    },
+    "estimated_duration_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "total_orders": {
+      "type": "number",
+      "default": 0
+    },
+    "total_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "total_cash_to_collect": {
+      "type": "number",
+      "default": 0,
+      "description": "Total a receber em dinheiro"
+    },
+    "total_card_offline": {
+      "type": "number",
+      "default": 0,
+      "description": "Total cart\u00e3o/pix presencial"
+    },
+    "total_online_paid": {
+      "type": "number",
+      "default": 0,
+      "description": "Total j\u00e1 pago online"
+    },
+    "neighborhoods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "real_duration_minutes": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "raw_route_data": {
+      "type": "string",
+      "description": "JSON serializado de dados extras da rota"
+    }
+  },
+  "required": [
+    "status"
+  ]
+}
