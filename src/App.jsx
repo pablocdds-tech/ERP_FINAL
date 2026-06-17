@@ -11,6 +11,12 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
+import MesasLayout from '@/components/layout/MesasLayout';
+import MesasHome from '@/pages/mesas/MesasHome';
+import SelecionarGarcom from '@/pages/mesas/SelecionarGarcom';
+import PainelMesas from '@/pages/mesas/PainelMesas';
+import Comanda from '@/pages/mesas/Comanda';
+import Produtos from '@/pages/mesas/Produtos';
 import PdvPainel from '@/pages/pdv/PdvPainel';
 import Roteirizacao from '@/pages/delivery/Roteirizacao';
 import PdvIndex from '@/pages/pdv/PdvIndex';
@@ -112,6 +118,17 @@ const AuthenticatedApp = () => {
 
       {/* Compatibilidade: rota antiga do Kiosk dentro do /app */}
       <Route path="/app/kiosk-ponto" element={<Navigate to="/kiosk" replace />} />
+
+      {/* PWA Mesas / Comandas (/mesas) — garçom no salão */}
+      <Route element={<AppGuard />}>
+        <Route element={<MesasLayout />}>
+          <Route path="/mesas" element={<MesasHome />} />
+          <Route path="/mesas/garcom" element={<SelecionarGarcom />} />
+          <Route path="/mesas/painel" element={<PainelMesas />} />
+          <Route path="/mesas/comanda/:comandaId" element={<Comanda />} />
+          <Route path="/mesas/comanda/:comandaId/produtos" element={<Produtos />} />
+        </Route>
+      </Route>
 
       {/* PWA Mobile (/app) — funcionário + gestor */}
       <Route element={<AppGuard />}>

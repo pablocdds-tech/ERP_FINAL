@@ -1,0 +1,49 @@
+{
+  "name": "mesa",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string",
+      "description": "Loja/unidade da mesa"
+    },
+    "numero": {
+      "type": "number",
+      "description": "N\u00famero da mesa exibido na grade"
+    },
+    "setor": {
+      "type": "string",
+      "description": "Setor/\u00e1rea do sal\u00e3o (ex: Sal\u00e3o, Varanda, Externo)"
+    },
+    "capacidade": {
+      "type": "number",
+      "default": 4,
+      "description": "Capacidade de pessoas"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "livre",
+        "aberta",
+        "ocupada",
+        "pedido_enviado",
+        "em_producao",
+        "pronto",
+        "conta_solicitada",
+        "fechada",
+        "cancelada"
+      ],
+      "default": "livre"
+    },
+    "comanda_atual_id": {
+      "type": "string",
+      "description": "ID da comanda aberta atualmente nesta mesa (vazio se livre)"
+    },
+    "ativa": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "numero"
+  ]
+}

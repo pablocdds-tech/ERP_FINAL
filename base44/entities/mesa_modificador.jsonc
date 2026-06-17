@@ -1,0 +1,44 @@
+{
+  "name": "mesa_modificador",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string",
+      "description": "Loja. Vazio = dispon\u00edvel em todas."
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "borda",
+        "sabor",
+        "adicional",
+        "ponto_carne",
+        "observacao"
+      ],
+      "description": "Tipo do modificador. Bordas e sabores usados no fluxo de pizza."
+    },
+    "nome": {
+      "type": "string"
+    },
+    "preco_adicional": {
+      "type": "number",
+      "default": 0
+    },
+    "categoria_aplicavel": {
+      "type": "string",
+      "description": "Categoria de produto a que se aplica (ex: Pizzas). Vazio = qualquer."
+    },
+    "ordem": {
+      "type": "number",
+      "default": 0
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "tipo",
+    "nome"
+  ]
+}

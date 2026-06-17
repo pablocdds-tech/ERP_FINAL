@@ -1,0 +1,73 @@
+{
+  "name": "producao_pedido",
+  "type": "object",
+  "properties": {
+    "comanda_id": {
+      "type": "string"
+    },
+    "loja_id": {
+      "type": "string"
+    },
+    "mesa_numero": {
+      "type": "number"
+    },
+    "setor": {
+      "type": "string",
+      "enum": [
+        "cozinha",
+        "pizzaria",
+        "bar"
+      ],
+      "description": "Setor que vai produzir os itens"
+    },
+    "garcom_nome": {
+      "type": "string"
+    },
+    "itens": {
+      "type": "array",
+      "description": "Snapshot dos itens enviados a este setor",
+      "items": {
+        "type": "object",
+        "properties": {
+          "comanda_item_id": {
+            "type": "string"
+          },
+          "nome_produto": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "detalhes": {
+            "type": "string",
+            "description": "Borda, sabores e observa\u00e7\u00e3o formatados"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "enviado",
+        "em_producao",
+        "pronto",
+        "entregue",
+        "cancelado"
+      ],
+      "default": "enviado"
+    },
+    "enviado_em": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finalizado_em": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "comanda_id",
+    "setor",
+    "status"
+  ]
+}

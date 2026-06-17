@@ -1,0 +1,32 @@
+{
+  "name": "mesa_config",
+  "type": "object",
+  "properties": {
+    "loja_id": {
+      "type": "string",
+      "description": "Configura\u00e7\u00e3o por loja (\u00fanica por loja)"
+    },
+    "taxa_servico_percentual": {
+      "type": "number",
+      "default": 10,
+      "description": "Percentual de taxa de servi\u00e7o aplicado \u00e0s comandas"
+    },
+    "sabores_pizza_pequena": {
+      "type": "number",
+      "default": 1
+    },
+    "sabores_pizza_media": {
+      "type": "number",
+      "default": 2
+    },
+    "sabores_pizza_grande": {
+      "type": "number",
+      "default": 3
+    },
+    "borda_obrigatoria": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": []
+}
