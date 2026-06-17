@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Eye, RefreshCw } from "lucide-react";
 
-const fmtMoeda = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { fmtMoeda } from "@/lib/format";
 const fmtData = (v) => (v ? new Date(v).toLocaleString("pt-BR") : "—");
 
 export default function PedidosImportados() {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Phone, ChevronRight, X } from "lucide-react";
 import { PDV_CANAIS, proximoStatus, getStatusInfo } from "@/lib/pdv-service";
+import { fmtMoeda } from "@/lib/format";
 
 function tempoDecorrido(iso) {
   if (!iso) return "";
@@ -12,8 +13,6 @@ function tempoDecorrido(iso) {
   const h = Math.floor(min / 60);
   return `${h}h${String(min % 60).padStart(2, "0")}`;
 }
-
-const brl = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function PdvPedidoCard({ pedido, onAvancar, onAbrir, onCancelar, busy }) {
   const prox = proximoStatus(pedido);
@@ -51,7 +50,7 @@ export default function PdvPedidoCard({ pedido, onAvancar, onAbrir, onCancelar, 
       </button>
 
       <div className="flex items-center justify-between pt-1 border-t">
-        <span className="font-semibold text-sm">{brl(pedido.total)}</span>
+        <span className="font-semibold text-sm">{fmtMoeda(pedido.total)}</span>
         <div className="flex items-center gap-1">
           <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-red-600" onClick={() => onCancelar?.(pedido)} disabled={busy} title="Cancelar">
             <X className="w-4 h-4" />

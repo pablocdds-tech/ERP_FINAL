@@ -1,4 +1,8 @@
 import { base44 } from "@/api/base44Client";
+import { fmtMoeda } from "@/lib/format";
+
+// Reexportado do util central para compatibilidade.
+export { fmtMoeda };
 
 // =====================================================================
 // Serviço de Roteirização de Entregas.
@@ -35,8 +39,7 @@ export const ORIGENS = {
   manual: "Manual",
 };
 
-export const fmtMoeda = (v) =>
-  Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 
 export const getRouteStatus = (v) => ROUTE_STATUS.find((s) => s.value === v) || ROUTE_STATUS[0];
 export const getDeliveryStatus = (v) => DELIVERY_STATUS.find((s) => s.value === v) || DELIVERY_STATUS[0];

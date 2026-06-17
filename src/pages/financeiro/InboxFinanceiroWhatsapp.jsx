@@ -15,7 +15,7 @@ import { Eye, RefreshCw, Bot } from "lucide-react";
 const STATUS = ["recebido", "processando", "classificado", "precisa_revisao", "aguardando_confirmacao", "lancado", "duplicado", "cancelado", "erro"];
 const TIPOS = ["cupom_fiscal", "nota_fiscal", "recibo", "boleto", "comprovante_pix", "comprovante_cartao", "comprovante_transferencia", "despesa_manual_texto", "despesa_por_audio", "compra_estoque", "compra_embalagem", "manutencao", "material_limpeza", "pagamento_funcionario", "motoboy_extra", "sangria_caixa", "reembolso", "orcamento", "outros"];
 const statusVariant = (s) => s === "erro" || s === "cancelado" ? "destructive" : s === "aguardando_confirmacao" ? "default" : "secondary";
-const fmtMoeda = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { fmtMoeda } from "@/lib/format";
 const fmtData = (v) => v ? new Date(v).toLocaleString("pt-BR") : "—";
 
 export default function InboxFinanceiroWhatsapp() {

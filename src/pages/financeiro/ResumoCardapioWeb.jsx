@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const fmtMoeda = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { fmtMoeda } from "@/lib/format";
 const n = (v) => Number(v || 0);
 
 // Classifica a forma de pagamento bruta em buckets padrão.

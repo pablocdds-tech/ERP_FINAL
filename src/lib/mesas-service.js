@@ -1,4 +1,9 @@
 import { base44 } from "@/api/base44Client";
+import { fmtMoeda } from "@/lib/format";
+
+// Reexportado do util central para compatibilidade com quem já importa
+// fmtMoeda a partir deste serviço.
+export { fmtMoeda };
 
 // =====================================================================
 // Serviço do módulo Mesas / Comandas (PWA Garçom).
@@ -20,9 +25,6 @@ export const MESA_STATUS = [
 ];
 
 export const getMesaStatus = (v) => MESA_STATUS.find((s) => s.value === v) || MESA_STATUS[0];
-
-export const fmtMoeda = (v) =>
-  Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 // Gera um UID local (evita item duplicado em reenvio offline).
 export function gerarLocalUid() {

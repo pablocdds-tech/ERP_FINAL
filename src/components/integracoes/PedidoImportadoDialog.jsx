@@ -3,8 +3,7 @@ import { cardapioWebService } from "@/lib/cardapio-web-service";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-const fmtMoeda = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { fmtMoeda } from "@/lib/format";
 
 export default function PedidoImportadoDialog({ pedido, isAdmin, open, onOpenChange }) {
   const [itens, setItens] = useState([]);
