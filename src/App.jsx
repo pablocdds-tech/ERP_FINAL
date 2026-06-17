@@ -22,7 +22,6 @@ import PdvPainel from '@/pages/pdv/PdvPainel';
 import Roteirizacao from '@/pages/delivery/Roteirizacao';
 import PdvIndex from '@/pages/pdv/PdvIndex';
 import PdvTipoPage from '@/pages/pdv/PdvTipoPage';
-import KdsTela from '@/pages/pdv/KdsTela';
 import KdsProducao from '@/pages/pdv/KdsProducao';
 import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
@@ -153,8 +152,8 @@ const AuthenticatedApp = () => {
 
       {/* KDS Cozinha — fullscreen, fora do ErpLayout */}
       <Route element={<AdminGuard />}>
-        <Route path="/admin/kds" element={<KdsTela />} />
-        <Route path="/admin/kds-producao" element={<KdsProducao />} />
+        <Route path="/admin/kds" element={<KdsProducao />} />
+        <Route path="/admin/kds-producao" element={<Navigate to="/admin/kds" replace />} />
       </Route>
 
       {/* ERP Administrativo (/admin) — admin / gestor / operador */}
