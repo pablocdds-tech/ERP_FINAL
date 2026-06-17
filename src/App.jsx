@@ -17,6 +17,7 @@ import SelecionarGarcom from '@/pages/mesas/SelecionarGarcom';
 import PainelMesas from '@/pages/mesas/PainelMesas';
 import Comanda from '@/pages/mesas/Comanda';
 import Produtos from '@/pages/mesas/Produtos';
+import ConfigCardapio from '@/pages/mesas/ConfigCardapio';
 import PdvPainel from '@/pages/pdv/PdvPainel';
 import Roteirizacao from '@/pages/delivery/Roteirizacao';
 import PdvIndex from '@/pages/pdv/PdvIndex';
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
           <Route path="/mesas/painel" element={<PainelMesas />} />
           <Route path="/mesas/comanda/:comandaId" element={<Comanda />} />
           <Route path="/mesas/comanda/:comandaId/produtos" element={<Produtos />} />
+          <Route path="/mesas/cardapio" element={<ConfigCardapio />} />
         </Route>
       </Route>
 

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMesas } from "@/lib/MesasContext";
-import { Utensils, ClipboardList } from "lucide-react";
+import { Utensils, ClipboardList, BookOpen } from "lucide-react";
 
 // Tela inicial do PWA: saudação + módulos (Mesas / Comanda).
 export default function MesasHome() {
@@ -28,6 +28,12 @@ export default function MesasHome() {
           titulo="Comandas"
           descricao="Acompanhar pedidos"
           onClick={() => navigate("/mesas/garcom")}
+        />
+        <ModuleCard
+          icon={BookOpen}
+          titulo="Cardápio"
+          descricao="Disponibilidade de itens"
+          onClick={() => navigate("/mesas/cardapio")}
         />
       </div>
     </div>

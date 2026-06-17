@@ -120,6 +120,18 @@ export const mesasService = {
     return produtos.filter((p) => p.compartilhado_entre_lojas !== false || (p.loja_ids || []).includes(lojaId) || (p.loja_ids || []).length === 0);
   },
 
+  // Lista TODOS os produtos (ativos e inativos) — usada na config de cardápio.
+  listTodosProdutos: async (lojaId) => {
+    const produtos = await base44.entities.Produto.list("nome", 500);
+    if (!lojaId || lojaId === "todas") return produtos;
+    return produtos.filter((p) => p.compartilhado_entre_lojas !== false || (p.loja_ids || []).includes(lojaId) || (p.loja_ids || []).length === 0);
+  },
+
+  // Liga/desliga a disponibilidade de um produto no cardápio do garçom.
+  setProdutoDisponivel: async (produtoId, disponivel) => {
+    await base44.entities.Produto.update(produtoId, { ativo: !!disponivel });
+  },
+
   // Categorias derivadas dos produtos ativos.
   listCategorias: async (lojaId) => {
     const produtos = await mesasService.listProdutos(lojaId);
