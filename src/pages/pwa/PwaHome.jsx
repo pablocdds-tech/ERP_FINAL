@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Clock, Calendar, ListChecks, MessageSquare, Camera, ShieldCheck, FileText, BarChart3 } from "lucide-react";
+import { Clock, Calendar, ListChecks, MessageSquare, Camera, ShieldCheck, FileText, BarChart3, Utensils } from "lucide-react";
 import { usePwa } from "@/lib/PwaContext";
 
 const ACOES_FUNC = [
+  { to: "/mesas", icon: Utensils, label: "Mesas / Salão" },
   { to: "/app/ponto", icon: Clock, label: "Bater ponto" },
   { to: "/app/escala", icon: Calendar, label: "Minha escala" },
   { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
@@ -13,6 +14,7 @@ const ACOES_FUNC = [
 ];
 
 const ACOES_GESTOR = [
+  { to: "/mesas", icon: Utensils, label: "Mesas / Salão" },
   { to: "/app/aprovacoes", icon: ShieldCheck, label: "Aprovações" },
   { to: "/app/pontos-pendentes", icon: Clock, label: "Pontos pendentes" },
   { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
