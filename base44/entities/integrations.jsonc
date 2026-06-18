@@ -1,6 +1,7 @@
 {
   "name": "integrations",
   "type": "object",
+  "description": "Conector espec\u00edfico do Card\u00e1pio Web (provider cardapio_web): merchant_id, token, polling e webhook. N\u00c3O confundir com a entidade 'Integracao' (automa\u00e7\u00f5es/webhooks do m\u00f3dulo IA).",
   "properties": {
     "store_id": {
       "type": "string",
