@@ -55,6 +55,62 @@ export function agruparPorCanal(pedidos, canais) {
   })).sort((a, b) => b.receita - a.receita);
 }
 
+// Sincroniza clientes do Cardápio Web (external_customers) para o CRM (Cliente).
+// Upsert por telefone: atualiza quem já existe, cria quem falta — sem duplicar.
+// Retorna { criados, atualizados, ignorados }.
+export async function sincronizarClientesCardapioWeb() {
+  const externos = await base44.entities.external_customers.list("-last_order_at", 1000);
+  const clientes = await base44.entities.Cliente.list("", 5000);
+
+  // Index do CRM por telefone normalizado (só dígitos)
+  const soDigitos = (t) => (t || "").replace(/\D/g, "");
+  const porTelefone = new Map();
+  clientes.forEach((c) => {
+    const k = soDigitos(c.telefone);
+    if (k) porTelefone.set(k, c);
+  });
+
+  let criados = 0, atualizados = 0, ignorados = 0;
+
+  for (const ext of externos) {
+    const tel = soDigitos(ext.phone);
+    if (!tel && !ext.name) { ignorados++; continue; }
+
+    const total_pedidos = Number(ext.total_orders) || 0;
+    const total_gasto = Number(ext.total_spent) || 0;
+    const ticket_medio = total_pedidos > 0 ? total_gasto / total_pedidos : 0;
+    const ultima_compra = ext.last_order_at ? ext.last_order_at.slice(0, 10) : undefined;
+
+    const dados = {
+      nome: ext.name || "Cliente Cardápio Web",
+      telefone: ext.phone || undefined,
+      documento: ext.document || undefined,
+      endereco: ext.address || undefined,
+      total_pedidos,
+      total_gasto,
+      ticket_medio,
+      ultima_compra,
+      observacoes: ext.neighborhood ? `Bairro: ${ext.neighborhood}` : undefined,
+    };
+
+    const existente = tel ? porTelefone.get(tel) : null;
+    if (existente) {
+      await base44.entities.Cliente.update(existente.id, dados);
+      atualizados++;
+    } else {
+      const novo = await base44.entities.Cliente.create({
+        ...dados,
+        canal_origem_id: "cardapio_web",
+        status: "ativo",
+      });
+      if (tel) porTelefone.set(tel, novo);
+      criados++;
+    }
+  }
+
+  return { criados, atualizados, ignorados };
+}
+
 // Marca clientes sem compra há X dias
 export function filtrarInativos(clientes, dias = 60) {
   const limite = new Date();

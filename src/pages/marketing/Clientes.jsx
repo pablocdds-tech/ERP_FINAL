@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Search, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Search, RefreshCw, Download } from "lucide-react";
 import { format } from "date-fns";
 import PageShell from "@/components/marketing/PageShell";
 import ClienteDialog from "@/components/marketing/ClienteDialog";
-import { recalcularCliente } from "@/lib/marketing-service";
+import { recalcularCliente, sincronizarClientesCardapioWeb } from "@/lib/marketing-service";
+import { useToast } from "@/components/ui/use-toast";
 
 const STATUS_COLORS = {
   ativo: "bg-emerald-100 text-emerald-700",
@@ -24,9 +25,23 @@ export default function Clientes() {
   const [busca, setBusca] = useState("");
   const [dlg, setDlg] = useState({ open: false, item: null });
   const [recalculando, setRecalculando] = useState(false);
+  const [importando, setImportando] = useState(false);
+  const { toast } = useToast();
 
   const load = async () => setItems(await base44.entities.Cliente.list("-ultima_compra"));
   useEffect(() => { load(); }, []);
+
+  const importarCardapioWeb = async () => {
+    setImportando(true);
+    try {
+      const r = await sincronizarClientesCardapioWeb();
+      await load();
+      toast({ title: "Importação concluída", description: `${r.criados} novos, ${r.atualizados} atualizados, ${r.ignorados} ignorados.` });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Falha na importação", description: e.message });
+    }
+    setImportando(false);
+  };
 
   const recalcularTodos = async () => {
     setRecalculando(true);
@@ -45,6 +60,9 @@ export default function Clientes() {
     <PageShell title="Clientes" description="Base de clientes com histórico, ticket médio e segmentação."
       actions={
         <div className="flex gap-2">
+          <Button variant="outline" onClick={importarCardapioWeb} disabled={importando}>
+            <Download className={`w-4 h-4 mr-1 ${importando ? "animate-pulse" : ""}`} /> Importar do Cardápio Web
+          </Button>
           <Button variant="outline" onClick={recalcularTodos} disabled={recalculando}>
             <RefreshCw className={`w-4 h-4 mr-1 ${recalculando ? "animate-spin" : ""}`} /> Recalcular
           </Button>
