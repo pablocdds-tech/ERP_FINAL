@@ -2,10 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { mesasService, fmtMoeda, ehPizza } from "@/lib/mesas-service";
 import { useMesas } from "@/lib/MesasContext";
-import { Search, Plus, ArrowLeft, ChevronRight } from "lucide-react";
+import { Search, ArrowLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import PizzaDialog from "@/components/mesas/PizzaDialog";
+import ProdutoLinha from "@/components/mesas/ProdutoLinha";
 
 // Tela de produtos: categorias grandes → lista de produtos com botão +.
 export default function Produtos() {
@@ -32,14 +33,9 @@ export default function Produtos() {
 
   useEffect(() => { setLoading(true); carregar(); }, [carregar]);
 
-  const adicionarSimples = async (produto) => {
-    await mesasService.adicionarItem({ comanda, produto, quantidade: 1, opcoes: [] });
-    toast({ title: "Adicionado", description: produto.nome });
-  };
-
-  const aoTocarProduto = (produto) => {
-    if (ehPizza(produto)) setPizzaProduto(produto);
-    else adicionarSimples(produto);
+  const adicionarSimples = async (produto, quantidade = 1) => {
+    await mesasService.adicionarItem({ comanda, produto, quantidade, opcoes: [] });
+    toast({ title: "Adicionado", description: `${quantidade}× ${produto.nome}` });
   };
 
   const filtrados = produtos.filter((p) => {
@@ -92,15 +88,12 @@ export default function Produtos() {
             <div className="space-y-2.5">
               {filtrados.length === 0 && <div className="text-center py-10 text-slate-400 text-sm">Nenhum produto encontrado.</div>}
               {filtrados.map((p) => (
-                <div key={p.id} className="bg-white rounded-xl border border-slate-100 shadow-sm p-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-slate-800 text-sm truncate">{p.nome}</div>
-                    <div className="text-xs text-slate-500">{fmtMoeda(p.preco_venda)}{ehPizza(p) && " · escolher borda/sabor"}</div>
-                  </div>
-                  <button onClick={() => aoTocarProduto(p)} className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center active:scale-90 shrink-0">
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
+                <ProdutoLinha
+                  key={p.id}
+                  produto={p}
+                  onAdicionar={adicionarSimples}
+                  onAbrirPizza={setPizzaProduto}
+                />
               ))}
             </div>
           </>
