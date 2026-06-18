@@ -60,7 +60,7 @@ export default function ListaClientes({ clientes, onAbrirCliente }) {
                   <TableCell>{c.dia_preferido ? <Badge variant="secondary" className="font-normal">{c.dia_preferido}</Badge> : "—"}</TableCell>
                   <TableCell className="text-right tabular-nums">{c.pedidos}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">{fmtMoeda(c.total_gasto)}</TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">{fmtData(c.ultimo_pedido)}</TableCell>
+                  <TableCell className="text-right text-xs text-muted-foreground">{fmtData(c.ultimo_pedido) || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

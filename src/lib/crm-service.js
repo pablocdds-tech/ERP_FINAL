@@ -1,8 +1,8 @@
 import { base44 } from "@/api/base44Client";
-import { fmtMoeda } from "@/lib/format";
+import { fmtMoeda, fmtData } from "@/lib/format";
 
 // Reexportado do util central para compatibilidade.
-export { fmtMoeda };
+export { fmtMoeda, fmtData };
 
 // CRM de clientes — chama a função de análise no backend.
 export const crmService = {
@@ -33,12 +33,3 @@ export const DIAS_SEMANA = [
   { idx: 5, label: "Sexta", curto: "Sex" },
   { idx: 6, label: "Sábado", curto: "Sáb" },
 ];
-
-
-
-export const fmtData = (s) => {
-  if (!s) return "—";
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("pt-BR");
-};

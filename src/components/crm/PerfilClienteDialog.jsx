@@ -56,7 +56,7 @@ export default function PerfilClienteDialog({ phone, open, onOpenChange }) {
               <Stat icon={TrendingUp} label="LTV (total gasto)" value={fmtMoeda(c.total_gasto)} />
               <Stat icon={Pizza} label="Pedidos" value={c.pedidos} hint={`Ticket médio ${fmtMoeda(c.ticket_medio)}`} />
               <Stat icon={Repeat} label="Frequência" value={c.freq_media_dias ? `${c.freq_media_dias}d` : "—"} hint={c.freq_media_dias ? "entre pedidos" : "1 pedido só"} />
-              <Stat icon={Clock} label="Sem pedir há" value={`${c.dias_sem_pedir}d`} hint={`Último: ${fmtData(c.ultimo_pedido)}`} />
+              <Stat icon={Clock} label="Sem pedir há" value={`${c.dias_sem_pedir}d`} hint={`Último: ${fmtData(c.ultimo_pedido) || "—"}`} />
             </div>
 
             <div className="grid md:grid-cols-2 gap-5">
@@ -83,7 +83,7 @@ export default function PerfilClienteDialog({ phone, open, onOpenChange }) {
                 {(data.historico || []).map((h, i) => (
                   <Card key={i} className="p-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{fmtData(h.when)} · {h.dia}</span>
+                      <span className="font-medium">{fmtData(h.when) || "—"} · {h.dia}</span>
                       <span className="flex items-center gap-2">
                         <Badge variant="secondary" className="font-normal">{h.canal}</Badge>
                         <strong>{fmtMoeda(h.total)}</strong>
