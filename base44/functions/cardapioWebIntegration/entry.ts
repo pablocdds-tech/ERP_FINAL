@@ -188,34 +188,34 @@ async function upsertOrder(sr, normalized, items) {
 
 // ---- Chamadas à API oficial ----
 
-// Lista resumida de pedidos. Suporta updated_since e status[] (array).
-async function fetchOrdersFromApi(integration, token, params = {}) {
+// Núcleo único de GET na API: monta fetch + valida HTTP + faz parse de JSON.
+// Centraliza o tratamento de erro/parse antes repetido em cada chamada.
+async function apiGet(integration, token, path, label) {
   const base = normalizeBaseUrl(integration.base_url);
   if (!base) throw new Error('Base URL da API não configurada.');
-  const qs = new URLSearchParams();
-  if (params.updated_since) qs.set('updated_since', params.updated_since);
-  if (Array.isArray(params.status)) params.status.forEach((s) => qs.append('status[]', s));
-  const query = qs.toString();
-  const url = `${base}/api/partner/v1/orders${query ? `?${query}` : ''}`;
+  const url = `${base}${path}`;
   const resp = await fetch(url, { headers: buildHeaders(token) });
   const text = await resp.text();
   if (!resp.ok) throw httpError(resp.status, text, url);
   let data;
-  try { data = JSON.parse(text); } catch { throw new Error(`Resposta não é JSON válido (HTTP ${resp.status}). Conteúdo: ${text.slice(0, 300)}`); }
+  try { data = JSON.parse(text); } catch { throw new Error(`${label} não é JSON válido (HTTP ${resp.status}). Conteúdo: ${text.slice(0, 300)}`); }
+  return { data, text, url };
+}
+
+// Lista resumida de pedidos. Suporta updated_since e status[] (array).
+async function fetchOrdersFromApi(integration, token, params = {}) {
+  const qs = new URLSearchParams();
+  if (params.updated_since) qs.set('updated_since', params.updated_since);
+  if (Array.isArray(params.status)) params.status.forEach((s) => qs.append('status[]', s));
+  const query = qs.toString();
+  const { data, text, url } = await apiGet(integration, token, `/api/partner/v1/orders${query ? `?${query}` : ''}`, 'Resposta');
   const orders = data.orders || data.data || data.pedidos || (Array.isArray(data) ? data : []);
   return { orders: Array.isArray(orders) ? orders : [], raw: text.slice(0, 20000), url };
 }
 
 // Detalhe completo de um pedido. Reutilizável por webhook e polling.
 async function fetchOrderDetail(integration, token, orderId) {
-  const base = normalizeBaseUrl(integration.base_url);
-  if (!base) throw new Error('Base URL da API não configurada.');
-  const url = `${base}/api/partner/v1/orders/${encodeURIComponent(orderId)}`;
-  const resp = await fetch(url, { headers: buildHeaders(token) });
-  const text = await resp.text();
-  if (!resp.ok) throw httpError(resp.status, text, url);
-  let data;
-  try { data = JSON.parse(text); } catch { throw new Error(`Detalhe não é JSON válido (HTTP ${resp.status}). Conteúdo: ${text.slice(0, 300)}`); }
+  const { data } = await apiGet(integration, token, `/api/partner/v1/orders/${encodeURIComponent(orderId)}`, 'Detalhe');
   return data.order || data.data || data;
 }
 
