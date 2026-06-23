@@ -9,25 +9,11 @@ import {
   Users,
   HeartHandshake,
   Sparkles,
-  UtensilsCrossed,
 } from "lucide-react";
 
 // Configuração central dos 10 módulos do ERP.
 // Cada módulo terá sua página de índice; submódulos serão construídos incrementalmente.
 export const MODULES = [
-  {
-    id: "mesas",
-    nome: "Mesas / Salão",
-    descricao: "Atendimento no salão: mesas, comandas, pedidos e cardápio.",
-    path: "/mesas",
-    icon: UtensilsCrossed,
-    submodulos: [
-      "Painel de Mesas",
-      "Comandas",
-      "Pedidos / Produtos",
-      "Configuração do Cardápio",
-    ],
-  },
   {
     id: "cadastros",
     nome: "Cadastros e Configurações",

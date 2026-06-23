@@ -11,18 +11,6 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
-import MesasLayout from '@/components/layout/MesasLayout';
-import MesasHome from '@/pages/mesas/MesasHome';
-import SelecionarGarcom from '@/pages/mesas/SelecionarGarcom';
-import PainelMesas from '@/pages/mesas/PainelMesas';
-import Comanda from '@/pages/mesas/Comanda';
-import Produtos from '@/pages/mesas/Produtos';
-import ConfigCardapio from '@/pages/mesas/ConfigCardapio';
-import PdvPainel from '@/pages/pdv/PdvPainel';
-import Roteirizacao from '@/pages/delivery/Roteirizacao';
-import PdvIndex from '@/pages/pdv/PdvIndex';
-import PdvTipoPage from '@/pages/pdv/PdvTipoPage';
-import KdsProducao from '@/pages/pdv/KdsProducao';
 import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
@@ -120,18 +108,6 @@ const AuthenticatedApp = () => {
       {/* Compatibilidade: rota antiga do Kiosk dentro do /app */}
       <Route path="/app/kiosk-ponto" element={<Navigate to="/kiosk" replace />} />
 
-      {/* PWA Mesas / Comandas (/mesas) — garçom no salão */}
-      <Route element={<AppGuard />}>
-        <Route element={<MesasLayout />}>
-          <Route path="/mesas" element={<MesasHome />} />
-          <Route path="/mesas/garcom" element={<SelecionarGarcom />} />
-          <Route path="/mesas/painel" element={<PainelMesas />} />
-          <Route path="/mesas/comanda/:comandaId" element={<Comanda />} />
-          <Route path="/mesas/comanda/:comandaId/produtos" element={<Produtos />} />
-          <Route path="/mesas/cardapio" element={<ConfigCardapio />} />
-        </Route>
-      </Route>
-
       {/* PWA Mobile (/app) — funcionário + gestor */}
       <Route element={<AppGuard />}>
         <Route element={<PwaLayout />}>
@@ -150,20 +126,10 @@ const AuthenticatedApp = () => {
         </Route>
       </Route>
 
-      {/* KDS Cozinha — fullscreen, fora do ErpLayout */}
-      <Route element={<AdminGuard />}>
-        <Route path="/admin/kds" element={<KdsProducao />} />
-        <Route path="/admin/kds-producao" element={<Navigate to="/admin/kds" replace />} />
-      </Route>
-
       {/* ERP Administrativo (/admin) — admin / gestor / operador */}
       <Route element={<AdminGuard />}>
         <Route element={<ErpLayout />}>
           <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/pdv" element={<PdvIndex />} />
-          <Route path="/admin/pdv/painel" element={<PdvPainel />} />
-          <Route path="/admin/pdv/:tipo" element={<PdvTipoPage />} />
-          <Route path="/admin/roteirizacao" element={<Roteirizacao />} />
           <Route path="/admin/agentes" element={<Agentes />} />
           <Route path="/admin/cadastros" element={<CadastrosIndex />} />
           <Route path="/admin/cadastros/:tipo" element={<CadastroTipoPage />} />
