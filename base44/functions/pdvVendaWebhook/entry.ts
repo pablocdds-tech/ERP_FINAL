@@ -79,8 +79,12 @@ Deno.serve(async (req) => {
   let body = {};
   try { body = await req.json(); } catch { body = {}; }
 
+  // Lê o token de vários lugares: query (?secret=), header X-Webhook-Secret,
+  // header Authorization (Bearer TOKEN ou só o token), ou body.
+  const authHeader = req.headers.get('authorization') || '';
+  const bearer = authHeader.replace(/^Bearer\s+/i, '').trim();
   const urlObj = new URL(req.url);
-  const secret = urlObj.searchParams.get('secret') || req.headers.get('x-webhook-secret') || body.secret || body.webhook_secret || '';
+  const secret = urlObj.searchParams.get('secret') || req.headers.get('x-webhook-secret') || bearer || body.secret || body.webhook_secret || '';
   const expected = getExpectedSecret();
 
   const eventBase = {
