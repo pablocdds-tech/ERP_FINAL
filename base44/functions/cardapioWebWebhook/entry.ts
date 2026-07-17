@@ -129,66 +129,6 @@ async function upsertCustomer(sr, order, isNew) {
   }
 }
 
-// Mapeia status oficial do Cardápio Web → fluxo do PDV/KDS.
-function mapStatusPdv(statusExterno) {
-  const s = String(statusExterno || '').toLowerCase();
-  const mapa = {
-    waiting_confirmation: 'novo',
-    pending_payment: 'aguardando_pagamento',
-    pending_online_payment: 'aguardando_pagamento',
-    scheduled_confirmed: 'agendado',
-    confirmed: 'em_preparo',
-    ready: 'pronto',
-    released: 'saiu_para_entrega',
-    waiting_to_catch: 'aguardando_retirada',
-    delivered: 'entregue',
-    closed: 'finalizado',
-    canceling: 'cancelando',
-    canceled: 'cancelado',
-  };
-  if (mapa[s]) return mapa[s];
-  if (/cancel/.test(s)) return 'cancelado';
-  if (/(conclu|entreg|finaliz|complet|deliver)/.test(s)) return 'concluido';
-  if (/(rota|saiu|transit|despach|released)/.test(s)) return 'em_entrega';
-  if (/(pronto|ready)/.test(s)) return 'pronto';
-  if (/(prepar|produ|cozinha|aceito|confirm)/.test(s)) return 'em_preparo';
-  return 'novo';
-}
-
-async function upsertPdvPedido(sr, normalized, items) {
-  const dedupeKey = `pdv|${normalized.dedupe_key}`;
-  const existing = (await sr.entities.pdv_pedido.filter({ dedupe_key: dedupeKey }, '-created_date', 1))[0];
-  const itensPdv = items.map((it) => ({
-    produto_nome: it.product_name,
-    quantidade: num(it.quantity) || 1,
-    preco_unitario: num(it.unit_price),
-    preco_total: num(it.total_price),
-    observacao: it.notes || '',
-  }));
-  const dados = {
-    loja_id: normalized.store_id || '',
-    canal: 'cardapio_web',
-    tipo_entrega: 'delivery',
-    numero_pedido: normalized.order_number,
-    origem_id: normalized.external_order_id,
-    dedupe_key: dedupeKey,
-    status: mapStatusPdv(normalized.status),
-    cliente_nome: normalized.customer_name,
-    cliente_telefone: normalized.customer_phone,
-    endereco_entrega: normalized.delivery_address,
-    bairro: normalized.neighborhood,
-    itens: itensPdv,
-    subtotal: num(normalized.subtotal),
-    taxa_entrega: num(normalized.delivery_fee),
-    desconto: num(normalized.discount),
-    total: num(normalized.total_amount),
-    forma_pagamento: normalized.payment_method,
-    recebido_em: normalized.ordered_at || new Date().toISOString(),
-  };
-  if (existing) await sr.entities.pdv_pedido.update(existing.id, dados);
-  else await sr.entities.pdv_pedido.create(dados);
-}
-
 // Busca o detalhe completo do pedido na API oficial (quando o webhook só envia o ID).
 async function fetchOrderDetail(integration, orderId) {
   const token = getApiToken();
@@ -243,7 +183,6 @@ async function processOrder(sr, body, integration) {
     await sr.entities.external_order_items.create({ ...itemData, external_order_id: orderRecord.id });
   }
   await upsertCustomer(sr, normalized, isNew);
-  await upsertPdvPedido(sr, normalized, items);
   return { orderRecord, externalId: normalized.external_order_id };
 }
 
