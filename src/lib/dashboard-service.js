@@ -51,7 +51,7 @@ export async function carregarDashboard() {
     movSocio, produtos, insumos, compras, notasFiscais,
     ordensProducao, movEstoque, ajustesPerdas, inventarios,
     chamados, tarefas, checklistsExec, manutencoes,
-    colaboradores, registrosPonto, escalas, solicitacoesRH,
+    colaboradores, escalas, solicitacoesRH,
     campanhas, cupons, clientes, avaliacoes, reclamacoes, reembolsos, cortesias,
     ocorrenciasOp, categorias, fichasTecnicas,
   ] = await Promise.all([
@@ -76,7 +76,6 @@ export async function carregarDashboard() {
     safe(base44.entities.ChecklistExecucao.list("-created_date", 300)),
     safe(base44.entities.ManutencaoPlano.list("-created_date", 200)),
     safe(base44.entities.Colaborador.list("-created_date", 500)),
-    safe(base44.entities.RegistroPonto.list("-horario", 1000)),
     safe(base44.entities.Escala.list("-created_date", 500)),
     safe(base44.entities.SolicitacaoRH.list("-created_date", 200)),
     safe(base44.entities.Campanha.list("-created_date", 100)),
@@ -96,7 +95,7 @@ export async function carregarDashboard() {
     movSocio, produtos, insumos, compras, notasFiscais,
     ordensProducao, movEstoque, ajustesPerdas, inventarios,
     chamados, tarefas, checklistsExec, manutencoes,
-    colaboradores, registrosPonto, escalas, solicitacoesRH,
+    colaboradores, escalas, solicitacoesRH,
     campanhas, cupons, clientes, avaliacoes, reclamacoes, reembolsos, cortesias,
     ocorrenciasOp, categorias, fichasTecnicas,
   };
@@ -328,21 +327,12 @@ export function calcularRotinas(base, lojaId) {
  * RH
  * ========================================= */
 export function calcularRH(base, lojaId) {
-  const hoje = new Date().toISOString().slice(0, 10);
   const colabs = base.colaboradores.filter((c) => c.status === "ativo" && (!lojaId || c.loja_id === lojaId));
-  const pontosHoje = base.registrosPonto.filter((p) => (p.horario || "").slice(0, 10) === hoje && (!lojaId || p.loja_id === lojaId));
-  const presentes = new Set(pontosHoje.filter((p) => p.tipo === "entrada").map((p) => p.colaborador_id)).size;
-
-  const semBater = colabs.filter((c) => !pontosHoje.some((p) => p.colaborador_id === c.id));
-  const pendRevisao = base.registrosPonto.filter((p) => p.status === "pendente_revisao" && (!lojaId || p.loja_id === lojaId)).length;
-  const baixaConfianca = base.registrosPonto.filter((p) => p.ia_resultado === "baixa_confianca" && (!lojaId || p.loja_id === lojaId)).slice(0, 5);
   const solicPend = base.solicitacoesRH.filter((s) => s.status === "pendente" || s.status === "aberta");
   const escalasVazias = base.escalas.filter((e) => !e.escalas_dia || e.escalas_dia.length === 0).length;
 
   return {
-    presentes, total: colabs.length,
-    semBaterCount: semBater.length, semBaterLista: semBater.slice(0, 5),
-    pendRevisao, baixaConfianca,
+    total: colabs.length,
     solicPend: solicPend.length, solicLista: solicPend.slice(0, 5),
     escalasVazias,
   };
@@ -487,8 +477,8 @@ export function gerarAlertas(base, lojaId, de, ate) {
 
   // RH
   const rh = calcularRH(base, lojaId);
-  if (rh.pendRevisao > 0) {
-    a.push({ severidade: "media", titulo: `${rh.pendRevisao} ponto(s) pendente(s) de revisão`, link: "/admin/aprovacoes" });
+  if (rh.solicPend > 0) {
+    a.push({ severidade: "media", titulo: `${rh.solicPend} solicitação(ões) de RH pendente(s)`, link: "/admin/aprovacoes" });
   }
 
   // Rotinas

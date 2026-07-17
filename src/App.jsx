@@ -11,7 +11,6 @@ import PwaLayout from '@/components/layout/PwaLayout';
 import AdminGuard from '@/components/guards/AdminGuard';
 import AppGuard from '@/components/guards/AppGuard';
 import RootRedirect from '@/pages/RootRedirect';
-import AutoCadastroFacial from '@/pages/AutoCadastroFacial';
 import Dashboard from '@/pages/Dashboard';
 import ModulePage from '@/pages/modules/ModulePage';
 import Agentes from '@/pages/Agentes';
@@ -38,7 +37,6 @@ import IATipoPage from '@/pages/ia/IATipoPage';
 import Auditoria from '@/pages/Auditoria';
 import Aprovacoes from '@/pages/Aprovacoes';
 import PwaHome from '@/pages/pwa/PwaHome';
-import PwaPonto from '@/pages/pwa/PwaPonto';
 import PwaEscala from '@/pages/pwa/PwaEscala';
 import PwaChecklist from '@/pages/pwa/PwaChecklist';
 import PwaChamados from '@/pages/pwa/PwaChamados';
@@ -47,13 +45,6 @@ import PwaSolicitacoes from '@/pages/pwa/PwaSolicitacoes';
 import PwaNotificacoes from '@/pages/pwa/PwaNotificacoes';
 import PwaAprovacoes from '@/pages/pwa/PwaAprovacoes';
 import PwaDashboard from '@/pages/pwa/PwaDashboard';
-import PwaEquipe from '@/pages/pwa/PwaEquipe';
-import PwaPontosPendentes from '@/pages/pwa/PwaPontosPendentes';
-import KioskGuard from '@/components/guards/KioskGuard';
-import KioskLayout from '@/components/layout/KioskLayout';
-import KioskHome from '@/pages/kiosk/KioskHome';
-import KioskSetup from '@/pages/kiosk/KioskSetup';
-import KioskLocked from '@/pages/kiosk/KioskLocked';
 
 // Redireciona /pwa/algo → /app/algo (compatibilidade com links antigos)
 const PwaCompatRedirect = () => {
@@ -68,11 +59,6 @@ const ErpCompatRedirect = () => {
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
-
-  // Rota pública de autocadastro facial — acessível sem login (link enviado ao colaborador)
-  if (window.location.pathname === "/cadastro-facial") {
-    return <AutoCadastroFacial />;
-  }
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -96,23 +82,10 @@ const AuthenticatedApp = () => {
       {/* Raiz: redireciona conforme perfil */}
       <Route path="/" element={<RootRedirect />} />
 
-      {/* PWA Kiosk (/kiosk) — tablet fixo na loja, sem login individual de funcionário */}
-      <Route element={<KioskGuard />}>
-        <Route element={<KioskLayout />}>
-          <Route path="/kiosk" element={<KioskHome />} />
-          <Route path="/kiosk/setup" element={<KioskSetup />} />
-          <Route path="/kiosk/locked" element={<KioskLocked />} />
-        </Route>
-      </Route>
-
-      {/* Compatibilidade: rota antiga do Kiosk dentro do /app */}
-      <Route path="/app/kiosk-ponto" element={<Navigate to="/kiosk" replace />} />
-
       {/* PWA Mobile (/app) — funcionário + gestor */}
       <Route element={<AppGuard />}>
         <Route element={<PwaLayout />}>
           <Route path="/app" element={<PwaHome />} />
-          <Route path="/app/ponto" element={<PwaPonto />} />
           <Route path="/app/escala" element={<PwaEscala />} />
           <Route path="/app/checklist" element={<PwaChecklist />} />
           <Route path="/app/chamados" element={<PwaChamados />} />
@@ -120,9 +93,7 @@ const AuthenticatedApp = () => {
           <Route path="/app/solicitacoes" element={<PwaSolicitacoes />} />
           <Route path="/app/notificacoes" element={<PwaNotificacoes />} />
           <Route path="/app/aprovacoes" element={<PwaAprovacoes />} />
-          <Route path="/app/pontos-pendentes" element={<PwaPontosPendentes />} />
           <Route path="/app/dashboard" element={<PwaDashboard />} />
-          <Route path="/app/equipe" element={<PwaEquipe />} />
         </Route>
       </Route>
 

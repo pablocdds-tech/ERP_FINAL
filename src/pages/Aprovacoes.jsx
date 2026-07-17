@@ -4,33 +4,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, ShoppingCart, FileSignature, Clock, ShieldCheck, MessageSquare, Sparkles } from "lucide-react";
+import { FileText, ShoppingCart, FileSignature, ShieldCheck, MessageSquare, Sparkles } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import AprovacaoNfDialog from "@/components/aprovacoes/AprovacaoNfDialog";
 import AprovacaoFechamentoDialog from "@/components/aprovacoes/AprovacaoFechamentoDialog";
-import { decidirSolicitacao, aprovarRegistroPonto, rejeitarRegistroPonto } from "@/lib/aprovacoes-service";
+import { decidirSolicitacao } from "@/lib/aprovacoes-service";
 import { format } from "date-fns";
 
 export default function Aprovacoes() {
   const [nf, setNf] = useState([]);
   const [fech, setFech] = useState([]);
   const [sol, setSol] = useState([]);
-  const [pontos, setPontos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [lojas, setLojas] = useState([]);
   const [dlgNf, setDlgNf] = useState(null);
   const [dlgFech, setDlgFech] = useState(null);
 
   const load = async () => {
-    const [n, f, s, p, c, l] = await Promise.all([
+    const [n, f, s, c, l] = await Promise.all([
       base44.entities.NotaFiscalPendente.filter({ status: "pendente" }, "-created_date", 200),
       base44.entities.FechamentoPendente.filter({ status: "pendente" }, "-created_date", 200),
       base44.entities.SolicitacaoRH.filter({ status: "pendente" }, "-created_date", 200),
-      base44.entities.RegistroPonto.filter({ status: "registrado" }, "-horario", 200),
       base44.entities.Colaborador.list("nome", 500),
       base44.entities.Loja.list(),
     ]);
-    setNf(n); setFech(f); setSol(s); setPontos(p); setColaboradores(c); setLojas(l);
+    setNf(n); setFech(f); setSol(s); setColaboradores(c); setLojas(l);
   };
   useEffect(() => { load(); }, []);
 
@@ -38,15 +36,15 @@ export default function Aprovacoes() {
   const lojaNome = (id) => lojas.find((l) => l.id === id)?.nome || "—";
 
   const totais = useMemo(() => ({
-    nf: nf.length, fech: fech.length, sol: sol.length, pontos: pontos.length,
-    total: nf.length + fech.length + sol.length + pontos.length,
-  }), [nf, fech, sol, pontos]);
+    nf: nf.length, fech: fech.length, sol: sol.length,
+    total: nf.length + fech.length + sol.length,
+  }), [nf, fech, sol]);
 
   return (
     <div>
       <PageHeader
         title="Central de Aprovações"
-        description="Tudo que precisa da sua decisão: notas, fechamentos, solicitações e pontos."
+        description="Tudo que precisa da sua decisão: notas, fechamentos e solicitações."
       />
 
       <Card className="p-4 mb-4 bg-primary/5 border-primary/20">
@@ -64,7 +62,6 @@ export default function Aprovacoes() {
           <TabsTrigger value="nf"><FileText className="w-4 h-4 mr-1.5" />NF <Counter n={totais.nf} /></TabsTrigger>
           <TabsTrigger value="fech"><ShoppingCart className="w-4 h-4 mr-1.5" />Fechamentos <Counter n={totais.fech} /></TabsTrigger>
           <TabsTrigger value="sol"><FileSignature className="w-4 h-4 mr-1.5" />Solicitações <Counter n={totais.sol} /></TabsTrigger>
-          <TabsTrigger value="ponto"><Clock className="w-4 h-4 mr-1.5" />Ponto <Counter n={totais.pontos} /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="nf" className="mt-3 space-y-2">
@@ -110,25 +107,6 @@ export default function Aprovacoes() {
                 <div className="flex gap-1.5">
                   <Button variant="outline" size="sm" onClick={async () => { const r = prompt("Motivo:"); if (r === null) return; await decidirSolicitacao(s, "rejeitada", r); load(); }}>Rejeitar</Button>
                   <Button size="sm" onClick={async () => { const r = prompt("Resposta (opcional):") || ""; await decidirSolicitacao(s, "aprovada", r); load(); }}>Aprovar</Button>
-                </div>
-              }
-            />
-          ))}
-        </TabsContent>
-
-        <TabsContent value="ponto" className="mt-3 space-y-2">
-          {pontos.length === 0 ? <Empty texto="Sem pontos pendentes." /> : pontos.map((p) => (
-            <ItemCard key={p.id}
-              icone={<Clock className="w-4 h-4" />}
-              titulo={`${colNome(p.colaborador_id)} — ${p.tipo}`}
-              subtitulo={p.horario ? format(new Date(p.horario), "dd/MM/yyyy HH:mm") : ""}
-              loja={lojaNome(p.loja_id)}
-              origem={p.origem || "pwa"}
-              created={p.created_date}
-              acao={
-                <div className="flex gap-1.5">
-                  <Button variant="outline" size="sm" onClick={async () => { const r = prompt("Motivo:"); if (r === null) return; await rejeitarRegistroPonto(p, r); load(); }}>Rejeitar</Button>
-                  <Button size="sm" onClick={async () => { await aprovarRegistroPonto(p); load(); }}>Aprovar</Button>
                 </div>
               }
             />

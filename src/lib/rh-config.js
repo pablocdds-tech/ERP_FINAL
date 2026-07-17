@@ -1,33 +1,20 @@
 import {
-  Users, Briefcase, CalendarRange, Clock, FileText, GraduationCap, FileSignature,
-  SlidersHorizontal, Tablet, BarChart3, Building2, Layers, Wallet, CalendarDays,
-  Timer, FileBarChart, FileLock2, AlertTriangle, ClipboardList, BookOpenCheck,
-  LayoutDashboard, ListChecks,
+  Users, CalendarRange, FileText, GraduationCap, FileSignature,
+  Building2, Layers, Wallet, CalendarDays,
+  AlertTriangle, ClipboardList,
+  ListChecks,
 } from "lucide-react";
 
 /**
- * Estrutura do menu RH/Ponto Eletrônico — VERSÃO ENXUTA.
+ * Estrutura do menu RH — sem ponto eletrônico.
  *
- * Reduzido de ~50 itens em 7 grupos para ~20 itens em 5 grupos,
- * agrupando telas familiares em HUBS com abas (TabsHub). Nada foi
- * removido — tudo continua acessível via aba ou alias de rota.
+ * O registro/apuração de ponto foi removido do ERP (integração externa futura).
+ * Ficam: colaboradores, estrutura, programação de escalas/jornadas e RH geral.
  */
 
 const item = (cfg) => ({ disponivel: true, ...cfg });
 
 export const RH_GRUPOS = [
-  {
-    id: "operacao",
-    nome: "Operação Diária",
-    descricao: "O que o gestor usa todo dia.",
-    icon: LayoutDashboard,
-    itens: [
-      item({ tipo: "painel", nome: "Painel do Ponto", descricao: "Ponto do dia + indicadores executivos.", icon: BarChart3 }),
-      item({ tipo: "tratamento", nome: "Tratamento de Ponto", descricao: "Faltas, atrasos, pendências e justificativas.", icon: ListChecks }),
-      item({ tipo: "espelho", nome: "Espelho de Ponto", descricao: "Registros do colaborador e banco de horas.", icon: Clock }),
-      item({ tipo: "solicitacoes", nome: "Solicitações", descricao: "Folgas, trocas e ajustes do PWA.", icon: FileSignature }),
-    ],
-  },
   {
     id: "pessoas",
     nome: "Pessoas e Estrutura",
@@ -41,26 +28,14 @@ export const RH_GRUPOS = [
     ],
   },
   {
-    id: "ponto",
-    nome: "Programação do Ponto",
-    descricao: "Como o ponto deve funcionar.",
-    icon: SlidersHorizontal,
+    id: "programacao",
+    nome: "Programação de Escalas",
+    descricao: "Escalas, jornadas e calendário da equipe.",
+    icon: CalendarRange,
     itens: [
       item({ tipo: "calendario", nome: "Calendário e Programação", descricao: "Escalas diárias, folgas e feriados.", icon: CalendarDays }),
       item({ tipo: "jornadas-turnos", nome: "Jornadas e Turnos", descricao: "Templates de jornada e turnos por loja.", icon: CalendarRange }),
-      item({ tipo: "configuracoes", nome: "Configurações do Ponto", descricao: "Regras de cálculo e tipos de abono.", icon: SlidersHorizontal }),
-      item({ tipo: "kiosk-dispositivos", nome: "Kiosks / Tablets", descricao: "Coletores de ponto: aprovar e gerenciar tablets do Kiosk.", icon: Tablet }),
-    ],
-  },
-  {
-    id: "fechamento",
-    nome: "Fechamento e Relatórios",
-    descricao: "Geração da folha e relatórios oficiais.",
-    icon: FileBarChart,
-    itens: [
-      item({ tipo: "fechamento", nome: "Fechamento Mensal", descricao: "Travar período e gerar totalizadores oficiais.", icon: BookOpenCheck }),
-      item({ tipo: "relatorios", nome: "Relatórios de Ponto", descricao: "Cartão, faltas, HE e totalizadores para folha.", icon: FileBarChart }),
-      item({ tipo: "fiscal", nome: "Relatórios Fiscais", descricao: "AFD, AEJ e arquivos exigidos pela Portaria 671.", icon: FileLock2, disponivel: false }),
+      item({ tipo: "solicitacoes", nome: "Solicitações", descricao: "Folgas, trocas e ajustes da equipe.", icon: FileSignature }),
     ],
   },
   {

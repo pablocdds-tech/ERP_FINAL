@@ -7,8 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Field from "@/components/cadastros/Field";
 import LojaSingleSelect from "@/components/cadastros/LojaSingleSelect";
-import SecaoFacialColaborador from "@/components/ponto/SecaoFacialColaborador";
-import LinkCadastroFacial from "@/components/rh/LinkCadastroFacial";
 import { formatarCpf, limparCpf } from "@/lib/cpf-validator";
 import { validarColaboradorParaSalvar } from "@/lib/colaborador-validator";
 import { registrarLog } from "@/lib/auditoria-service";
@@ -20,10 +18,6 @@ const empty = () => ({
   jornada_id: "",
   data_admissao: "",
   perfil_pwa: "funcionario", usa_pwa: false,
-  pode_bater_ponto_pelo_pwa: false,
-  pode_bater_ponto_pelo_kiosk: true,
-  bloqueado_para_ponto: false,
-  bloqueado_motivo: "",
   status: "ativo", salario: 0, endereco: "", observacoes: "",
 });
 
@@ -37,9 +31,6 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
   const [saving, setSaving] = useState(false);
   const [erros, setErros] = useState({});
   const [avisoReativar, setAvisoReativar] = useState(null);
-  const [pinNovo, setPinNovo] = useState("");
-  const [pinSalvando, setPinSalvando] = useState(false);
-  const [pinMsg, setPinMsg] = useState(null);
   const isView = mode === "view";
 
   useEffect(() => {
@@ -49,8 +40,6 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
       setData(inicial);
       setErros({});
       setAvisoReativar(null);
-      setPinNovo("");
-      setPinMsg(null);
       base44.entities.Cargo.filter({ ativo: true }).then(setCargos);
       base44.entities.Departamento.filter({ ativo: true }).then(setDepartamentos).catch(() => setDepartamentos([]));
       base44.entities.Time.filter({ ativo: true }).then(setTimes).catch(() => setTimes([]));
@@ -120,38 +109,6 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
     onClose?.();
   };
 
-  const salvarPin = async (pinValue) => {
-    if (!data.id) return;
-    setPinSalvando(true);
-    setPinMsg(null);
-    try {
-      const res = await base44.functions.invoke("setColaboradorPin", {
-        colaborador_id: data.id, pin: pinValue,
-      });
-      const out = res?.data || {};
-      if (!out.ok) {
-        setPinMsg({ tipo: "erro", texto: out.motivo || "Falha ao salvar PIN." });
-      } else {
-        setPinMsg({ tipo: "ok", texto: pinValue ? "PIN atualizado." : "PIN removido." });
-        setPinNovo("");
-        // recarrega para refletir pin_ponto_versao
-        const fresh = await base44.entities.Colaborador.filter({ id: data.id });
-        if (fresh[0]) setData({ ...fresh[0] });
-      }
-    } catch (e) {
-      setPinMsg({ tipo: "erro", texto: e?.message || "Erro ao salvar PIN." });
-    } finally {
-      setPinSalvando(false);
-    }
-  };
-
-  const recarregar = async () => {
-    if (!data.id) return;
-    const fresh = await base44.entities.Colaborador.filter({ id: data.id });
-    if (fresh[0]) setData({ ...fresh[0] });
-    onSaved?.();
-  };
-
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -187,7 +144,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
           </Field>
           <Field label="Telefone"><Input value={data.telefone || ""} onChange={(e) => set("telefone", e.target.value)} disabled={isView} /></Field>
 
-          <Field label="Usa PWA pessoal?" required hint="Se 'Não', bate ponto só pelo Kiosk (sem precisar de login)">
+          <Field label="Usa PWA pessoal?" required hint="Se 'Sim', o colaborador acessa o app da equipe com login próprio.">
             <Select
               value={data.usa_pwa ? "sim" : "nao"}
               onValueChange={(v) => {
@@ -198,7 +155,7 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="nao">Não — só Kiosk (facial/PIN)</SelectItem>
+                <SelectItem value="nao">Não</SelectItem>
                 <SelectItem value="sim">Sim — login pessoal no PWA</SelectItem>
               </SelectContent>
             </Select>
@@ -288,98 +245,11 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
             </Select>
           </Field>
 
-          <Field label="Bater ponto pelo PWA?" hint="Funcionário comum: Não. Liberar apenas para gestor/líder autorizado.">
-            <Select
-              value={data.pode_bater_ponto_pelo_pwa ? "sim" : "nao"}
-              onValueChange={(v) => set("pode_bater_ponto_pelo_pwa", v === "sim")}
-              disabled={isView}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nao">Não — só Kiosk</SelectItem>
-                <SelectItem value="sim">Sim — pode bater pelo celular</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Bater ponto pelo Kiosk?" hint="Padrão para funcionário de loja.">
-            <Select
-              value={data.pode_bater_ponto_pelo_kiosk === false ? "nao" : "sim"}
-              onValueChange={(v) => set("pode_bater_ponto_pelo_kiosk", v === "sim")}
-              disabled={isView}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sim">Sim</SelectItem>
-                <SelectItem value="nao">Não</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Bloqueado para ponto?" hint="Bloqueia ponto sem desligar o colaborador.">
-            <Select
-              value={data.bloqueado_para_ponto ? "sim" : "nao"}
-              onValueChange={(v) => set("bloqueado_para_ponto", v === "sim")}
-              disabled={isView}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nao">Não</SelectItem>
-                <SelectItem value="sim">Sim — bloqueado</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          {data.bloqueado_para_ponto && (
-            <Field label="Motivo do bloqueio">
-              <Input value={data.bloqueado_motivo || ""} onChange={(e) => set("bloqueado_motivo", e.target.value)} disabled={isView} />
-            </Field>
-          )}
           <Field label="Salário (R$)">
             <Input type="number" step="0.01" value={data.salario ?? ""} onChange={(e) => set("salario", parseFloat(e.target.value) || 0)} disabled={isView} />
           </Field>
           <Field label="Data desligamento">
             <Input type="date" value={data.data_desligamento || ""} onChange={(e) => set("data_desligamento", e.target.value)} disabled={isView} />
-          </Field>
-          <Field label="PIN ponto (Kiosk)" hint="4-6 dígitos. O PIN é salvo apenas como hash — não fica visível depois.">
-            {!data.id ? (
-              <Input disabled placeholder="Salve o colaborador primeiro" />
-            ) : (
-              <div className="flex gap-2">
-                <Input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder={data.pin_ponto_versao ? "PIN definido — digite para alterar" : "Definir PIN"}
-                  value={pinNovo}
-                  onChange={(e) => setPinNovo(e.target.value.replace(/\D/g, ""))}
-                  disabled={isView || pinSalvando}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={isView || pinSalvando || !pinNovo || pinNovo.length < 4}
-                  onClick={() => salvarPin(pinNovo)}
-                >
-                  {pinSalvando ? "..." : "Salvar PIN"}
-                </Button>
-                {data.pin_ponto_versao && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={isView || pinSalvando}
-                    onClick={() => salvarPin("")}
-                    className="text-destructive"
-                  >
-                    Remover
-                  </Button>
-                )}
-              </div>
-            )}
-            {pinMsg && (
-              <div className={`text-[11px] mt-1 ${pinMsg.tipo === "ok" ? "text-emerald-700" : "text-destructive"}`}>
-                {pinMsg.texto}
-              </div>
-            )}
           </Field>
           <Field label="Endereço" className="col-span-2">
             <Input value={data.endereco || ""} onChange={(e) => set("endereco", e.target.value)} disabled={isView} />
@@ -388,12 +258,6 @@ export default function ColaboradorDialog({ open, mode, record, onClose, onSaved
             <Textarea rows={2} value={data.observacoes || ""} onChange={(e) => set("observacoes", e.target.value)} disabled={isView} />
           </Field>
 
-          {data.id && (
-            <div className="col-span-2 pt-3 mt-1 border-t border-border space-y-3">
-              <LinkCadastroFacial />
-              <SecaoFacialColaborador colaborador={data} onUpdated={recarregar} disabled={isView} />
-            </div>
-          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{isView ? "Fechar" : "Cancelar"}</Button>

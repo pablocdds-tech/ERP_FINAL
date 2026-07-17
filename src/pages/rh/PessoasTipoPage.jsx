@@ -9,44 +9,27 @@ import Treinamentos from "./Treinamentos";
 import Tarefas from "./Tarefas";
 import Checklists from "./Checklists";
 import Chamados from "./Chamados";
-import KioskDispositivos from "./KioskDispositivos";
 
-// Hubs (telas com abas)
-import HubPainel from "./HubPainel";
-import HubTratamento from "./HubTratamento";
-import HubEspelho from "./HubEspelho";
+// Hubs (telas com abas) — estrutura, calendário e jornadas continuam no RH
 import HubCalendario from "./HubCalendario";
 import HubJornadas from "./HubJornadas";
 import HubEstrutura from "./HubEstrutura";
-import HubRelatorios from "./HubRelatorios";
-import HubConfiguracoes from "./HubConfiguracoes";
-
-// Fechamento (não agrupado por enquanto)
-import FechamentoMensal from "./FechamentoMensal";
 
 /**
- * Mapa enxuto: hubs + cadastros que ficam soltos.
+ * Mapa de páginas do RH (sem ponto eletrônico).
  * Telas antigas continuam acessíveis via ALIASES (redirect com aba pré-selecionada).
  */
 const PAGES = {
   // Operação diária
-  painel: HubPainel,
-  tratamento: HubTratamento,
-  espelho: HubEspelho,
   solicitacoes: Solicitacoes,
 
   // Pessoas e Estrutura
   colaboradores: Colaboradores,
   estrutura: HubEstrutura,
 
-  // Programação do Ponto
+  // Programação (escalas/jornadas/feriados)
   calendario: HubCalendario,
   "jornadas-turnos": HubJornadas,
-  configuracoes: HubConfiguracoes,
-
-  // Fechamento e Relatórios
-  fechamento: FechamentoMensal,
-  relatorios: HubRelatorios,
 
   // RH Geral
   documentos: Documentos,
@@ -54,20 +37,10 @@ const PAGES = {
   chamados: Chamados,
   tarefas: Tarefas,
   checklists: Checklists,
-  "kiosk-dispositivos": KioskDispositivos,
 };
 
 /** Tipo antigo → novo destino (rota + aba). */
 const ALIASES = {
-  // Painel
-  indicadores: "/admin/pessoas/painel?tab=indicadores",
-  "ponto-do-dia": "/admin/pessoas/painel?tab=hoje",
-  // Tratamento
-  pendentes: "/admin/pessoas/tratamento?tab=pendentes",
-  justificativas: "/admin/pessoas/tratamento?tab=justificativas",
-  // Espelho
-  ponto: "/admin/pessoas/espelho?tab=espelho",
-  "banco-horas-gestao": "/admin/pessoas/espelho?tab=banco-horas",
   // Calendário
   escalas: "/admin/pessoas/calendario?tab=escalas",
   folgas: "/admin/pessoas/calendario?tab=folgas",
@@ -79,14 +52,6 @@ const ALIASES = {
   departamentos: "/admin/pessoas/estrutura?tab=departamentos",
   times: "/admin/pessoas/estrutura?tab=times",
   cargos: "/admin/pessoas/estrutura?tab=cargos",
-  // Configurações
-  "configuracao-ponto": "/admin/pessoas/configuracoes?tab=regras",
-  abonos: "/admin/pessoas/configuracoes?tab=abonos",
-  // Relatórios
-  "rel-cartao-ponto": "/admin/pessoas/relatorios?tab=cartao",
-  "rel-faltas-atrasos": "/admin/pessoas/relatorios?tab=faltas",
-  "rel-horas-extras": "/admin/pessoas/relatorios?tab=he",
-  "rel-totalizadores-folha": "/admin/pessoas/relatorios?tab=folha",
 };
 
 export default function PessoasTipoPage() {

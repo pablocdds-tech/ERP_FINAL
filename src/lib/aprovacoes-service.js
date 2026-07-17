@@ -117,20 +117,6 @@ export async function decidirSolicitacao(sol, decisao /* aprovada|rejeitada */, 
     aprovado_por: usuario_email,
     aprovado_em: new Date().toISOString(),
   });
-  // Se for ajuste de ponto aprovado e tiver vínculo + horário correto, atualiza o registro
-  if (decisao === "aprovada" && sol.tipo === "ajuste_ponto" && sol.ponto_id && sol.horario_correto) {
-    const original = await base44.entities.RegistroPonto.filter({ id: sol.ponto_id });
-    if (original[0]) {
-      await base44.entities.RegistroPonto.update(sol.ponto_id, {
-        horario: sol.horario_correto,
-        ajustado: true,
-        ajuste_motivo: sol.descricao,
-        ajustado_por: usuario_email,
-        horario_original: original[0].horario,
-        status: "aprovado",
-      });
-    }
-  }
   await logAprovacao({
     entidade: "SolicitacaoRH", entidade_id: sol.id,
     acao: decisao === "aprovada" ? "aprovar" : "rejeitar",
@@ -151,29 +137,4 @@ export async function decidirSolicitacao(sol, decisao /* aprovada|rejeitada */, 
       });
     }
   } catch { /* */ }
-}
-
-export async function aprovarRegistroPonto(reg) {
-  let usuario_email = null;
-  try { usuario_email = (await base44.auth.me())?.email; } catch { /* */ }
-  const updated = await base44.entities.RegistroPonto.update(reg.id, {
-    status: "aprovado", aprovado_por: usuario_email, aprovado_em: new Date().toISOString(),
-  });
-  await logAprovacao({
-    entidade: "RegistroPonto", entidade_id: reg.id, acao: "aprovar",
-    snapshot_antes: reg, snapshot_depois: updated,
-  });
-}
-
-export async function rejeitarRegistroPonto(reg, motivo) {
-  let usuario_email = null;
-  try { usuario_email = (await base44.auth.me())?.email; } catch { /* */ }
-  const updated = await base44.entities.RegistroPonto.update(reg.id, {
-    status: "rejeitado", aprovado_por: usuario_email, aprovado_em: new Date().toISOString(),
-    observacoes: motivo,
-  });
-  await logAprovacao({
-    entidade: "RegistroPonto", entidade_id: reg.id, acao: "rejeitar",
-    observacoes: motivo, snapshot_antes: reg, snapshot_depois: updated,
-  });
 }

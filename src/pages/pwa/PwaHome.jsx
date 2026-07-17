@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Clock, Calendar, ListChecks, MessageSquare, Camera, ShieldCheck, FileText, BarChart3, Utensils } from "lucide-react";
+import { Calendar, ListChecks, MessageSquare, ShieldCheck, FileText, BarChart3 } from "lucide-react";
 import { usePwa } from "@/lib/PwaContext";
 
 const ACOES_FUNC = [
-  { to: "/mesas", icon: Utensils, label: "Mesas / Salão" },
-  { to: "/app/ponto", icon: Clock, label: "Bater ponto" },
   { to: "/app/escala", icon: Calendar, label: "Minha escala" },
   { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
   { to: "/app/checklist", icon: ListChecks, label: "Checklists" },
@@ -14,13 +12,10 @@ const ACOES_FUNC = [
 ];
 
 const ACOES_GESTOR = [
-  { to: "/mesas", icon: Utensils, label: "Mesas / Salão" },
   { to: "/app/aprovacoes", icon: ShieldCheck, label: "Aprovações" },
-  { to: "/app/pontos-pendentes", icon: Clock, label: "Pontos pendentes" },
   { to: "/app/dashboard", icon: BarChart3, label: "Dashboard" },
-  { to: "/app/equipe", icon: Calendar, label: "Equipe / Ponto" },
   { to: "/app/tarefas", icon: ListChecks, label: "Tarefas" },
-  { to: "/app/kiosk-ponto", icon: Camera, label: "Modo Kiosk" },
+  { to: "/app/chamados", icon: MessageSquare, label: "Chamados" },
 ];
 
 export default function PwaHome() {
@@ -44,13 +39,13 @@ export default function PwaHome() {
 
       <Card className="p-5 mb-6 bg-primary text-primary-foreground border-0">
         <div className="text-xs opacity-80">Próxima ação</div>
-        <div className="text-lg font-medium mt-1">{gestor ? "Ver aprovações pendentes" : "Bater ponto"}</div>
+        <div className="text-lg font-medium mt-1">{gestor ? "Ver aprovações pendentes" : "Ver minha escala"}</div>
         <Link
-          to={gestor ? "/app/aprovacoes" : "/app/ponto"}
+          to={gestor ? "/app/aprovacoes" : "/app/escala"}
           className="inline-flex items-center gap-2 mt-4 text-sm bg-primary-foreground text-primary rounded-lg px-4 py-2 font-medium"
         >
-          {gestor ? <ShieldCheck className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-          {gestor ? "Abrir central" : "Registrar agora"}
+          {gestor ? <ShieldCheck className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+          {gestor ? "Abrir central" : "Abrir escala"}
         </Link>
       </Card>
 
